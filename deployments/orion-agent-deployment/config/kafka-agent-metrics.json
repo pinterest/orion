@@ -1,0 +1,165 @@
+[
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=${topic}",
+        "attributeName": "OneMinuteRate"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [
+      "topic",
+      "host"
+    ],
+    "output":{
+      "name":"BrokerTopicMetrics-BytesInPerSec-OneMinuteRate",
+      "transmission": [
+        "tsdb"
+      ],
+      "tags": {
+        "topic": "${topic}",
+        "host": "${host}"
+      }
+    }
+  },
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=${topic}",
+        "attributeName": "FiveMinuteRate"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [
+      "topic",
+      "host"
+    ],
+    "output":{
+      "name":"BrokerTopicMetrics-BytesInPerSec-FiveMinuteRate",
+      "transmission": [
+        "tsdb"
+      ],
+      "tags": {
+        "topic": "${topic}",
+        "host": "${host}"
+      }
+    }
+  },
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=${topic}",
+        "attributeName": "FifteenMinuteRate"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [
+      "topic",
+      "host"
+    ],
+    "output":{
+      "name":"BrokerTopicMetrics-BytesInPerSec-FifteenMinuteRate",
+      "transmission": [
+        "tsdb"
+      ],
+      "tags": {
+        "topic": "${topic}",
+        "host": "${host}"
+      }
+    }
+  },
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=${topic}",
+        "attributeName": "OneMinuteRate"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [
+      "topic",
+      "host"
+    ],
+    "output":{
+      "name":"BrokerTopicMetrics-BytesOutPerSec-OneMinuteRate",
+      "transmission": [
+        "tsdb"
+      ],
+      "tags": {
+        "topic": "${topic}",
+        "host": "${host}"
+      }
+    }
+  },
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=${topic}",
+        "attributeName": "FiveMinuteRate"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [
+      "topic",
+      "host"
+    ],
+    "output":{
+      "name":"BrokerTopicMetrics-BytesOutPerSec-FiveMinuteRate",
+      "transmission": [
+        "tsdb"
+      ],
+      "tags": {
+        "topic": "${topic}",
+        "host": "${host}"
+      }
+    }
+  },
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=${topic}",
+        "attributeName": "FifteenMinuteRate"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [
+      "topic",
+      "host"
+    ],
+    "output":{
+      "name":"BrokerTopicMetrics-BytesOutPerSec-FifteenMinuteRate",
+      "transmission": [
+        "tsdb"
+      ],
+      "tags": {
+        "topic": "${topic}",
+        "host": "${host}"
+      }
+    }
+  },
+  {
+    "metricsSource":"jmx",
+    "input":{
+      "inputDefinitionAttributes": {
+        "metricName": "kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica",
+        "attributeName": "Value"
+      }
+    },
+    "metricType": "GAUGE",
+    "injectedEntities": [],
+    "output":{
+      "name":"MaxLag",
+      "transmission": [
+        "heartbeat",
+        "tsdb"
+      ],
+      "tags": []
+    }
+  }
+]

@@ -1,0 +1,8 @@
+agentConfigs:
+  kafkaServerProperties: /etc/kafka/server.properties
+  serverUrl: https://localhost:8444/admin/api
+  clusterId: testkafka
+  readOnly: true
+  enableServiceMetrics: true
+statsConfigs:
+  enabled: false

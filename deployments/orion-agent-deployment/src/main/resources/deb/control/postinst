@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cp /opt/orion-agent/orion-agent.default /etc/default/orion-agent
+cp /opt/orion-agent/orion-agent.upstart /etc/init/orion-agent.conf
+cp /opt/orion-agent/orion-agent.service /etc/systemd/system/orion-agent.service

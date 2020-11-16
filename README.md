@@ -1,88 +1,86 @@
-# Open Source Project Template
+# Orion
+Orion is a generalized plugable management and automation platform for stateful sistributed systems. Orion provides a unified interface of one or more clusters to both human and machine operators. Orion is capable of efficiently handling thousands of nodes spread across of 10s of clusters. 
 
-This repository serves as a template for Pinterest's open source projects. It
-contains the canonical copies of common files for licensing, contribution,
-etc.
+Our intent is to use automation to handle commonly encountered operations issues and build a library of learnings from experiences of various large scale environments like ours.
 
-- [`ADOPTERS.md`](ADOPTERS.md) - list of project adopters
-- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) - code of conduct
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) - contributing guide
-- [`LICENSE`](LICENSE) - our standard [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0)
-- [`SECURITY.md`](SECURITY.md) - security policy
+### Problem
+Orion aims to address the following problems:
+- **Lack of single console to manage large clusters of Stateful Distributed Systems**: Present open source tooling lacks ability to manage 10s of clusters and 1000s of nodes simultaneously, requiring engineers to switch between multiple consoles and perform manual correlations.
 
-## Licensing
 
-In addition to including the [`LICENSE`](LICENSE) file in the root of your
-repository, you should also add the following comment header to *all* of your
-project's source files (using the current year in place of `[yyyy]`):
+- **Conflicts between human and automation operations**: When automation scripts are implemented they mostly lack the visibility into out of band human operations and vice-a-versa as a single control surface is missing for machine and human operations this has proven to cause catastrophic failures e.g. engineer manually restarts process but automation system thinks that the node is down and replaces it causing stability issues in the cluster.
 
-    Copyright [yyyy]-present, Pinterest, Inc.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+- **Missing generalized community learnings on operations**: There currently is a lack of a generic unified interface and "store" for sharing community learnings for operations of various systems this leads to various companies having to rewrite remediations of problems. e.g. topic rebalancing in Kafka, auto replacement of slow HDFS nodes, concurrent rolling upgrades etc.
 
-        http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+- **Missing ability for sensor fusion for automation**: Lack of ability to fuse information from multiple sensors to find root cause of an issue on cluster to make best decisions for automated remediations. e.g. finding if Kafka replica lag is due to a slow leader or a slow follower or due to increased client load or due to faulty readings for replica lag.
 
-For the purposes of licensing, all significant project files are considered
-"source files". However, it doesn't make sense to add license headers to files
-such as:
+## Key Features
 
-- Short information text files (`README`, etc.)
-- Test data that would become malformed with the addition of the license text
+- **Unified Interface**: Orion provides a unified interface to implement human and automation actions along with a barrier to prevent conflicts
 
-Large projects may also use a shorter per-file copyright header, such as:
 
-    /**
-     * Copyright [yyyy]-present, Pinterest, Inc.
-     *
-     * This source code is licensed under the Apache License, Version 2.0
-     * found in the LICENSE file in the root directory of this source tree.
-     */
+- **Library of Remediations**: Orion comes with a pre-defined set of common Sensors, Operators and Actions and interfaces to define new ones to build on-top of learnings
 
-Lastly, please ensure that the `LICENSE` file is included as part of all
-release packages and distribution archives, including things like JAR files.
 
-## Adopters
+- **Scalable**: Ability to handle thousands of nodes and 10s of clusters efficiently
 
-You can also include an [`ADOPTERS.md`](ADOPTERS.md) file to list people and
-organizations who are using the project. This can be a good way to demonstrate
-a project's popularity.
 
-In general, it's best for adopters to add themselves to the list via a Pull
-Request, but project maintainers can also add to the list on their behalf
-if they receive permission.
+- **Plugable**: Orion was developed with the understanding that not all distributed systems behave the same way, pluggability, extensibility and abstraction is at the very core of Orion
 
-You can also add links to sites such as [AppSight][] and [StackShare][] if you
-think the information there is accurate.
+## Current State
 
-[AppSight]: https://www.appsight.io/
-[StackShare]: https://stackshare.io/
+Orion currently support management of the following systems:
+- Kafka
 
-## Contributions
 
-It's helpful to add a [`CONTRIBUTING.md`](CONTRIBUTING.md) file to help
-potential contributors understand how the project works. This is a good place
-to describe the contribution process, style guide, and testing requirements.
+## Usage
+Orion allows implementations of user defined **Action**s which are made available via both UI and as well as automated **Operator**s which allows engineers to program automated remediation of issues based on information from **Sensor**s in a large environment.
 
-The template provided here is a good starting point, but definitely customize
-it for your project. Check out [`elixir-thrift/CONTRIBUTING.md`][et-contrib]
-as an example.
+Example:
+- Safely Replace Nodes in a Cloud Environment
+- Concurrent Rolling Restart
+- Concurrent Rolling Upgrade
+- Execution of custom workflows like Kafka topic rebalancing
+- Maintain settings e.g. monitor and fix topic configurations in Kafka
 
-[et-contrib]: https://github.com/pinterest/elixir-thrift/blob/master/CONTRIBUTING.md
+## Architecture
+![Image of Orion's Architecture](images/Arch1.png)
 
-## Code of Conduct
 
-You should include a copy of [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in the
-root of your project.
+## Quick Start
 
-## Issues
+**Build**
 
-Adding an issue template to `.github/ISSUE_TEMPLATE.md` directory is a good idea
-to reduce the number of non-actionable issues the project receives.
+```
+git clone https://github.com/pinterest/orion.git
+cd orion
+bash ./builds/build-deployment.sh
+# Agent artifact will be generated in deployments/orion-agent-deployment/target/orion-agent_x.x.x_all.deb
+# Server artifact will be generated in deployments/orion-server-deployment/target/orion-server-deployment-x.x.x-bin.tar.gz
+# Note: Agent jar is generated as well if you would like to use custom scripts
+```
+
+Build scripts for Ubuntu are provided. The build script will attempt to install pre-requisites. If they don't work for your environment the following are needed to build Orion:
+
+- OpenJDK8
+- nodejs12/npm
+- Maven 3+
+
+
+### Dr.Kafka to Orion Migration
+If you were previously using Dr.Kafka you can find instructions on migrating to Orion here
+
+## Maintainers
+
+- Ping-Ming Lin
+- Ambud Sharma
+
+## Contributors
+
+- Vahid Hashemian
+- Jeff Xiang
+
+## License
+Orion is distributed under Apache License, Version 2.0.

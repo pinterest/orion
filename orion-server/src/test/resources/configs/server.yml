@@ -1,0 +1,23 @@
+plugins:
+  actionConfigs:
+    - key: testAction
+      class: test.foo.bar.Baz
+      configuration:
+        key1: value1
+        key2:
+          key3: value3
+          key4: value4
+  sensorConfigs:
+    - key: testSensor
+      configuration:
+        blah: blah
+clusterConfigs:
+  - clusterId: testkafka
+    configuration:
+      connectionConfig:
+        ssl.blah: 1
+  - clusterId: testkafka2
+    configuration:
+      test: 2
+      connectionConfig:
+        ssl.blah: 1
