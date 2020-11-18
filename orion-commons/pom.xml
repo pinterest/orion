@@ -14,7 +14,6 @@
 	<name>commons</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jackson.verion>2.9.10.1</jackson.verion>
 		<metrics.version>5.0.0-rc3</metrics.version>
 	</properties>
 	<dependencies>
@@ -50,7 +49,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.9.10.1</version>
+			<version>2.9.10.4</version>
 		</dependency>
 		<dependency>
 			<groupId>io.dropwizard.metrics5</groupId>
