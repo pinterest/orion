@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly>
+    <id>bin</id>
+    <baseDirectory/>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>scripts</directory>
+            <outputDirectory>scripts</outputDirectory>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>conf</directory>
+            <outputDirectory>conf</outputDirectory>
+            <includes>
+                <include>*.*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>target</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>orion-*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>target/classes</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>*.properties</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>

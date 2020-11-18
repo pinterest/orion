@@ -1,0 +1,6 @@
+<urlrewrite>
+    <rule>
+        <from>^/(?!(api|static/|manifest\.json|assets-manifest\.json|logo\.png)).*$</from>
+        <to type="forward">/index.html</to>
+    </rule>
+</urlrewrite>

@@ -1,0 +1,8 @@
+description "OrionAgent"
+
+start on runlevel [2345]
+setuid orion-agent
+respawn
+respawn limit 20 5
+
+exec /opt/orion-agent/run_agent.sh

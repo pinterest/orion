@@ -1,0 +1,13 @@
+[Unit]
+Description=Orion Agent
+
+[Service]
+Type=simple
+User=orion-agent
+Group=orion-agent
+ExecStart=/opt/orion-agent/run_agent.sh
+Restart=on-failure
+RestartSec=20
+
+[Install]
+WantedBy=multi-user.target

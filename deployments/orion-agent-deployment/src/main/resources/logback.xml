@@ -1,0 +1,21 @@
+<configuration debug="true">
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.dir:-/var/log/orion-agent}/orion-agent.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.dir:-/var/log/orion-agent}/orion-agent.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>14</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <logger name="org.apache.kafka.clients.admin" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

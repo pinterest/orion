@@ -1,0 +1,11 @@
+#!/bin/bash
+
+getent passwd orion-agent 2>/dev/null >/dev/null || /usr/sbin/useradd -s /bin/bash -M -r -d /opt/orion-agent orion-agent
+
+mkdir -p /opt/orion-agent
+mkdir -p /var/log/orion-agent
+mkdir -p /tmp/orion-agent/logs
+
+chown orion-agent:orion-agent /opt/orion-agent
+chown orion-agent:orion-agent /var/log/orion-agent
+chown orion-agent:orion-agent /tmp/orion-agent/logs

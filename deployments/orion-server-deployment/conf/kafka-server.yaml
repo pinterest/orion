@@ -1,0 +1,200 @@
+#*******************************************************************************
+# Copyright 2020 Pinterest, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#*******************************************************************************
+logging:
+  level: INFO
+  appenders:
+    - type: file
+      # The file to which current statements will be logged.
+      currentLogFilename: /var/log/orion/orion.log
+      # When the log file rotates, the archived log will be renamed to this and gzipped. The
+      # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
+      # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
+      archivedLogFilenamePattern: /var/log/orion/orion-%d.log.gz
+      # The number of archived files to keep.
+      archivedFileCount: 5
+
+server:
+  requestLog:
+    appenders: []
+  applicationConnectors:
+    - type: http
+      port: 8090
+      bindHost: 127.0.0.1
+  adminConnectors:
+    - type: http
+      port: 8444
+      bindHost: 0.0.0.0
+
+adminGroups:
+  - loggingteam
+
+statsConfiguration:
+  enabled: true
+  pushInterval: 10000
+
+actionAuditorConfigs:
+  class: com.pinterest.orion.core.actions.audit.KafkaActionAuditor
+  configuration:
+    serversetPath: /var/serverset/discovery.testkafka.prod
+    historyTopic: kafka_ops_action_history_canary
+  enabled: true
+
+clusterConfigs:
+  - clusterId: testkafka
+    type: kafka
+    configuration:
+      serversetPath: /var/serverset/discovery.testkafka.prod
+      clusterInfoDir: /opt/orion/configs/kafka/clusters/testkafka
+
+customApiFactoryClasses:
+  - com.pinterest.orion.server.api.kafka.KafkaApiFactory
+plugins:
+  sensorConfigs:
+    - key: brokerSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaBrokerSensor
+      interval: 60
+      enabled: true
+    - key: brokerConfigSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaBrokerConfigSensor
+      interval: 120
+      enabled: true
+    - key: clusterInfoSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaClusterInfoSensor
+      interval: 120
+      enabled: true
+    - key: topicSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicSensor
+      interval: 60
+      enabled: true
+    - key: logdirSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaLogDirectorySensor
+      interval: 120
+      enabled: true
+    - key: consumerGroupDescriptionSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaConsumerGroupDescriptionSensor
+      interval: 10
+      enabled: true
+    - key: consumerGroupOffsetSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaConsumerGroupOffsetSensor
+      interval: 60
+      enabled: true
+    - key: stuckConsumerGroupSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaStuckConsumerGroupSensor
+      interval: 10
+      enabled: true
+    - key: topicOffsetSensor
+      class: com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicOffsetSensor
+      interval: 120
+      enabled: true
+
+  operatorConfigs:
+    - key: brokersetTopicOperator
+      class: com.pinterest.orion.core.automation.operator.kafka.BrokersetTopicOperator
+      enabled: true
+    - key: brokerHealingOperator
+      class: com.pinterest.orion.core.automation.operator.kafka.BrokerHealingOperator
+      enabled: true
+    - key: kafkaTopicConfigOperator
+      class: com.pinterest.orion.core.automation.operator.kafka.KafkaTopicConfigOperator
+      enabled: true
+    - key: configConflictOperator
+      class: com.pinterest.orion.core.automation.operator.kafka.ConfigConflictOperator
+      enabled: true
+    - key: stuckConsumerGroupOperator
+      class: com.pinterest.orion.core.automation.operator.kafka.StuckConsumerGroupOperator
+      enabled: true
+
+  actionConfigs:
+#   The following actions have endpointEnabled: true, can be accessed via API
+    - key: rollingRestart
+      class: com.pinterest.orion.core.actions.kafka.ConcurrentKafkaRestartAction
+      enabled: true
+      endpointEnabled: true
+    - key: start
+      class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelClusterStartAction
+      enabled: true
+      endpointEnabled: true
+    - key: stop
+      class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelClusterStopAction
+      enabled: true
+      endpointEnabled: true
+    - key: rollingReplacement
+      class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$RollingReplacementAction
+      enabled: true
+      endpointEnabled: true
+    - key: rollingReboot
+      class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$RollingRebootAction
+      enabled: true
+      endpointEnabled: true
+    - key: rollingUpgrade
+      class: com.pinterest.orion.core.actions.kafka.KafkaClusterRollingUpgrade
+      enabled: true
+      endpointEnabled: true
+    - key: decommission
+      class: com.pinterest.orion.core.actions.kafka.KafkaClusterDecommissionBrokers
+      enabled: true
+      endpointEnabled: true
+    - key: enablenodemaintenance
+      class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelEnableNodeMaintenanceModeAction
+      enabled: true
+      endpointEnabled: true
+    - key: disablenodemaintenance
+      class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelDisableNodeMaintenanceModeAction
+      enabled: true
+      endpointEnabled: true
+#   The following actions are not exposed in the API
+    - key: configupdate
+      class: com.pinterest.orion.core.actions.generic.GenericActions$ServiceConfigUpdateAction
+      enabled: true
+    - key: createtopic
+      class: com.pinterest.orion.core.actions.kafka.AssignmentCreateKafkaTopicAction
+      enabled: true
+    - key: rebalancetopic
+      class: com.pinterest.orion.core.actions.kafka.KafkaIdealBalanceAction
+      enabled: true
+    - key: expandtopic
+      class: com.pinterest.orion.core.actions.kafka.AssignmentExpandKafkaTopicAction
+      enabled: true
+    - key: brokerrecovery
+      class: com.pinterest.orion.core.actions.kafka.BrokerRecoveryAction
+      enabled: true
+      configuration:
+        dry_run: false
+    - key: topicConfigUpdate
+      class: com.pinterest.orion.core.actions.kafka.KafkaTopicConfigUpdateAction
+      enabled: true
+    - key: slackAlert
+      class: com.pinterest.orion.core.actions.alert.SlackAlertAction
+      enabled: true
+      configuration:
+        slack_webhooks: # Slack hook for getting notifications
+        message_prefix: "[Orion] "
+    - key: pagerdutyAlert
+      class: com.pinterest.orion.core.actions.alert.PagerDutyAlertAction
+      enabled: true
+      configuration:
+        pagerduty_service_token: # Provide a valid Pager Duty ServiceToken
+    - key: emailAlert
+      class: com.pinterest.orion.core.actions.alert.LocalhostEmailAlertAction
+      enabled: true
+      configuration:
+        from: orion@localhost
+    - key: minIsrRfConfigConflictResolution
+      class: com.pinterest.orion.core.actions.kafka.MinIsrRfConflictResolutionAction
+      enabled: true
+    - key: stuckcgrecovery
+      class: com.pinterest.orion.core.actions.kafka.KafkaStuckConsumerGroupRecoveryAction
+      enabled: true
