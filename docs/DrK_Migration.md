@@ -16,7 +16,7 @@ Before configuring Orion with feature parity of Dr. Kafka please ensure to:
 
 1. Read [quick start guide](QuickStart.md)
 2. Read [kafka service overview](Kafka/README.md)
-3. Deploy Orion Server and Agent as described in Quick Start guidde
+3. Deploy Orion Server and Agent as described in Quick Start guide
 4. Update Orion Server configuration with the Dr. Kafka Parity Configuration (described below)
 5. Restart Orion Server
 
