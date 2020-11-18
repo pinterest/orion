@@ -31,9 +31,10 @@ Orion aims to address the following problems:
 
 ## Current State
 
-Orion currently support management of the following systems:
-- [Kafka](docs/Kafka/README.md)
+**Orion is actively under development and the API may change over time.**
 
+Orion currently supports management of the following systems:
+- [Kafka](docs/Kafka/README.md)
 
 ## Usage
 Orion allows implementations of user defined **Action**s which are made available via both UI and as well as automated **Operator**s which allows engineers to program automated remediation of issues based on information from **Sensor**s in a large environment.
