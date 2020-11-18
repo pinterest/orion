@@ -1,5 +1,5 @@
 # Orion
-Orion is a generalized plugable management and automation platform for stateful sistributed systems. Orion provides a unified interface of one or more clusters to both human and machine operators. Orion is capable of efficiently handling thousands of nodes spread across of 10s of clusters. 
+Orion is a generalized pluggable management and automation platform for stateful distributed systems. Orion provides a unified interface of one or more clusters to both human and machine operators. Orion is capable of efficiently handling thousands of nodes spread across of 10s of clusters. 
 
 Our intent is to use automation to handle commonly encountered operations issues and build a library of learnings from experiences of various large scale environments like ours.
 
@@ -27,7 +27,7 @@ Orion aims to address the following problems:
 - **Scalable**: Ability to handle thousands of nodes and 10s of clusters efficiently
 
 
-- **Plugable**: Orion was developed with the understanding that not all distributed systems behave the same way, pluggability, extensibility and abstraction is at the very core of Orion
+- **Pluggable**: Orion was developed with the understanding that not all distributed systems behave the same way, pluggability, extensibility and abstraction is at the very core of Orion
 
 ## Current State
 
