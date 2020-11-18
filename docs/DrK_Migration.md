@@ -8,7 +8,24 @@ Note: Currently only AWS EC2 replacements are supported. Auto-rebalancing isn't 
 1. Orion-compatible agents need to be installed on the brokers and configured to communicate with the Orion Server
 2. AWS IAM roles are configured correctly for the server machine
 
-## Simple Example Configuration:
+## Migration Overview
+
+Dr. Kafka and Orion have different architecture, a migration in this case represents running Orion with configurations that will provide feature parity with Dr. Kafka.
+
+Before configuring Orion with feature parity of Dr. Kafka please ensure to:
+
+1. Read [quick start guide](QuickStart.md)
+2. Read [kafka service overview](Kafka/README.md)
+3. Deploy Orion Server and Agent as described in Quick Start guidde
+4. Update Orion Server configuration with the Dr. Kafka Parity Configuration (described below)
+5. Restart Orion Server
+
+
+```
+NOTE: We highly recommend using the full stack of Orion Kafka service instead of limiting features to Dr. Kafka parity. The new capabilities are very useful for managing large Kafka deployments.
+```
+
+**Orion Dr. Kafka Parity Configuration**
 ```yaml
 server:
   applicationConnectors:
