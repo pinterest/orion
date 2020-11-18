@@ -28,16 +28,9 @@ import com.pinterest.orion.core.Attribute;
 public class AssignmentCreateKafkaTopicAction extends AbstractKafkaAction {
   public static final String ATTR_TOPIC_NAME_KEY = "topic";
   public static final String ATTR_REPLICAS_ASSIGNMENTS_KEY = "replicas_assignments";
-<<<<<<< HEAD
 
-  private static final Logger logger = Logger
-      .getLogger(AssignmentCreateKafkaTopicAction.class.getName());
   private static final String[] REQUIRED_ARG_KEYS = new String[] { ATTR_TOPIC_NAME_KEY,
-      ATTR_REPLICAS_ASSIGNMENTS_KEY };
-=======
-  private static final String[]
-      REQUIRED_ARG_KEYS = new String[]{ATTR_TOPIC_NAME_KEY, ATTR_REPLICAS_ASSIGNMENTS_KEY};
->>>>>>> c9e6c3c... Remove nimbus action call from topic actions
+          ATTR_REPLICAS_ASSIGNMENTS_KEY };
 
   @Override
   public void run(String zkUrl, AdminClient adminClient) {
@@ -59,16 +52,13 @@ public class AssignmentCreateKafkaTopicAction extends AbstractKafkaAction {
       markFailed(e);
       return;
     }
-<<<<<<< HEAD
-
-=======
+    
     try {
       onTopicCreated(topicName, replicasAssignments);
     } catch (Exception e) {
       markFailed(e);
       return;
     }
->>>>>>> c9e6c3c... Remove nimbus action call from topic actions
     markSucceeded();
   }
 

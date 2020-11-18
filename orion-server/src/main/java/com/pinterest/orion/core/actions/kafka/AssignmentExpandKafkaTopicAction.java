@@ -15,25 +15,16 @@
  *******************************************************************************/
 package com.pinterest.orion.core.actions.kafka;
 
-<<<<<<< HEAD
-=======
 import com.pinterest.orion.core.Attribute;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreatePartitionsResult;
 import org.apache.kafka.clients.admin.NewPartitions;
 
->>>>>>> c9e6c3c... Remove nimbus action call from topic actions
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.CreatePartitionsResult;
-import org.apache.kafka.clients.admin.NewPartitions;
-
-import com.pinterest.orion.core.Attribute;
 
 public class AssignmentExpandKafkaTopicAction extends AbstractKafkaAction {
 
@@ -42,9 +33,9 @@ public class AssignmentExpandKafkaTopicAction extends AbstractKafkaAction {
   public static final String ATTR_NEW_PARTITION_INDEX_KEY = "new_partition_idx";
 
   private static final String[]
-      REQUIRED_ARG_KEYS =
-      new String[]{ATTR_TOPIC_NAME_KEY, ATTR_REPLICAS_ASSIGNMENTS_KEY,
-                   ATTR_NEW_PARTITION_INDEX_KEY};
+          REQUIRED_ARG_KEYS =
+          new String[]{ATTR_TOPIC_NAME_KEY, ATTR_REPLICAS_ASSIGNMENTS_KEY,
+                  ATTR_NEW_PARTITION_INDEX_KEY};
 
   @Override
   public void run(String zkUrl, AdminClient adminClient) {
@@ -63,7 +54,7 @@ public class AssignmentExpandKafkaTopicAction extends AbstractKafkaAction {
       newPartitionAssignments.add(replicasAssignments.get(i));
     }
     NewPartitions newPartitions =
-        NewPartitions.increaseTo(replicasAssignments.size(), newPartitionAssignments);
+            NewPartitions.increaseTo(replicasAssignments.size(), newPartitionAssignments);
     this.getResult().appendOut("Increasing topic " + topicName + " to " + replicasAssignments.size() + " partitions.");
     CreatePartitionsResult result = adminClient.createPartitions(Collections.singletonMap(topicName, newPartitions));
 
@@ -73,8 +64,6 @@ public class AssignmentExpandKafkaTopicAction extends AbstractKafkaAction {
       markFailed("Failed when expanding partition count for topic " + topicName + ":" + e);
       return;
     }
-<<<<<<< HEAD
-=======
 
     try {
       onTopicExpanded(topicName, replicasAssignments);
@@ -82,8 +71,6 @@ public class AssignmentExpandKafkaTopicAction extends AbstractKafkaAction {
       markFailed(e);
       return;
     }
-
->>>>>>> c9e6c3c... Remove nimbus action call from topic actions
     markSucceeded();
   }
 
