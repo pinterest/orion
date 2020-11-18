@@ -1,7 +1,7 @@
 # Motivation
 Operations on stateful data systems are more complicated than their stateless counterparts due to the need for data replication & consistency. We needed to build a framework to manage our Kafka clusters in a safe and reliable manner while providing a control plane for our clusters.
 
-Our existing framework Dr. Kafka lacks key features around the control plane therefore more advanced operations like Cluster Upgrades, Config Updates, Rebalancing have to be done manually using shell scripts by Engineers. We also run into several conflicting operations scenarios where the automation and human interaction collide causing stability problems for the cluster e.g. multiple node replacements, assignment corruption. Lancer aims to address these gaps and provide a unified control plane and automation for stateful system operations (starting with Kafka) to reduce our KTLO costs.
+Our existing framework Dr. Kafka lacks key features around the control plane therefore more advanced operations like Cluster Upgrades, Config Updates, Rebalancing have to be done manually using shell scripts by Engineers. We also run into several conflicting operations scenarios where the automation and human interaction collide causing stability problems for the cluster e.g. multiple node replacements, assignment corruption. Orion aims to address these gaps and provide a unified control plane and automation for stateful system operations (starting with Kafka) to reduce our KTLO costs.
 
 We also want to eliminate inconsistency in the operations performed on our clusters by on-call engineers using this centralization approach. This eliminates the chances of human error and allows for all operations to be audited as well as secured.
 
