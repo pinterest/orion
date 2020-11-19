@@ -1,11 +1,13 @@
 package com.pinterest.orion.core.yarn;
 
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,16 +27,18 @@ import com.pinterest.orion.core.hbase.HBaseCluster;
 
 public class YarnCluster extends Cluster {
 
+  private static final String YARNSITE_FILE = "yarnsite.file";
+  private static final String CORESITE_FILE = "coresite.file";
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(HBaseCluster.class.getName());
-  
+
   private Map<String, Object> config;
+  private Configuration configuration;
   @JsonIgnore
   private transient YarnClient connection;
 
   public YarnCluster(String id,
                      String name,
-                     String type,
                      List<Sensor> monitors,
                      List<Operator> operators,
                      ActionFactory actionFactory,
@@ -49,9 +53,17 @@ public class YarnCluster extends Cluster {
   @Override
   protected void bootstrapClusterInfo(Map<String, Object> config) throws PluginConfigurationException {
     this.config = config;
-    // core-site.xml
-    // yarn-site.xml
-    // hdfs-site.xml
+    this.configuration = new Configuration();
+    try {
+      if (!config.containsKey(CORESITE_FILE) || !config.containsKey(YARNSITE_FILE)) {
+        throw new PluginConfigurationException(
+            "Missing " + CORESITE_FILE + " and " + YARNSITE_FILE);
+      }
+      this.configuration.addResource(new FileInputStream(config.get(CORESITE_FILE).toString()));
+      this.configuration.addResource(new FileInputStream(config.get(YARNSITE_FILE).toString()));
+    } catch (Exception e) {
+      throw new PluginConfigurationException(e);
+    }
   }
 
   @Override
@@ -80,6 +92,14 @@ public class YarnCluster extends Cluster {
 
   public void setConnection(YarnClient connection) {
     this.connection = connection;
+  }
+
+  public Map<String, Object> getConfig() {
+    return config;
+  }
+
+  public Configuration getConfiguration() {
+    return configuration;
   }
 
 }

@@ -74,14 +74,16 @@ public class ActionEngine implements ActionDispatcher, Runnable {
 
   private final AtomicInteger activeCounter = new AtomicInteger();
 
-  public ActionEngine(Cluster cluster, ActionFactory actionFactory, AlertFactory alertFactory, ActionAuditor actionAuditor) {
+  public ActionEngine(Cluster cluster,
+                      ActionFactory actionFactory,
+                      AlertFactory alertFactory,
+                      ActionAuditor actionAuditor) {
     this.cluster = cluster;
     this.actionFactory = actionFactory;
     this.alertFactory = alertFactory;
     this.actionAuditor = actionAuditor;
   }
 
-  @SuppressWarnings("unchecked")
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
     trackedActionsMap = new ConcurrentSkipListMap<>(Comparator.reverseOrder());
     alertsMap = new ConcurrentSkipListMap<>(Comparator.reverseOrder());
@@ -122,8 +124,7 @@ public class ActionEngine implements ActionDispatcher, Runnable {
     alert(AlertLevel.MEDIUM,
         new AlertMessage("Action triggered on cluster " + cluster.getClusterId(),
             "Action " + action.getName() + " scheduled on cluster " + cluster.getClusterId(),
-            action.getOwner())
-    );
+            action.getOwner()));
     Future<?> future = actionExecutors.submit(action);
     action.setInternalFuture(future);
     trackedActionsMap.put(action.getUuid(), action);
@@ -146,7 +147,7 @@ public class ActionEngine implements ActionDispatcher, Runnable {
   }
 
   protected void alert(AlertMessage message,
-                    List<Alert> alerts) throws PluginConfigurationException {
+                       List<Alert> alerts) throws PluginConfigurationException {
     this.alertsMap.put(message.getUuid(), message);
     for (Alert alert : alerts) {
       alert.setMessage(message);
@@ -164,14 +165,14 @@ public class ActionEngine implements ActionDispatcher, Runnable {
   }
 
   private void validateParentAction(Action action) {
-    if (!actionFactory.isActionEnabledOnCluster(cluster.getClusterId(), action.getClass().getName())) {
+    if (!actionFactory.isActionEnabledOnCluster(cluster.getClusterId(),
+        action.getClass().getName())) {
       alert(AlertLevel.MEDIUM,
           new AlertMessage("Action blocked on cluster " + cluster.getClusterId(),
               "Action " + action.getName() + " is blocked on cluster " + cluster.getClusterId(),
-              action.getOwner())
-      );
-      throw new IllegalArgumentException(action.getClass().getName()
-          + " is not allowed for cluster:" + cluster.getClusterId());
+              action.getOwner()));
+      throw new IllegalArgumentException(
+          action.getClass().getName() + " is not allowed for cluster:" + cluster.getClusterId());
     }
     validateRequiredFields(action);
   }
@@ -191,7 +192,8 @@ public class ActionEngine implements ActionDispatcher, Runnable {
       }
     } catch (PluginConfigurationException pce) {
       LOG.log(Level.SEVERE, "Failed to initialize action", pce);
-      throw new IllegalArgumentException("Failed to initialize action " + action.getClass().getName(), pce);
+      throw new IllegalArgumentException(
+          "Failed to initialize action " + action.getClass().getName(), pce);
     }
   }
 
@@ -216,8 +218,7 @@ public class ActionEngine implements ActionDispatcher, Runnable {
     for (Iterator<Entry<OrionUUID, Action>> iterator = trackedActionsMap.entrySet()
         .iterator(); iterator.hasNext();) {
       Entry<OrionUUID, Action> entry = iterator.next();
-      if (entry.getValue().isDone()
-          && entry.getValue().getCompleteTime() > 0
+      if (entry.getValue().isDone() && entry.getValue().getCompleteTime() > 0
           && (System.currentTimeMillis() - entry.getValue().getCompleteTime()) > TASK_EXPIRE) {
         iterator.remove();
         LOG.info(
@@ -278,7 +279,9 @@ public class ActionEngine implements ActionDispatcher, Runnable {
 
     private final AtomicInteger activeCounter;
 
-    public ControlledActionExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime,
+    public ControlledActionExecutor(int corePoolSize,
+                                    int maximumPoolSize,
+                                    long keepAliveTime,
                                     TimeUnit unit,
                                     BlockingQueue<Runnable> workQueue,
                                     AtomicInteger activeCounter) {
