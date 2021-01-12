@@ -24,23 +24,23 @@ import MemqTopic from "./MemqTopic";
 
 const useStyles = makeStyles({
   MuiTableCell: {
-    backgroundColor: "black"
-  }
+    backgroundColor: "black",
+  },
 });
 
-const modalStyles = makeStyles(theme => ({
+const modalStyles = makeStyles((theme) => ({
   modal: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   paper: {
     backgroundColor: theme.palette.background.paper,
     border: "2px solid #000",
     maxHeight: "500px",
     boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 4, 3)
-  }
+    padding: theme.spacing(2, 4, 3),
+  },
 }));
 
 export default function Topics(props) {
@@ -55,29 +55,31 @@ export default function Topics(props) {
     topicAssignments = Object.values(props.cluster.attributes.topicAssignment);
   }
 
-  topicInfoRows.forEach(topicInfoRow => {
+  topicInfoRows.forEach((topicInfoRow) => {
     topicToRowValuesMap[topicInfoRow.topic] = {
       topic: topicInfoRow.topic,
       clusterId: clusterId,
-      partition: topicInfoRow.partitions.length,
-      replication: topicInfoRow.partitions[0].replicas.length,
-      brokerset: topicInfoRow.brokerset || "n/a",
+      readpartition: topicInfoRow.readpartition.length,
+      writepartition: topicInfoRow.writepartition.length,
+      storageHandler: topicInfoRow.storageHandler,
       retentionHrs:
-        topicInfoRow.configs["retention.ms"] < 0
+        topicInfoRow.storageConfigs["retention.ms"] < 0
           ? -1
-          : (topicInfoRow.configs["retention.ms"] / 1000 / 3600).toFixed(2),
-      size: calculateTopicSizeInTB(topicInfoRow),
-      urps: countUrpForTopic(topicInfoRow.topic, props.cluster),
+          : (topicInfoRow.storageConfigs["retention.ms"] / 1000 / 3600).toFixed(
+              2
+            ),
+      size: topicInfoRow.size,
       configs: topicInfoRow.configs,
-      raw: topicInfoRow
+      storageConfigs: topicInfoRow.storageConfigs,
+      raw: topicInfoRow,
     };
   });
 
-  topicAssignments.forEach(topicAssignmentEntry => {
-      let topicName = topicAssignmentEntry.topicName;
-      if (topicName in topicToRowValuesMap) {
-        topicToRowValuesMap[topicName].project = topicAssignmentEntry.project;
-      }
+  topicAssignments.forEach((topicAssignmentEntry) => {
+    let topicName = topicAssignmentEntry.topicName;
+    if (topicName in topicToRowValuesMap) {
+      topicToRowValuesMap[topicName].project = topicAssignmentEntry.project;
+    }
   });
 
   const classes = modalStyles();
@@ -97,8 +99,8 @@ export default function Topics(props) {
   const handleDetailsClose = () => {
     setOpenDetailsModal(false);
     setSelectedRow();
-    history.push("/clusters/" + clusterId + "/service/topics")
-  }
+    history.push("/clusters/" + clusterId + "/service/topics");
+  };
 
   if (match && match.params.topicName) {
     if (!selectedRow) {
@@ -113,29 +115,27 @@ export default function Topics(props) {
   let data = Object.values(topicToRowValuesMap);
   let columns = [
     { title: "Topic", field: "topic" },
-    { title: "Partition", field: "partition" },
-    { title: "Replication Factor", field: "replication" },
-    { title: "Brokerset", field: "brokerset" },
+    { title: "Write Partitions", field: "writepartition" },
+    { title: "Read Partitions", field: "readpartition" },
     // { title: "MB-In/s", field: "mbin", type: "numeric" },
     // { title: "MB-Out/s", field: "mbout", type: "numeric" },
     { title: "Retention (Hrs)", field: "retentionHrs", type: "numeric" },
     { title: "Size (TB)", field: "size", type: "numeric" },
-    { title: "URPs", field: "urps", type: "numeric" },
-    { title: "Project", field: "project"},
+    { title: "Project", field: "project" },
   ];
 
-  const exportAsJson = async() => {
-    const fileName = 'export';
+  const exportAsJson = async () => {
+    const fileName = "export";
     const json = JSON.stringify(data);
-    const blob = new Blob([json], {type: 'application/json'});
+    const blob = new Blob([json], { type: "application/json" });
     const href = await URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = href;
-    link.download = fileName + '.json';
+    link.download = fileName + ".json";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
+  };
 
   return (
     <Box>
@@ -148,7 +148,7 @@ export default function Topics(props) {
         closeAfterTransition
         BackdropComponent={Backdrop}
         BackdropProps={{
-          timeout: 500
+          timeout: 500,
         }}
       >
         <Fade in={openDetailsModal}>
@@ -156,15 +156,12 @@ export default function Topics(props) {
             style={{
               backgroundColor: "white",
               padding: "20px",
-              width: "1000px"
+              width: "1000px",
             }}
           >
             {selectedRow && (
               <Suspense fallback={<div>Loading...</div>}>
-                <MemqTopic
-                  rowData={selectedRow}
-                  clusterId={clusterId}
-                />
+                <MemqTopic rowData={selectedRow} clusterId={clusterId} />
               </Suspense>
             )}
           </div>
@@ -174,42 +171,20 @@ export default function Topics(props) {
         options={{ pageSize: 10, grouping: true, filtering: false }}
         title={""}
         onRowClick={(event, rowData, togglePanel) => {
-          history.push("/clusters/" + clusterId + "/service/topics/" + rowData.topic);
-          setSelectedRow(rowData)
+          history.push(
+            "/clusters/" + clusterId + "/service/topics/" + rowData.topic
+          );
+          setSelectedRow(rowData);
           setOpenDetailsModal(true);
         }}
         columns={columns}
         data={data}
       />
       <Box m={2}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={exportAsJson}
-         >
+        <Button variant="contained" color="primary" onClick={exportAsJson}>
           Export Topic Data as JSON
         </Button>
       </Box>
     </Box>
   );
-}
-
-function calculateTopicSizeInTB(row) {
-  return (
-    row.partitions
-      .map(p =>
-        Object.values(p.replicainfo)
-          .map(v => v.size)
-          .reduce((l1, l2) => l1 + l2, 0)
-      )
-      .reduce((l1, l2) => l1 + l2, 0) / 1099511627776
-  ).toFixed(2);
-}
-
-function countUrpForTopic(topicName, cluster) {
-  let urpForTopic = cluster.urp[topicName];
-  if (urpForTopic && urpForTopic.partitions) {
-    return urpForTopic.partitions.length;
-  }
-  return 0;
 }

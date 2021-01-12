@@ -20,19 +20,21 @@ import KafkaService from "./Kafka/KafkaService";
 export default function Service(props) {
   let cluster = props.cluster;
 
-let render;
+  let render;
   switch (cluster.type) {
-	case "Kafka": render = (
-    <Box>
-      <KafkaService cluster={cluster} />
-    </Box>
-  );
-break;
-
-case "MemQ":
-render = (<Box>
-      <MemqService cluster={cluster} />
-    </Box>);
-} 
+    case "Kafka":
+      render = (
+        <Box>
+          <KafkaService cluster={cluster} />
+        </Box>
+      );
+      break;
+    case "MemQ":
+      render = (
+        <Box>
+          <MemqService cluster={cluster} />
+        </Box>
+      );
+  }
   return render;
 }

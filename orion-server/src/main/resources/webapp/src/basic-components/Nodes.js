@@ -233,7 +233,8 @@ function Nodes({ cluster, isAdmin }) {
           searchOpen: true,
           selectableRowsHeader: isAdmin,
           selectableRows: isAdmin ? "multiple" : "none",
-          isRowSelectable: (dataIndex, expandedRows) => rows[dataIndex].agentPresent,
+          isRowSelectable: (dataIndex, expandedRows) =>
+            rows[dataIndex].agentPresent,
           onRowClick: (rowData, rowMeta) => {
             history.push(
               "/clusters/" + cluster.clusterId + "/nodes/" + rowData[0]
@@ -285,9 +286,47 @@ function Nodes({ cluster, isAdmin }) {
         columns = getHBaseColumns();
         dataFunction = getHBaseNodeData(cluster);
         break;
+      case "MemQ":
+        const MemQClusterNode = lazy(() => import("./MemQ/MemqNode"));
+        ClusterNode = MemQClusterNode;
+        columns = getMemqColumns();
+        dataFunction = getMemQNodeData(cluster);
+        break;
       default:
     }
     return ClusterNode;
+
+    function getMemQNodeData(cluster) {
+      return (row) => {
+        let nodeType = "";
+        if (row.agentNodeInfo) {
+          // if agent is active
+          nodeType = row.agentNodeInfo.nodeType;
+        }
+
+        return {
+          nodeId: row.currentNodeInfo.nodeId,
+          hostname: row.currentNodeInfo.hostname.split(".", 1)[0],
+          ip: row.currentNodeInfo.ip,
+          rack: row.currentNodeInfo.rack,
+          nodeType: nodeType,
+          topics: row.topicPartitionsForNode.length,
+          agent: getAgentStatus(row),
+          service: getServiceStatus(row),
+          raw: row,
+        };
+      };
+    }
+
+    function getMemqColumns() {
+      return [
+        { label: "Node Id", name: "nodeId" },
+        { label: "Name", name: "hostname" },
+        { label: "Rack", name: "rack" },
+        { label: "Node Type", name: "nodeType" },
+        { label: "Topics", name: "topics", type: "numeric" },
+      ];
+    }
 
     function getKafkaNodeData(cluster) {
       return (row) => {
@@ -348,16 +387,6 @@ function Nodes({ cluster, isAdmin }) {
           raw: row,
         };
       };
-    }
-
-    function getMemqColumns() {
-	  return [
-        { label: "Node Id", name: "nodeId" },
-        { label: "Name", name: "hostname" },
-        { label: "Rack", name: "rack" },
-        { label: "Node Type", name: "nodeType" },
-        { label: "Topics", name: "topics", type: "numeric" }
-      ];
     }
 
     function getKafkaColumns() {
