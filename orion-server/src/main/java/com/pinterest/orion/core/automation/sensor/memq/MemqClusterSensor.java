@@ -17,6 +17,7 @@ package com.pinterest.orion.core.automation.sensor.memq;
 
 import java.util.Map;
 
+import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 
@@ -37,7 +38,13 @@ public class MemqClusterSensor extends MemqSensor {
   @Override
   public void sense(MemqCluster cluster) throws Exception {
     try {
-
+      NodeInfo info = new NodeInfo();
+      info.setClusterId(cluster.getClusterId());
+      info.setHostname("test");
+      info.setIp("127.0.0.1");
+      info.setNodeType("i3.2xlarge");
+      info.setNodeId("01");
+      cluster.addNodeWithoutAgent(info);
     } catch (Exception e) {
       e.printStackTrace();
       throw e;

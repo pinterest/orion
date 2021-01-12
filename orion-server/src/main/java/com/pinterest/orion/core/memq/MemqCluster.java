@@ -41,7 +41,7 @@ public class MemqCluster extends Cluster {
   public static final String ZK_CONNECTION_STRING = "zkConnectionString";
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(MemqCluster.class.getName());
-  private Map<String, Object> config;
+//  private Map<String, Object> config;
 
   public MemqCluster(String id,
                       String name,
@@ -57,10 +57,10 @@ public class MemqCluster extends Cluster {
 
   @Override
   protected void bootstrapClusterInfo(Map<String, Object> config) throws PluginConfigurationException {
-    this.config = config;
-    setAttribute(ZK_CONNECTION_STRING, config.get(ZK_CONNECTION_STRING));
-    setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
-    setAttribute(CLUSTER_INFO_DIR, config.get(CLUSTER_INFO_DIR));
+//    this.config = config;
+//    setAttribute(ZK_CONNECTION_STRING, config.get(ZK_CONNECTION_STRING));
+//    setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
+//    setAttribute(CLUSTER_INFO_DIR, config.get(CLUSTER_INFO_DIR));
   }
 
   @Override
@@ -78,9 +78,9 @@ public class MemqCluster extends Cluster {
     return new HashMap<>();
   }
   
-  public Map<String, Object> getConfig() {
-    return config;
-  }
+//  public Map<String, Object> getConfig() {
+//    return config;
+//  }
 
   @Override
   public Logger logger() {
