@@ -23,14 +23,13 @@ import com.pinterest.orion.core.actions.alert.AlertFactory;
 import com.pinterest.orion.core.actions.audit.ActionAuditor;
 import com.pinterest.orion.core.automation.operator.Operator;
 import com.pinterest.orion.core.automation.sensor.Sensor;
-import com.pinterest.orion.core.hbase.HBaseCluster;
 
 public class YarnCluster extends Cluster {
 
   private static final String YARNSITE_FILE = "yarnsite.file";
   private static final String CORESITE_FILE = "coresite.file";
   private static final long serialVersionUID = 1L;
-  private static final Logger logger = Logger.getLogger(HBaseCluster.class.getName());
+  private static final Logger logger = Logger.getLogger(YarnCluster.class.getName());
 
   private Map<String, Object> config;
   private Configuration configuration;

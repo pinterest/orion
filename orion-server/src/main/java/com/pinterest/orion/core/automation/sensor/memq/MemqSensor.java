@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import { Box } from "@material-ui/core";
-import React from "react";
-import KafkaService from "./Kafka/KafkaService";
+package com.pinterest.orion.core.automation.sensor.memq;
 
-export default function Service(props) {
-  let cluster = props.cluster;
+import com.pinterest.orion.core.Cluster;
+import com.pinterest.orion.core.automation.sensor.Sensor;
+import com.pinterest.orion.core.memq.MemqCluster;
 
-let render;
-  switch (cluster.type) {
-	case "Kafka": render = (
-    <Box>
-      <KafkaService cluster={cluster} />
-    </Box>
-  );
-break;
+public abstract class MemqSensor extends Sensor {
+  
+  @Override
+  public void observe(Cluster cluster) throws Exception {
+    if (logger == null) {
+      logger = getLogger(cluster);
+    }
+    if(cluster instanceof MemqCluster){
+      sense((MemqCluster) cluster);
+    }
+  }
+  
+  public abstract void sense(MemqCluster cluster) throws Exception;
 
-case "MemQ":
-render = (<Box>
-      <MemqService cluster={cluster} />
-    </Box>);
-} 
-  return render;
 }

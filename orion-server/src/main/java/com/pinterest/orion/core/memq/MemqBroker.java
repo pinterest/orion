@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import React from "react";
-import { Typography, Paper, Box } from "@material-ui/core";
+package com.pinterest.orion.core.memq;
 
-export default function KafkaClusterSummary(props) {
-  let cluster = props.cluster;
-  if (cluster.attributes["zookeeper.connect"]) {
-    return (
-      <Paper variant="outlined">
-        <Box mx={2} my={1}>
-          <Typography
-            variant="caption"
-          >
-            {cluster.attributes["zookeeper.connect"]}
-          </Typography>
-        </Box>
-      </Paper>
-    );
-  } else {
-    return <div></div>;
+import java.util.Properties;
+
+import com.pinterest.orion.common.NodeInfo;
+import com.pinterest.orion.core.Cluster;
+import com.pinterest.orion.core.Node;
+
+public class MemqBroker extends Node {
+
+  private static final long serialVersionUID = 1L;
+  
+  public MemqBroker(Cluster cluster, NodeInfo currentNodeInfo, Properties connectionProps) {
+    super(cluster, currentNodeInfo, connectionProps);
   }
 }
