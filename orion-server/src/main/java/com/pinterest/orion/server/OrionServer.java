@@ -71,7 +71,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.sslreload.SslReloadBundle;
 
-public abstract class OrionServer extends Application<OrionConf> {
+public class OrionServer extends Application<OrionConf> {
 
   private static final Logger logger = Logger.getLogger(OrionServer.class.getCanonicalName());
   private static final String DEFAULT_URL_REWRITE_CONF_PATH = "urlrewrite.xml";
@@ -85,7 +85,7 @@ public abstract class OrionServer extends Application<OrionConf> {
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     bootstrap.addBundle(new AssetsBundle("/webapp/build/", "/", "index.html"));
-    bootstrap.addBundle(new SslReloadBundle());
+//    bootstrap.addBundle(new SslReloadBundle());
   }
 
   public void additionalModules(OrionConf configuration, Environment environment) throws Exception {
@@ -227,6 +227,7 @@ public abstract class OrionServer extends Application<OrionConf> {
         e.printStackTrace();
       }
       mgr.addCluster(cluster);
+      logger.info("Initialized cluster:" + cluster.getName());
     }
     mgr.loadClusterActionsFromActionAuditor();
   }
@@ -276,5 +277,9 @@ public abstract class OrionServer extends Application<OrionConf> {
 
   public static Logger getLogger() {
     return logger;
+  }
+
+  public static void main(String[] args) throws Exception {
+    new OrionServer().run(args);
   }
 }

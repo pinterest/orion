@@ -23,9 +23,9 @@ public class ClusterTypeMap {
   public static final Map<String, Class<? extends Cluster>> clusterTypeMap = new ConcurrentHashMap<>();
 
   static {
-    clusterTypeMap.put("Kafka", KafkaCluster.class);
-    clusterTypeMap.put("MemQ", MemqCluster.class);
-    clusterTypeMap.put("HBase", HBaseCluster.class);
+    clusterTypeMap.put("kafka", KafkaCluster.class);
+    clusterTypeMap.put("memq", MemqCluster.class);
+    clusterTypeMap.put("hbase", HBaseCluster.class);
   }
 
   public static Cluster getClusterInstance(String clusterType,
@@ -43,7 +43,7 @@ public class ClusterTypeMap {
                                                                           IllegalAccessException,
                                                                           IllegalArgumentException,
                                                                           InvocationTargetException {
-    Class<? extends Cluster> clzz = clusterTypeMap.get(clusterType);
+    Class<? extends Cluster> clzz = clusterTypeMap.get(clusterType.toLowerCase());
     if (clzz == null) {
       return null;
     }
@@ -51,7 +51,7 @@ public class ClusterTypeMap {
         List.class, List.class, ActionFactory.class, AlertFactory.class, ActionAuditor.class,
         ClusterStateSink.class, CostCalculator.class);
     return constructor.newInstance(clusterId, clusterName, monitors, operators, actionFactory,
-        actionAuditor, clusterStateSink, costCalculator);
+        alertFactory, actionAuditor, clusterStateSink, costCalculator);
   }
 
 }
