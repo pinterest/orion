@@ -85,7 +85,7 @@ public class OrionServer extends Application<OrionConf> {
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     bootstrap.addBundle(new AssetsBundle("/webapp/build/", "/", "index.html"));
-//    bootstrap.addBundle(new SslReloadBundle());
+    bootstrap.addBundle(new SslReloadBundle());
   }
 
   public void additionalModules(OrionConf configuration, Environment environment) throws Exception {
