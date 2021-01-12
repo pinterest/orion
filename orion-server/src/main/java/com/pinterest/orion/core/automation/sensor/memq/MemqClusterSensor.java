@@ -13,26 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import { Box } from "@material-ui/core";
-import React from "react";
-import KafkaService from "./Kafka/KafkaService";
+package com.pinterest.orion.core.automation.sensor.memq;
 
-export default function Service(props) {
-  let cluster = props.cluster;
+import java.util.Map;
 
-let render;
-  switch (cluster.type) {
-	case "Kafka": render = (
-    <Box>
-      <KafkaService cluster={cluster} />
-    </Box>
-  );
-break;
+import com.pinterest.orion.core.PluginConfigurationException;
+import com.pinterest.orion.core.memq.MemqCluster;
 
-case "MemQ":
-render = (<Box>
-      <MemqService cluster={cluster} />
-    </Box>);
-} 
-  return render;
+public class MemqClusterSensor extends MemqSensor {
+
+  private Map<String, Object> config;
+
+  @Override
+  public String getName() {
+    return "memqbrokersensor";
+  }
+
+  @Override
+  public void initialize(Map<String, Object> config) throws PluginConfigurationException {
+    super.initialize(config);
+  }
+
+  @Override
+  public void sense(MemqCluster cluster) throws Exception {
+    try {
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
+  }
+
 }

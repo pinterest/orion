@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import { Box } from "@material-ui/core";
 import React from "react";
-import KafkaService from "./Kafka/KafkaService";
+import { Typography, Paper, Box } from "@material-ui/core";
 
-export default function Service(props) {
+export default function ClusterSummary(props) {
   let cluster = props.cluster;
-
-let render;
-  switch (cluster.type) {
-	case "Kafka": render = (
-    <Box>
-      <KafkaService cluster={cluster} />
-    </Box>
-  );
-break;
-
-case "MemQ":
-render = (<Box>
-      <MemqService cluster={cluster} />
-    </Box>);
-} 
-  return render;
+  if (cluster.attributes["zookeeper.connect"]) {
+    return (
+      <Paper variant="outlined">
+        <Box mx={2} my={1}>
+          <Typography
+            variant="caption"
+          >
+            {cluster.attributes["zookeeper.connect"]}
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  } else {
+    return <div></div>;
+  }
 }

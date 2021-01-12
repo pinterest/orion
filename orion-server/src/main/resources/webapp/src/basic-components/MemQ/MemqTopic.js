@@ -36,7 +36,7 @@ const routes = [
   },
 ];
 
-export default function KafkaTopic(props) {
+export default function MemqTopic(props) {
   let rowData = props.rowData;
   let clusterId = props.clusterId;
 
@@ -98,7 +98,7 @@ function getTopicInfoHeader(rowData, clusterId) {
           </Typography>
         </Grid>
         <Grid item>
-          <Chip variant="outlined" label="Kafka Topic" size="small" />
+          <Chip variant="outlined" label="MemQ Topic" size="small" />
         </Grid>
         <Grid item>
           <Chip

@@ -350,6 +350,16 @@ function Nodes({ cluster, isAdmin }) {
       };
     }
 
+    function getMemqColumns() {
+	  return [
+        { label: "Node Id", name: "nodeId" },
+        { label: "Name", name: "hostname" },
+        { label: "Rack", name: "rack" },
+        { label: "Node Type", name: "nodeType" },
+        { label: "Topics", name: "topics", type: "numeric" }
+      ];
+    }
+
     function getKafkaColumns() {
       return [
         { label: "Node Id", name: "nodeId" },

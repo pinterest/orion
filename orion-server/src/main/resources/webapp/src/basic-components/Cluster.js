@@ -30,7 +30,7 @@ import Nodes from "./Nodes";
 import Alerts from "./Alerts";
 import Dashboard from "./Dashboard";
 import Service from "./Service";
-import KafkaClusterSummary from "./Kafka/KafkaClusterSummary";
+import ClusterSummary from "./ClusterSummary";
 import { connect } from "react-redux";
 import { requestCluster } from "../actions/cluster";
 import { makeStyles } from "@material-ui/core/styles";
@@ -127,7 +127,7 @@ function Cluster({
             </Box>
           </Grid>
           <Grid item xs="auto">
-            <KafkaClusterSummary cluster={cluster} />
+            <ClusterSummary cluster={cluster} />
           </Grid>
           <Grid item xs={12}>
             <Switch>
