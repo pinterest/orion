@@ -16,7 +16,7 @@
 import { Box } from "@material-ui/core";
 import React from "react";
 import KafkaService from "./Kafka/KafkaService";
-import MemqService from "./Memq/MemqService";
+import MemqService from "./MemQ/MemqService";
 
 export default function Service(props) {
   let cluster = props.cluster;
