@@ -16,39 +16,36 @@
 package com.pinterest.orion.server;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.FilterRegistration;
 
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jersey.DropwizardResourceConfig;
-import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
-import io.dropwizard.jersey.setup.JerseyContainerHolder;
-import io.dropwizard.jersey.setup.JerseyEnvironment;
-import io.dropwizard.metrics5.MetricRegistry;
-import io.dropwizard.metrics5.SharedMetricRegistries;
-import io.dropwizard.sslreload.SslReloadBundle;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.tuckey.web.filters.urlrewrite.UrlRewriteFilter;
 
-import com.pinterest.orion.core.actions.alert.AlertFactory;
-import com.pinterest.orion.security.OrionAuthorizationFilter;
-import com.pinterest.orion.security.NoopAuthorizationFilter;
 import com.pinterest.orion.configs.StatsConfiguration;
+import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.ClusterManager;
 import com.pinterest.orion.core.ClusterStateSink;
 import com.pinterest.orion.core.CostCalculator;
 import com.pinterest.orion.core.actions.ActionFactory;
+import com.pinterest.orion.core.actions.alert.AlertFactory;
 import com.pinterest.orion.core.actions.audit.ActionAuditor;
+import com.pinterest.orion.core.automation.operator.Operator;
 import com.pinterest.orion.core.automation.operator.OperatorFactory;
+import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.automation.sensor.SensorFactory;
+import com.pinterest.orion.core.configs.ClusterConfig;
 import com.pinterest.orion.core.configs.PluginConfig;
 import com.pinterest.orion.core.metrics.MetricsStore;
 import com.pinterest.orion.metrics.OpenTsdbStatsPusher;
 import com.pinterest.orion.metrics.StatsPusher;
+import com.pinterest.orion.security.NoopAuthorizationFilter;
+import com.pinterest.orion.security.OrionAuthorizationFilter;
 import com.pinterest.orion.server.api.ActionEngineApi;
 import com.pinterest.orion.server.api.ClusterApi;
 import com.pinterest.orion.server.api.ClusterManagerApi;
@@ -62,8 +59,17 @@ import com.pinterest.orion.utils.NetworkUtils;
 
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.DropwizardResourceConfig;
+import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
+import io.dropwizard.jersey.setup.JerseyContainerHolder;
+import io.dropwizard.jersey.setup.JerseyEnvironment;
+import io.dropwizard.metrics5.MetricRegistry;
+import io.dropwizard.metrics5.SharedMetricRegistries;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.dropwizard.sslreload.SslReloadBundle;
 
 public abstract class OrionServer extends Application<OrionConf> {
 
@@ -82,9 +88,8 @@ public abstract class OrionServer extends Application<OrionConf> {
     bootstrap.addBundle(new SslReloadBundle());
   }
 
-  public void additionalModules(OrionConf configuration,
-                                Environment environment) throws Exception {
-
+  public void additionalModules(OrionConf configuration, Environment environment) throws Exception {
+    // NOT implemented for open source version
   }
 
   @Override
@@ -146,8 +151,8 @@ public abstract class OrionServer extends Application<OrionConf> {
     actionFactory.initialize(pluginConfigs.getActionConfigs());
     alertFactory.initialize(pluginConfigs.getAlertConfigs());
 
-    mgr = new ClusterManager(sensorFactory, operatorFactory, actionFactory, alertFactory, actionAuditor,
-        clusterStateSink, metricsStore, costCalculator);
+    mgr = new ClusterManager(sensorFactory, operatorFactory, actionFactory, alertFactory,
+        actionAuditor, clusterStateSink, metricsStore, costCalculator);
   }
 
   protected ClusterStateSink initializeClusterStateSink(OrionConf configuration) {
@@ -194,7 +199,37 @@ public abstract class OrionServer extends Application<OrionConf> {
     heartbeatService.start();
   }
 
-  public abstract void initializeClusters(OrionConf configuration) throws Exception;
+  public void initializeClusters(OrionConf configuration) throws Exception {
+    ClusterManager mgr = getClusterManager();
+    for (ClusterConfig clusterConfig : configuration.getClusterConfigs()) {
+      String clusterId = clusterConfig.getClusterId();
+      if (clusterConfig.getPlugins() != null) {
+        getClusterManager().addClusterPluginConfigs(clusterId, clusterConfig.getPlugins());
+      }
+      List<Sensor> monitors = getClusterManager().getSensorFactory()
+          .getAllSensorInstances(clusterId);
+      List<Operator> operators = getClusterManager().getOperatorFactory()
+          .getAllOperatorInstances(clusterId);
+
+      Cluster cluster = ClusterTypeMap.getClusterInstance(clusterConfig.getType(), clusterId,
+          clusterId, monitors, operators, mgr.getActionFactory(), mgr.getAlertFactory(),
+          mgr.getActionAuditor(), mgr.getClusterStateSink(), mgr.getCostCalculator());
+      if (cluster == null) {
+        logger
+            .severe("No cluster implementation found for cluster type:" + clusterConfig.getType());
+        continue;
+      }
+      try {
+        Map<String, Object> clusterConf = clusterConfig.getConfiguration();
+        cluster.initialize(clusterConf);
+      } catch (Exception e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      mgr.addCluster(cluster);
+    }
+    mgr.loadClusterActionsFromActionAuditor();
+  }
 
   private void registerAdminAPIs(Environment environment, OrionConf configuration) {
     final DropwizardResourceConfig jerseyConfig = new DropwizardResourceConfig(
