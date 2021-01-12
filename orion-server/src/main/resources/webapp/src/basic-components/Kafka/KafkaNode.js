@@ -17,7 +17,7 @@ import React from "react";
 import { Tab, Tabs, Grid, Typography, Box, Chip, Link } from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
-import PropsTable from "./PropsTable";
+import PropsTable from "../Commons/PropsTable";
 
 const routes = [
   {
