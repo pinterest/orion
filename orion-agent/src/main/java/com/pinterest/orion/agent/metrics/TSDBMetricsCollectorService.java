@@ -29,6 +29,7 @@ import io.dropwizard.metrics5.SharedMetricRegistries;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -65,7 +66,7 @@ public class TSDBMetricsCollectorService implements Runnable {
         MetricRegistry registry = SharedMetricRegistries.getOrCreate(transmission);
         switch (v.getType()) {
           case COUNTER:
-            registry.counter(name).inc(v.getValue());
+            registry.counter(name).inc(v.getValueAsLong());
             break;
           case GAUGE:
             if (!registry.getGauges().containsKey(name)) {
@@ -76,14 +77,14 @@ public class TSDBMetricsCollectorService implements Runnable {
             }
             break;
           case HISTOGRAM:
-            registry.histogram(name).update(v.getValue());
+            registry.histogram(name).update(v.getValueAsLong());
             break;
         }
       }
     }
   }
 
-  private void collectToMetricRegistry() throws InterruptedException {
+  private void collectToMetricRegistry() throws InterruptedException, IOException {
     long lastMetricPollTime = 0;
     while (true) {
       try {
@@ -111,20 +112,20 @@ public class TSDBMetricsCollectorService implements Runnable {
     }
   }
 
-  private static class SettableGauge<Long> implements Gauge<Long> {
+  private static class SettableGauge<Double> implements Gauge<Double> {
 
-    private Long v;
+    private Double v;
 
-    public SettableGauge(Long v) {
+    public SettableGauge(Double v) {
       this.v = v;
     };
 
     @Override
-    public Long getValue() {
+    public Double getValue() {
       return v;
     }
 
-    public void setValue(Long v) {
+    public void setValue(Double v) {
       this.v = v;
     }
   }

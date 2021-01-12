@@ -22,19 +22,19 @@ public class Value implements Serializable {
   private static final long serialVersionUID = 1L;
   private MetricType type;
   private String name;
-  private long value;
+  private double value;
   private boolean fp;
 
   public Value() {
   }
   
-  public Value(MetricType type, String name, long value) {
+  public Value(MetricType type, String name, double value) {
     this.type = type;
     this.name = name;
     this.value = value;
   }
 
-  public Value(MetricType type, String name, long value, boolean fp) {
+  public Value(MetricType type, String name, double value, boolean fp) {
     this.type = type;
     this.name = name;
     this.value = value;
@@ -72,14 +72,18 @@ public class Value implements Serializable {
   /**
    * @return the value
    */
-  public long getValue() {
+  public double getValue() {
     return value;
+  }
+
+  public long getValueAsLong() {
+    return ((Double) value).longValue();
   }
 
   /**
    * @param value the value to set
    */
-  public void setValue(long value) {
+  public void setValue(double value) {
     this.value = value;
   }
 

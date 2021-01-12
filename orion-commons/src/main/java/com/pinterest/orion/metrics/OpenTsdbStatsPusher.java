@@ -102,7 +102,7 @@ public class OpenTsdbStatsPusher extends StatsPusher {
 
     while (true) {
       try {
-        LOG.info("Sending metrics from buffer: " + buffer);
+        LOG.fine("Sending metrics from buffer: " + buffer);
         client.sendMetrics(buffer);
         break;
       } catch (Exception ex) {

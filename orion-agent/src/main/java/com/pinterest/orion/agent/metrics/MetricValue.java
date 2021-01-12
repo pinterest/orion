@@ -42,6 +42,9 @@ public class MetricValue {
   }
   
   public double toDouble() {
+    if (value instanceof Long) {
+      return ((Long) value).doubleValue();
+    }
     return (Double) value;
   }
 

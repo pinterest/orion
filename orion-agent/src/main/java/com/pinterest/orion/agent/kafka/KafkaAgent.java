@@ -91,10 +91,11 @@ public class KafkaAgent extends BaseAgent {
   }
 
   @Override
-  public void initializeMetricsPoll() throws InterruptedException {
+  public void initializeMetricsPoll() throws Exception {
     // need to re-create the adminClient each time since the bootstrap server is
     // only used when
     // initializing
+    super.initializeMetricsPoll();
     initializeAdminClient();
   }
 

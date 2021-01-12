@@ -21,6 +21,8 @@ import com.pinterest.orion.agent.utils.OrionCmd;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.common.StatusInfo;
 
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
@@ -44,50 +46,37 @@ public class KafkaMirrorAgent extends BaseAgent {
         return logger;
     }
 
-    private List<String> getTopicsList(String mirrorConfigDirectory) {
-        String topicAllowlist = null;
-        String mirrorConfigFilepath = mirrorConfigDirectory;
-        try {
-            File[] configFiles = new File(mirrorConfigDirectory).listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.getName().endsWith(".conf");
-                }
-            });
-            if (Objects.requireNonNull(configFiles).length != 1) {
-                logger.severe("More than one file under " + mirrorConfigDirectory);
-                return Collections.emptyList();
-            }
-            mirrorConfigFilepath = configFiles[0].getAbsolutePath();
-            BufferedReader reader = new BufferedReader(new FileReader(mirrorConfigFilepath));
-            String line = reader.readLine();
-            while (line != null) {
-                if (line.startsWith("TOPIC_ALLOWLIST")) {
-                    topicAllowlist = line.replace("TOPIC_ALLOWLIST=", "");
-                    break;
-                }
-                line = reader.readLine();
-            }
-        } catch (Exception e) {
-            logger.severe("Error reading config file " + mirrorConfigFilepath);
-        }
-        if (topicAllowlist == null) {
-            logger.severe("Error getting topic list from " + mirrorConfigFilepath);
-            return Collections.emptyList();
-        }
-        logger.info("Topic allowlist extracted from " + mirrorConfigFilepath + ": " + topicAllowlist);
-        return Arrays.asList(topicAllowlist.split(","));
-    }
-
     @Override
     public List<String> getEntityValues(String entity) {
         switch (entity) {
             case "topic":
-                return getTopicsList(config.getAgentConfigs().get(KAFKAMIRROR_CONFIG_DIRECTORY).toString());
+                return getJMXPropertyValuesForKey("kafka.consumer:*", "topic");
             case "host":
                 return Collections.singletonList(config.getHostname());
+            case "consumer-client-id":
+                return getJMXPropertyValuesForKey("kafka.consumer:*", "client-id");
+            case "producer-client-id":
+                return getJMXPropertyValuesForKey("kafka.producer:*", "client-id");
         }
         return null;
+    }
+
+    private List<String> getJMXPropertyValuesForKey(String jmxMetricPrefix, String key) {
+        Set<String> result = new HashSet<>();
+        try {
+            Set<ObjectInstance> objects = mbs.queryMBeans(new ObjectName(jmxMetricPrefix), null);
+            for (ObjectInstance obj: objects) {
+                String match = obj.getObjectName().getKeyProperty(key);
+                if (match != null) {
+                    result.add(match);
+                }
+            }
+        } catch (Exception e) {
+            logger.severe("Failed to get " + key + " JMX property values for prefix " + jmxMetricPrefix);
+            return Collections.emptyList();
+        }
+        logger.info("Retrieved JMX property values " + result + " for metric prefix: " + jmxMetricPrefix + ", key: " + key);
+        return new ArrayList<>(result);
     }
 
     @Override

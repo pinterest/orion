@@ -53,15 +53,15 @@ public class JMXMetricRetreiverTask extends MetricRetrieverTask {
         attributeName);
 
     MetricValue metricValue = metricValueFuture.get();
-    long metricValueLong;
+    double metricValueDouble;
     try {
-      metricValueLong = metricValue.toLong();
+      metricValueDouble = metricValue.toDouble();
     } catch (Exception e) {
-      logger.warning("Failed to convert metric value to long for " + definition.getInput().toString());
+      logger.warning("Failed to convert metric value to double for " + definition.getInput().toString());
       return metric;
     }
     if (!metricValue.hadException()) {
-      metric.addToValues(new Value(definition.getMetricType(), output.getName(), metricValueLong));
+      metric.addToValues(new Value(definition.getMetricType(), output.getName(), metricValueDouble));
     } else {
       logger.log(Level.FINE, "Got exception for " + output.getName(), metricValue.getException());
     }

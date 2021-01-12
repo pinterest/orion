@@ -58,7 +58,7 @@ public abstract class BaseAgent {
   private NodeCmd currentCommand;
   private volatile long metricsIterationCount;
   private JMXConnector jmxConnector = null;
-  private MBeanServerConnection mbs = null;
+  protected MBeanServerConnection mbs = null;
   private List<MetricDefinition> metricDefinitions;
 
   public BaseAgent(OrionAgentConfig config) {
@@ -80,17 +80,31 @@ public abstract class BaseAgent {
   public void initializeHeartbeat() throws InterruptedException {
   }
 
-  public void initializeMetricsPoll() throws InterruptedException {
+  public void initializeMetricsPoll() throws Exception {
+    if (jmxConnector != null) {
+      try {
+        getLogger().info("Closing JMX connector");
+        jmxConnector.close();
+      } catch (IOException e) {
+        getLogger().warning("Encountered error when trying to close JMX connector: " + e);
+      }
+    }
+    jmxConnector = getJMXServerConnection();
+    if (jmxConnector != null) {
+      mbs = jmxConnector.getMBeanServerConnection();
+      getLogger().info("Initialized JMX connector and MBeans server connection");
+    } else {
+      throw new Exception("Failed to initialize JMX connector");
+    }
   }
 
-  public void endMetricsPoll() throws InterruptedException {
+  public void endMetricsPoll() throws InterruptedException, IOException {
   }
 
   public void addToTasksFromDefinition(Set<MetricRetrieverTask> tasks, MetricDefinition newDef) throws Exception {
     switch (newDef.getMetricsSource()) {
       case "jmx":
-        boolean success = initializeJMXServerConnection();
-        if (success) {
+        if (mbs != null) {
           tasks.add(new JMXMetricRetreiverTask(newDef, mbs));
         }
         break;
@@ -123,20 +137,13 @@ public abstract class BaseAgent {
 
   protected abstract Logger getLogger();
 
-  protected boolean initializeJMXServerConnection() throws Exception {
+  protected JMXConnector getJMXServerConnection() throws Exception {
     if (!NetworkUtils.checkPort(getMetricsPort())) {
       getLogger().warning(
-              "JMX connection to Kafka broker is not available, kafka metrics won't be captured");
-      return false;
-    } else if (jmxConnector == null || mbs == null) {
-      jmxConnector = MetricUtils.getJMXConnector("localhost", getMetricsPort());
-      if (jmxConnector != null) {
-        mbs = jmxConnector.getMBeanServerConnection();
-      } else {
-        throw new Exception("Failed to create JMX server connection");
-      }
+              "JMX connection on port " + getMetricsPort() + " to broker is not available, JMX metrics won't be captured");
+      return null;
     }
-    return true;
+    return MetricUtils.getJMXConnector("localhost", getMetricsPort());
   }
 
   public abstract List<String> getEntityValues(String entity);
@@ -265,8 +272,8 @@ public abstract class BaseAgent {
       String hostname = metricsConfigs.getDestinationHostname();
       int port = metricsConfigs.getDestinationPort();
       int pushInterval = metricsConfigs.getPushInterval();
-      metricsPusher.configure(config.getHostname(), "orion.agent", hostname, port, pushInterval);
-      LOG.info("Starting metrics pusher with hostname " + config.getHostname() + " and metrics prefix orion.agent");
+      metricsPusher.configure(config.getHostname(), config.getMetricsPrefix(), hostname, port, pushInterval);
+      LOG.info("Starting metrics pusher with hostname " + config.getHostname() + " and metrics prefix " + config.getMetricsPrefix());
       metricsPusher.start();
     }
   }

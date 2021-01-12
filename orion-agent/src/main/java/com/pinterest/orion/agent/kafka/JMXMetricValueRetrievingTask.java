@@ -19,11 +19,9 @@ import com.pinterest.orion.agent.metrics.MetricValue;
 
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.QueryExp;
+import javax.management.*;
 
 public class JMXMetricValueRetrievingTask implements Callable<MetricValue> {
 
@@ -42,20 +40,27 @@ public class JMXMetricValueRetrievingTask implements Callable<MetricValue> {
   }
 
   @Override
-  public MetricValue call() throws Exception {
+  public MetricValue call() {
     try {
       ObjectName pattern = ObjectName.getInstance(metricName);
       Set<ObjectInstance> objects = mbs.queryMBeans(pattern, null);
-      logger.info("Got " + objects.size() + " metrics from MBeans pattern " + metricName);
-      long sum = 0;
+      if (objects.size() != 1) {
+        logger.warning("Retrieved " + objects.size() + " MBeans for metric " + pattern + " but expected 1." +
+                               " Will default to performing summation aggregation.");
+      }
+      logger.fine("Got " + objects.size() + " beans from MBeans pattern " + metricName);
+      double sum = 0;
       for (ObjectInstance inst: objects) {
         Object obj = mbs.getAttribute(inst.getObjectName(), attributeName);
-        sum += new MetricValue(obj).toLong();
+        sum += new MetricValue(obj).toDouble();
       }
-      logger.info("Retrieved value " + sum + " for MBeans pattern " + metricName + " from JMX");
+      logger.fine("Retrieved value " + sum + " for metricName " + metricName +
+                          " attributeName " + attributeName + " from JMX");
       return new MetricValue(sum);
     } catch (Exception e) {
-      return new MetricValue(e);
+      logger.log(Level.WARNING, "Exception when retrieving MBean attribute " +
+                             attributeName + " for metric " + metricName + ", defaulting to value=0", e);
+      return new MetricValue(0);
     }
   }
 }

@@ -28,8 +28,8 @@ import com.pinterest.orion.utils.OrionConstants;
 
 public abstract class NodeAction extends Action {
 
-  public static final String POSTHEALTHCHECK_INTERVAL = "posthealthcheck.interval";
-  public static final String RECOVERY_TIMEOUT = "recovery.timeout";
+  public static final String POSTHEALTHCHECK_INTERVAL = "postHealthcheckInterval";
+  public static final String RECOVERY_TIMEOUT = "recoveryTimeout";
 
   enum MaintenancePolicy {
     NONE,
@@ -39,7 +39,7 @@ public abstract class NodeAction extends Action {
   }
 
   private static final int DEFAULT_NODE_ACTION_TIMEOUT = 300;// 300s default timeout
-  protected static final String ATTR_ACTION_TIMEOUT = "action_timeout";
+  protected static final String ATTR_ACTION_TIMEOUT = "actionTimeout";
   protected Node node;
   protected String nodeId;
 

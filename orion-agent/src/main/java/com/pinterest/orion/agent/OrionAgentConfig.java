@@ -35,6 +35,7 @@ public class OrionAgentConfig {
   private Map<String, String> connectionConfigs;
   private StatsConfiguration statsConfigs = new StatsConfiguration();
   private String metricsFilepath = "/etc/orion-agent/metrics/kafka-agent-metrics.json";
+  private String metricsPrefix = "orion.agent";
 
   public String getMetricsFilepath() {
     return metricsFilepath;
@@ -115,6 +116,14 @@ public class OrionAgentConfig {
 
   public boolean isEnableHeartbeat() {
     return Boolean.parseBoolean(agentConfigs.getOrDefault("enableHeartbeat", "true"));
+  }
+
+  public String getMetricsPrefix() {
+    return metricsPrefix;
+  }
+
+  public void setMetricsPrefix(String metricsPrefix) {
+    this.metricsPrefix = metricsPrefix;
   }
 
   /**
