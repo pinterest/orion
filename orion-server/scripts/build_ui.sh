@@ -21,5 +21,8 @@ CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 NODE_DIR=$CWD/../src/main/resources/webapp
 
 cd $NODE_DIR
-npm prune && npm install
+export CI=''
+npm cache clean --force
+npm prune
+npm install
 npm run build
