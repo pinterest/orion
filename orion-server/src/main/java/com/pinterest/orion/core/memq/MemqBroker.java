@@ -15,17 +15,37 @@
  *******************************************************************************/
 package com.pinterest.orion.core.memq;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 
 import com.pinterest.orion.common.NodeInfo;
+import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.Node;
+import com.pinterest.orion.core.automation.sensor.memq.Broker;
+import com.pinterest.orion.core.automation.sensor.memq.MemqClusterSensor;
+import com.pinterest.orion.core.automation.sensor.memq.TopicConfig;
 
 public class MemqBroker extends Node {
 
   private static final long serialVersionUID = 1L;
-  
+
   public MemqBroker(Cluster cluster, NodeInfo currentNodeInfo, Properties connectionProps) {
     super(cluster, currentNodeInfo, connectionProps);
+  }
+
+  public Collection<TopicConfig> getTopicPartitionsForNode() {
+    MemqCluster cluster = ((MemqCluster) getCluster());
+
+    if (cluster.containsAttribute(MemqClusterSensor.RAW_BROKER_INFO)) {
+      Attribute attribute = cluster.getAttribute(MemqClusterSensor.RAW_BROKER_INFO);
+      Map<String, Broker> rawBrokerMap = attribute.getValue();
+      Broker broker = rawBrokerMap.get(currentNodeInfo.getNodeId());
+      return broker.getAssignedTopics();
+    } else {
+      return Arrays.asList();
+    }
   }
 }

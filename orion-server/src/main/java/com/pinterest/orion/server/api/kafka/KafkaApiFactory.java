@@ -19,34 +19,32 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.pinterest.orion.core.Attribute;
-import com.pinterest.orion.core.ClusterManager;
-import com.pinterest.orion.core.kafka.KafkaTopicDescription;
-import com.pinterest.orion.core.kafka.KafkaTopicPartitionInfo;
-import com.pinterest.orion.server.api.AttributeSerializer;
-import com.pinterest.orion.server.api.CustomApiFactory;
-
-import io.dropwizard.jersey.setup.JerseyEnvironment;
-import io.dropwizard.setup.Environment;
 import org.apache.kafka.clients.admin.MemberDescription;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
-public class KafkaApiFactory extends SimpleModule implements CustomApiFactory {
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.pinterest.orion.core.ClusterManager;
+import com.pinterest.orion.core.kafka.KafkaTopicDescription;
+import com.pinterest.orion.core.kafka.KafkaTopicPartitionInfo;
+import com.pinterest.orion.server.api.CustomApiFactory;
+
+import io.dropwizard.jersey.setup.JerseyEnvironment;
+import io.dropwizard.setup.Environment;
+
+public class KafkaApiFactory extends CustomApiFactory {
 
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(KafkaApiFactory.class.getCanonicalName());
 
   public KafkaApiFactory() {
+    super();
     addSerializer(KafkaTopicDescription.class, new KafkaTopicDescriptionSerializer());
     addSerializer(MemberDescription.class, new MemberDescriptionSerializer());
     addSerializer(OffsetAndMetadata.class, new OffsetAndMetadataSerializer());
     addSerializer(TopicPartition.class, new TopicPartitionSerializer());
-    addSerializer(Attribute.class, new AttributeSerializer());
   }
 
   @Override

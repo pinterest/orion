@@ -31,8 +31,6 @@ import com.pinterest.orion.core.kafka.ConsumerInfo;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.core.kafka.TopicAssignment;
 
-import org.apache.kafka.common.config.ConfigResource;
-
 public class KafkaClusterInfoSensor extends KafkaSensor {
 
   public static final String ATTR_CONSUMER_INFO_KEY = "consumers";

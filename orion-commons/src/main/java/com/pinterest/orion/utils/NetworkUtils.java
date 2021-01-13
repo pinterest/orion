@@ -57,6 +57,14 @@ public class NetworkUtils {
     }
   }
   
+  public static String getHostnameFromIpIfAvailable(String ip) {
+    try {
+      return InetAddress.getByName(ip).getHostName();
+    } catch (UnknownHostException e) {
+      return ip;
+    }
+  }
+  
   public static String getHostnameForLocalhost() {
     String hostName;
     try {

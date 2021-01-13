@@ -72,7 +72,7 @@ public class KafkaTopicSensor extends KafkaSensor {
     }
   }
 
-  protected void populateTopicConfigInfo(AdminClient adminClient,
+  public static void populateTopicConfigInfo(AdminClient adminClient,
                                          Map<String, KafkaTopicDescription> topicDescriptionMap) throws ExecutionException, InterruptedException {
     List<ConfigResource> request = topicDescriptionMap.keySet().stream()
         .map(m -> new ConfigResource(Type.TOPIC, m)).collect(Collectors.toList());
@@ -96,7 +96,7 @@ public class KafkaTopicSensor extends KafkaSensor {
     });
   }
 
-  protected void populateTopicBrokersetInfo(List<TopicAssignment> assignments,
+  public static void populateTopicBrokersetInfo(List<TopicAssignment> assignments,
                                             Map<String, KafkaTopicDescription> topicDescriptionMap) {
     assignments.forEach(assignment -> {
       if (topicDescriptionMap.containsKey(assignment.getTopicName())) {
@@ -105,7 +105,7 @@ public class KafkaTopicSensor extends KafkaSensor {
     });
   }
 
-  protected void populateTopicLogDirectoryInfo(KafkaCluster cluster,
+  public static void populateTopicLogDirectoryInfo(KafkaCluster cluster,
                                                Map<String, KafkaTopicDescription> value) {
     if (cluster.containsAttribute(KafkaLogDirectorySensor.ATTR_BROKER_LOG_DIRS_KEY)) {
       Map<Integer, Map<String, LogDirInfo>> map = cluster

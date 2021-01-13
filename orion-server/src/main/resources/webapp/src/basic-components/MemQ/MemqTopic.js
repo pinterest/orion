@@ -14,32 +14,46 @@
  * limitations under the License.
  *******************************************************************************/
 import React from "react";
-import { Tab, Tabs, Grid, Typography, Box, Chip, Link } from "@material-ui/core";
+import {
+  Tab,
+  Tabs,
+  Grid,
+  Typography,
+  Box,
+  Chip,
+  Link,
+} from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import PropsTable from "../Commons/PropsTable";
 
 const routes = [
   {
-    subpath: "topicpartitions",
+    subpath: "topicwritepartitions",
     component: PropsTable,
-    label: "Topic Partitions",
-    getData: getTopicPartitionsData,
-    getColumns: getTopicPartitionsColumns,
+    label: "Write Partitions",
+    getData: getTopicWritePartitionsData,
+    getColumns: getTopicWritePartitionsColumns,
+  },
+  {
+    subpath: "topicreadpartitions",
+    component: PropsTable,
+    label: "Read Partitions",
+    getData: getTopicReadPartitionsData,
+    getColumns: getTopicReadPartitionsColumns,
   },
   {
     subpath: "topicconfigs",
     component: PropsTable,
     label: "Topic Configurations",
     getData: getTopicConfigData,
-    getColumns: getTopicConfigColumns
+    getColumns: getTopicConfigColumns,
   },
 ];
 
 export default function MemqTopic(props) {
   let rowData = props.rowData;
   let clusterId = props.clusterId;
-
   return (
     <div>
       {getTopicInfoHeader(rowData, clusterId)}
@@ -49,7 +63,7 @@ export default function MemqTopic(props) {
             <Redirect
               exact
               from="/clusters/:clusterId/service/topics/:topicName"
-              to="/clusters/:clusterId/service/topics/:topicName/topicpartitions"
+              to="/clusters/:clusterId/service/topics/:topicName/topicwritepartitions"
             ></Redirect>
             <Route
               path="/clusters/:clusterId/service/topics/:topicName/:tab"
@@ -64,12 +78,17 @@ export default function MemqTopic(props) {
                 <Route
                   key={idx}
                   exact
-                  path={"/clusters/:clusterId/service/topics/:topicName/" + route.subpath}
+                  path={
+                    "/clusters/:clusterId/service/topics/:topicName/" +
+                    route.subpath
+                  }
                 >
-                {<route.component
-                  data={route.getData(rowData)}
-                  columns={route.getColumns()}
-                />}
+                  {
+                    <route.component
+                      data={route.getData(rowData)}
+                      columns={route.getColumns()}
+                    />
+                  }
                 </Route>
               );
             })}
@@ -82,20 +101,19 @@ export default function MemqTopic(props) {
 
 function getBrokerset(rowData) {
   if (rowData.brokerset === "n/a") {
-    return "No brokerset assigned"
+    return "No brokerset assigned";
   }
   return rowData.brokerset;
 }
 
 function getTopicInfoHeader(rowData, clusterId) {
   let topic = rowData.topic;
+  console.log(rowData);
   return (
     <Box my={2}>
       <Grid container display="flex" alignItems="center" spacing={2}>
         <Grid item>
-          <Typography variant="h6">
-            {topic}
-          </Typography>
+          <Typography variant="h6">{topic}</Typography>
         </Grid>
         <Grid item>
           <Chip variant="outlined" label="MemQ Topic" size="small" />
@@ -113,7 +131,7 @@ function getTopicInfoHeader(rowData, clusterId) {
             variant="outlined"
             color="primary"
             size="small"
-            label={rowData.size + " TB"}
+            label={rowData.raw.writeAssignments.length + " Write Partitions"}
           />
         </Grid>
         <Grid item>
@@ -121,15 +139,9 @@ function getTopicInfoHeader(rowData, clusterId) {
             variant="outlined"
             color="primary"
             size="small"
-            label={rowData.partition + " Partitions"}
-          />
-        </Grid>
-        <Grid item>
-          <Chip
-            variant="outlined"
-            color="primary"
-            size="small"
-            label={getBrokerset(rowData)}
+            label={
+              rowData.raw.readAssignments.partitions.length + " Read Partitions"
+            }
           />
         </Grid>
       </Grid>
@@ -137,72 +149,104 @@ function getTopicInfoHeader(rowData, clusterId) {
   );
 }
 
-function getTopicPartitionsData(rowData) {
+function getTopicReadPartitionsData(rowData) {
   let rows = [];
   let topic = rowData.raw;
   if (topic) {
-    rows = topic.partitions;
+    rows = topic.readAssignments.partitions;
   }
   let data = [];
-  rows.map(partition => {
-    data.push({
-      partition: partition.partition,
-      isrs: <Box>{nodeToLink(partition.isrs, rowData.clusterId)}</Box>,
-      replicas: <Box>{nodeToLink(partition.replicas, rowData.clusterId)}</Box>,
-      leader: partition.replicas[0],
-      underReplicatedCount: partition.replicas.length - partition.isrs.length > 0 ? "Yes" : "No",
-      isPreferredLeader:
-        partition.leader === partition.replicas[0] ? "True" : "False",
-      size: bytesToGB(
-        Object.values(partition.replicainfo)
-          .map(e => e.size)
-          .reduce((l1, l2) => l1 + l2, 0)
-      ).toFixed(2)
+  if (rows) {
+    rows.map((partition) => {
+      data.push({
+        partition: partition.partition,
+        isrs: <Box>{nodeToLink(partition.isrs, rowData.clusterId)}</Box>,
+        replicas: (
+          <Box>{nodeToLink(partition.replicas, rowData.clusterId)}</Box>
+        ),
+        leader: partition.replicas[0],
+        underReplicatedCount:
+          partition.replicas.length - partition.isrs.length > 0 ? "Yes" : "No",
+        isPreferredLeader:
+          partition.leader === partition.replicas[0] ? "True" : "False",
+      });
     });
-  });
+  }
   return data;
 }
 
-function getTopicPartitionsColumns() {
-  return ([
+function getTopicReadPartitionsColumns() {
+  return [
     { title: "Partition", field: "partition" },
     { title: "ISRs", field: "isrs" },
     { title: "Replicas", field: "replicas" },
-    { title: "Leader", field: "leader"},
-    { title: "Under Replicated", field: "underReplicatedCount"},
+    { title: "Leader", field: "leader" },
+    { title: "Under Replicated", field: "underReplicatedCount" },
     { title: "Preferred Leader?", field: "isPreferredLeader" },
-    { title: "Size (GB)", field: "size", type: "numeric" }
-  ]);
+  ];
+}
+
+function getTopicWritePartitionsData(rowData) {
+  let rows = [];
+  let topic = rowData.raw;
+  if (topic) {
+    rows = topic.writeAssignments;
+  }
+  let data = [];
+  if (rows) {
+    let id = 0;
+    rows.map((partition) => {
+      data.push({
+        partition: id++,
+        broker: partition,
+      });
+    });
+  }
+  return data;
+}
+
+function getTopicWritePartitionsColumns() {
+  return [
+    { title: "Partition", field: "partition" },
+    { title: "Broker", field: "broker" },
+  ];
 }
 
 function getTopicConfigData(rowData) {
   let topicConfigData = [];
   if (rowData) {
-    let attributes = rowData.configs;
-    let overrideConfigs = rowData.raw.overrideConfigs;
-    let tmp = Object.entries(attributes);
-    for (let [key, value] of tmp) {
-      topicConfigData.push({
-        key: key,
-        value: JSON.stringify(value),
-        overridden: overrideConfigs && overrideConfigs.includes(key) ? "true" : "false"
-      });
+    let attributes = rowData.raw.config;
+    if (attributes) {
+      let overrideConfigs = rowData.raw.overrideConfigs;
+      let tmp = Object.entries(attributes);
+      for (let [key, value] of tmp) {
+        topicConfigData.push({
+          key: key,
+          value: JSON.stringify(value),
+          overridden:
+            overrideConfigs && overrideConfigs.includes(key) ? "true" : "false",
+        });
+      }
     }
   }
   return topicConfigData;
 }
 
 function getTopicConfigColumns() {
-  return ([
+  return [
     { title: "Config Name", field: "key" },
     { title: "Value", field: "value" },
-    { title: "Overridden", field: "overridden" }
-  ]);
+    { title: "Overridden", field: "overridden" },
+  ];
 }
 
 function nodeToLink(arry, clusterId) {
   return arry.map((node, i) => (
-    <Link component={RouterLink} key={i} to={"/clusters/" + clusterId + "/nodes/" + node}>
+    <Link
+      component={RouterLink}
+      key={i}
+      to={"/clusters/" + clusterId + "/nodes/" + node}
+    >
       {node}
       {i != arry.length - 1 ? "," : ""}
     </Link>

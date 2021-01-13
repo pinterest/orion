@@ -21,13 +21,16 @@ import com.pinterest.orion.server.api.CustomApiFactory;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Environment;
 
-public class YarnApiFactory implements CustomApiFactory {
+public class YarnApiFactory extends CustomApiFactory {
+
+  private static final long serialVersionUID = 1L;
 
   @Override
   public void registerAPIs(Environment globalEnv,
                            JerseyEnvironment environment,
                            ClusterManager clusterMgr) {
     environment.register(new YarnClusterApi(clusterMgr));
+    globalEnv.getObjectMapper().registerModule(this);
   }
 
 }
