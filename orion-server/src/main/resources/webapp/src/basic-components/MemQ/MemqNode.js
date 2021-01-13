@@ -50,7 +50,7 @@ export default function MemqNode({ node, clusterId, cluster }) {
       {getNodeInfoHeader(
         node,
         node.currentNodeInfo.nodeId,
-        node.currentNodeInfo.serviceInfo["broker.id"],
+        node.currentNodeInfo.nodeId,
         node.currentNodeInfo.hostname.split(".", 1)[0]
       )}
       <Grid>
@@ -93,10 +93,7 @@ export default function MemqNode({ node, clusterId, cluster }) {
 }
 
 function getNodeInfoHeader(node, nodeId, brokerId, hostname) {
-  let nodeType = "Node type not available";
-  if (node.agentNodeInfo) {
-    nodeType = node.agentNodeInfo.nodeType;
-  }
+  let nodeType = node.currentNodeInfo.nodeType;
   return (
     <div>
       <Box my={2}>
@@ -105,7 +102,7 @@ function getNodeInfoHeader(node, nodeId, brokerId, hostname) {
             <Typography variant="h6">{hostname}</Typography>
           </Grid>
           <Grid item>
-            <Chip variant="outlined" label="Kafka Node" size="small" />
+            <Chip variant="outlined" label="Broker Node" size="small" />
           </Grid>
           <Grid item>
             <Chip label={"Broker ID: " + brokerId} size="small" />
@@ -115,7 +112,7 @@ function getNodeInfoHeader(node, nodeId, brokerId, hostname) {
               variant="outlined"
               color="primary"
               size="small"
-              label={0 + " topics"}
+              label={node.topicPartitionsForNode.length + " topics"}
             />
           </Grid>
           <Grid item>
@@ -138,10 +135,6 @@ function getNodeInfoHeader(node, nodeId, brokerId, hostname) {
       </Box>
     </div>
   );
-}
-
-function bytesToGB(bytes) {
-  return bytes / 1073741824;
 }
 
 function nodeToLink(arry, clusterId) {
@@ -186,9 +179,11 @@ function getServiceConfigsData(cluster, node) {
   let serviceConfigRows = [];
   if (node) {
     let attributes = node.currentNodeInfo.serviceInfo;
-    let tmp = Object.entries(attributes);
-    for (let [key, value] of tmp) {
-      serviceConfigRows.push({ key: key, value: JSON.stringify(value) });
+    if (attributes) {
+      let tmp = Object.entries(attributes);
+      for (let [key, value] of tmp) {
+        serviceConfigRows.push({ key: key, value: JSON.stringify(value) });
+      }
     }
   }
   let serviceConfigsData = serviceConfigRows.map((entry) => {

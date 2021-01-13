@@ -23,26 +23,26 @@ import ConsumerGroups from "../Kafka/ConsumerGroups";
 
 const useStyles = makeStyles({
   table: {
-    minWidth: 650
-  }
+    minWidth: 650,
+  },
 });
 
 const routes = [
   {
     subpath: "topics",
     component: Topics,
-    label: "Topics"
+    label: "Topics",
   },
   {
     subpath: "brokersets",
     component: Brokersets,
-    label: "Brokersets"
+    label: "Brokersets",
   },
-  {
-    subpath: "consumergroups",
-    component: ConsumerGroups,
-    label: "Consumer Groups"
-  }
+  // {
+  //   subpath: "consumergroups",
+  //   component: ConsumerGroups,
+  //   label: "Consumer Groups"
+  // }
 ];
 
 export default function MemqService(props) {

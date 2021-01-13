@@ -18,7 +18,6 @@ package com.pinterest.orion.core.kafka;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +30,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -43,14 +39,15 @@ import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.requests.DescribeLogDirsResponse.ReplicaInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.ClusterCost;
+import com.pinterest.orion.core.ClusterCost.EntityCost;
 import com.pinterest.orion.core.ClusterStateSink;
 import com.pinterest.orion.core.CostCalculator;
 import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.Utilization;
-import com.pinterest.orion.core.ClusterCost.EntityCost;
 import com.pinterest.orion.core.actions.ActionFactory;
 import com.pinterest.orion.core.actions.alert.AlertFactory;
 import com.pinterest.orion.core.actions.audit.ActionAuditor;
@@ -76,8 +73,8 @@ public class KafkaCluster extends Cluster {
                       ActionAuditor historySink,
                       ClusterStateSink stateSink,
                       CostCalculator costCalculator) {
-    super(clusterId, name, "Kafka", monitors, operators, actionFactory, alertFactory, historySink, stateSink,
-        costCalculator);
+    super(clusterId, name, "Kafka", monitors, operators, actionFactory, alertFactory, historySink,
+        stateSink, costCalculator);
   }
 
   @Override
@@ -93,8 +90,7 @@ public class KafkaCluster extends Cluster {
 
   public boolean brokerHealthy(String brokerId) {
     try {
-      return getURPFromClusters().values().stream()
-          .flatMap(ktd -> ktd.getPartitions().stream())
+      return getURPFromClusters().values().stream().flatMap(ktd -> ktd.getPartitions().stream())
           .filter(ktpi -> ktpi.getReplicas().stream().anyMatch(n -> n.idString().equals(brokerId)))
           .allMatch(ktpi -> ktpi.getIsrs().stream().anyMatch(n -> n.idString().equals(brokerId)));
     } catch (Exception e) {
@@ -176,37 +172,47 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
                                                                            ExecutionException {
+    AdminClient adminClient = getAdminClient();
+    Map<String, KafkaTopicDescription> cachedTopicMap = containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)
+        ? getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue()
+        : null;
+    Map<String, KafkaTopicDescription> ret = getTopicDescriptions(adminClient, logger(),
+        cachedTopicMap,
+        clusterId);
+    return ret;
+  }
+
+  public static Map<String, KafkaTopicDescription> getTopicDescriptions(AdminClient adminClient,
+                                                                        Logger logger,
+                                                                        Map<String, KafkaTopicDescription> cachedTopicMap,
+                                                                        String clusterId) throws InterruptedException,
+                                                                                          ExecutionException {
     long start = System.currentTimeMillis();
+    Map<String, KafkaTopicDescription> ret = new HashMap<>();
     Set<String> topics;
     try {
-      topics = getAdminClient().listTopics(new ListTopicsOptions().listInternal(true))
-          .names().get();
+      topics = adminClient.listTopics(new ListTopicsOptions().listInternal(true)).names().get();
     } catch (ExecutionException e) {
-      if (this.containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)) {
-        logger().log(Level.WARNING, "Failed to list topics for " + clusterId + ", fallback to previous topic data.", e);
-        Map<String, KafkaTopicDescription> map = this.getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue();
-        topics = map.keySet();
+      if (cachedTopicMap != null) {
+        logger.log(Level.WARNING,
+            "Failed to list topics for " + clusterId + ", fallback to previous topic data.", e);
+        topics = cachedTopicMap.keySet();
       } else {
         throw e;
       }
     }
     long list = System.currentTimeMillis();
-    List<Future<Map<String, TopicDescription>>> futures = Lists.partition(new ArrayList<>(topics), Integer.min(topics.size(), 10)).stream()
-        .map(subset -> getAdminClient().describeTopics(subset).all())
-        .collect(Collectors.toList());
-    Map<String, KafkaTopicDescription> ret = new HashMap<>();
-    for( Future<Map<String, TopicDescription>> f : futures) {
-      ret.putAll(f.get().entrySet().stream()
-          .collect(
-              Collectors.toMap(
-                  Entry::getKey,
-                  entry -> new KafkaTopicDescription(entry.getValue())
-              )
-          )
-      );
+    List<Future<Map<String, TopicDescription>>> futures = Lists
+        .partition(new ArrayList<>(topics), Integer.min(topics.size(), 10)).stream()
+        .map(subset -> adminClient.describeTopics(subset).all()).collect(Collectors.toList());
+    for (Future<Map<String, TopicDescription>> f : futures) {
+      ret.putAll(f.get().entrySet().stream().collect(
+          Collectors.toMap(Entry::getKey, entry -> new KafkaTopicDescription(entry.getValue()))));
     }
     long desc = System.currentTimeMillis();
-    logger().info(String.format("%s:getTopicDescriptionFromKafka: ListTopics %d ms, DescribeTopics %d ms", clusterId, list - start, desc - list));
+    logger.info(
+        String.format("%s:getTopicDescriptionFromKafka: ListTopics %d ms, DescribeTopics %d ms",
+            clusterId, list - start, desc - list));
     return ret;
   }
 

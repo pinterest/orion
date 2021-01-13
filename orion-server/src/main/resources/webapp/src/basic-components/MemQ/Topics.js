@@ -56,21 +56,28 @@ export default function Topics(props) {
   }
 
   topicInfoRows.forEach((topicInfoRow) => {
-    topicToRowValuesMap[topicInfoRow.topic] = {
-      topic: topicInfoRow.topic,
+    topicToRowValuesMap[topicInfoRow.config.topic] = {
+      topic: topicInfoRow.config.topic,
       clusterId: clusterId,
-      readpartition: topicInfoRow.readpartition.length,
-      writepartition: topicInfoRow.writepartition.length,
-      storageHandler: topicInfoRow.storageHandler,
+      readpartition: topicInfoRow.readAssignments
+        ? topicInfoRow.readAssignments.partitions.length
+        : 0,
+      writepartition: topicInfoRow.writeAssignments
+        ? topicInfoRow.writeAssignments.length
+        : 0,
+      storageHandler: topicInfoRow.config.outputHandler,
       retentionHrs:
-        topicInfoRow.storageConfigs["retention.ms"] < 0
+        topicInfoRow.readAssignments.configs["retention.ms"] < 0
           ? -1
-          : (topicInfoRow.storageConfigs["retention.ms"] / 1000 / 3600).toFixed(
-              2
-            ),
-      size: topicInfoRow.size,
+          : (
+              topicInfoRow.readAssignments.configs["retention.ms"] /
+              1000 /
+              3600
+            ).toFixed(2),
+      size: topicInfoRow.config.size,
+      traffic: topicInfoRow.config.inputTrafficMB,
       configs: topicInfoRow.configs,
-      storageConfigs: topicInfoRow.storageConfigs,
+      storageConfigs: topicInfoRow.config.outputHandlerConfig,
       raw: topicInfoRow,
     };
   });
@@ -121,6 +128,7 @@ export default function Topics(props) {
     // { title: "MB-Out/s", field: "mbout", type: "numeric" },
     { title: "Retention (Hrs)", field: "retentionHrs", type: "numeric" },
     { title: "Size (TB)", field: "size", type: "numeric" },
+    { title: "Traffic (MB/s)", field: "traffic", type: "numeric" },
     { title: "Project", field: "project" },
   ];
 

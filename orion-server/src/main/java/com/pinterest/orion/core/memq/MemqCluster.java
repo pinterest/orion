@@ -19,8 +19,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.kafka.clients.admin.AdminClient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.ClusterStateSink;
@@ -41,26 +46,31 @@ public class MemqCluster extends Cluster {
   public static final String ZK_CONNECTION_STRING = "zkConnectionString";
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(MemqCluster.class.getName());
-//  private Map<String, Object> config;
+  private Map<String, Object> config;
+  @JsonIgnore
+  private transient CuratorFramework zkClient;
+  @JsonIgnore
+  private transient Map<String, AdminClient> readClusterClientMap = new ConcurrentHashMap<>();
 
   public MemqCluster(String id,
-                      String name,
-                      List<Sensor> monitors,
-                      List<Operator> operators,
-                      ActionFactory actionFactory,
-                      AlertFactory alertFactory,
-                      ActionAuditor auditSink,
-                      ClusterStateSink stateSink,
-                      CostCalculator costCalculator) {
-    super(id, name, "MemQ", monitors, operators, actionFactory, alertFactory, auditSink, stateSink, costCalculator);
+                     String name,
+                     List<Sensor> monitors,
+                     List<Operator> operators,
+                     ActionFactory actionFactory,
+                     AlertFactory alertFactory,
+                     ActionAuditor auditSink,
+                     ClusterStateSink stateSink,
+                     CostCalculator costCalculator) {
+    super(id, name, "MemQ", monitors, operators, actionFactory, alertFactory, auditSink, stateSink,
+        costCalculator);
   }
 
   @Override
   protected void bootstrapClusterInfo(Map<String, Object> config) throws PluginConfigurationException {
-//    this.config = config;
-//    setAttribute(ZK_CONNECTION_STRING, config.get(ZK_CONNECTION_STRING));
-//    setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
-//    setAttribute(CLUSTER_INFO_DIR, config.get(CLUSTER_INFO_DIR));
+    this.config = config;
+    setAttribute(ZK_CONNECTION_STRING, config.get(ZK_CONNECTION_STRING));
+    setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
+    setAttribute(CLUSTER_INFO_DIR, config.get(CLUSTER_INFO_DIR));
   }
 
   @Override
@@ -72,19 +82,35 @@ public class MemqCluster extends Cluster {
   public void addNodeWithoutAgent(NodeInfo info) {
     getNodeMap().put(info.getNodeId(), getNodeInstance(info));
   }
-  
+
   @Override
   public Map<String, Utilization> getUtilizationMap() {
     return new HashMap<>();
   }
-  
-//  public Map<String, Object> getConfig() {
-//    return config;
-//  }
+
+  public Map<String, Object> getConfig() {
+    return config;
+  }
+
+  public CuratorFramework getZkClient() {
+    return zkClient;
+  }
+
+  public void setZkClient(CuratorFramework zkClient) {
+    this.zkClient = zkClient;
+  }
+
+  public Map<String, AdminClient> getReadClusterClientMap() {
+    return readClusterClientMap;
+  }
+
+  public void setReadClusterClientMap(Map<String, AdminClient> readClusterClientMap) {
+    this.readClusterClientMap = readClusterClientMap;
+  }
 
   @Override
   public Logger logger() {
     return logger;
   }
-  
+
 }

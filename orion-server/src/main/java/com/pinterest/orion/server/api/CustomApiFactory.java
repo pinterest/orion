@@ -15,14 +15,22 @@
  *******************************************************************************/
 package com.pinterest.orion.server.api;
 
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.ClusterManager;
 
 import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Environment;
 
-public interface CustomApiFactory {
+public abstract class CustomApiFactory extends SimpleModule {
+  
+  private static final long serialVersionUID = 1L;
 
-  public void registerAPIs(Environment globalEnv,
+  public CustomApiFactory() {
+    addSerializer(Attribute.class, new AttributeSerializer());
+  }
+
+  public abstract void registerAPIs(Environment globalEnv,
                            JerseyEnvironment jerseyEnv,
                            ClusterManager clusterMgr);
 

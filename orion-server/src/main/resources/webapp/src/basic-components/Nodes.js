@@ -309,8 +309,10 @@ function Nodes({ cluster, isAdmin }) {
           hostname: row.currentNodeInfo.hostname.split(".", 1)[0],
           ip: row.currentNodeInfo.ip,
           rack: row.currentNodeInfo.rack,
-          nodeType: nodeType,
-          topics: row.topicPartitionsForNode.length,
+          nodeType: row.currentNodeInfo.nodeType,
+          topics: row.topicPartitionsForNode
+            ? row.topicPartitionsForNode.length
+            : 0,
           agent: getAgentStatus(row),
           service: getServiceStatus(row),
           raw: row,
