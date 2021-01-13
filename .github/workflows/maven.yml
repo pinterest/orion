@@ -12,7 +12,9 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Setup NPM
-      run: echo "deb https://deb.nodesource.com/node_12.x bionic main" > /etc/apt/sources.list.d/nodesource.list && curl -s -k https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && apt-get update && apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
+    - name: Setup node12
+      uses: actions/setup-node@v2
+      with:
+        node-version: '12'
     - name: Build with Maven
       run: mvn -B package --file pom.xml
