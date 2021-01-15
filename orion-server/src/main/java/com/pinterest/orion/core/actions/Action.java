@@ -353,6 +353,15 @@ public abstract class Action extends Context implements Plugin, Runnable, Future
   public AttributeSchema generateSchema(Map<String, Object> config) {
     return null;
   }
+  
+  public void checkRequiredArgs(String[] requiredArgs) {
+    for (String arg : requiredArgs) {
+      if (!containsAttribute(arg)) {
+        markFailed("Missing " + arg);
+        return;
+      }
+    }
+  }
 
   /*
    * (non-Javadoc)

@@ -34,12 +34,7 @@ public class AssignmentCreateKafkaTopicAction extends AbstractKafkaAction {
 
   @Override
   public void run(String zkUrl, AdminClient adminClient) {
-    for (String arg : REQUIRED_ARG_KEYS) {
-      if (!containsAttribute(arg)) {
-        markFailed("Missing " + arg);
-        return;
-      }
-    }
+    checkRequiredArgs(REQUIRED_ARG_KEYS);
     String topicName = getAttribute(this, ATTR_TOPIC_NAME_KEY).getValue().toString();
     Attribute attributeReplicaAssignments = getAttribute(this, ATTR_REPLICAS_ASSIGNMENTS_KEY);
     Map<Integer, List<Integer>> replicasAssignments = attributeReplicaAssignments.getValue();

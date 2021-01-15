@@ -21,6 +21,8 @@ import com.pinterest.orion.core.memq.MemqCluster;
 
 public class MemqTopicSensor extends MemqSensor {
 
+  public static final String NOTIFICATION_SERVERSET = "notificationServerset";
+  public static final String NOTIFICATION_TOPIC = "notificationTopic";
   public static final String TOPICINFO = "topicinfo";
 
   @Override
@@ -46,7 +48,7 @@ public class MemqTopicSensor extends MemqSensor {
       TopicConfig topicConfig = entry.getValue();
       String topic = topicConfig.getTopic();
       Properties outputHandlerConfig = topicConfig.getOutputHandlerConfig();
-      String serversetFile = outputHandlerConfig.getProperty("notificationServerset");
+      String serversetFile = outputHandlerConfig.getProperty(NOTIFICATION_SERVERSET);
       Map<String, KafkaTopicDescription> topicDescriptionMap = topicDescMap.get(serversetFile);
       if (topicDescriptionMap == null) {
         topicDescriptionMap = new HashMap<>();
@@ -63,7 +65,7 @@ public class MemqTopicSensor extends MemqSensor {
       MemqTopicDescription desc = new MemqTopicDescription();
       desc.setConfig(topicConfig);
       topicInfo.put(topic, desc);
-      String notificationTopic = outputHandlerConfig.getProperty("notificationTopic");
+      String notificationTopic = outputHandlerConfig.getProperty(NOTIFICATION_TOPIC);
       KafkaTopicDescription kafkaTopicDescription = topicDescriptionMap.get(notificationTopic);
       desc.setReadAssignments(kafkaTopicDescription);
       topicInfo.put(topic, desc);
@@ -82,7 +84,7 @@ public class MemqTopicSensor extends MemqSensor {
     setAttribute(cluster, TOPICINFO, topicInfo);
   }
 
-  private AdminClient initializeAdminClient(String serversetFile) throws PluginConfigurationException,
+  public static AdminClient initializeAdminClient(String serversetFile) throws PluginConfigurationException,
                                                                   IOException {
     AdminClient adminClient;
     String currentBootstrapServers = Files.readAllLines(new File(serversetFile).toPath()).get(0);
