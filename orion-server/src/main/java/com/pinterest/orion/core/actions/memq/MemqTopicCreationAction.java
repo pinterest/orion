@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -31,6 +32,7 @@ public class MemqTopicCreationAction extends Action {
 
   public static final String ATTR_TOPIC_NAME_KEY = "topic";
   public static final String ATTR_TOPIC_CONFIG_KEY = "topicConfig";
+  private static final Logger logger = Logger.getLogger(MemqTopicCreationAction.class.getCanonicalName());
   private static final String[] REQUIRED_ARG_KEYS = new String[] { ATTR_TOPIC_NAME_KEY,
       ATTR_TOPIC_CONFIG_KEY };
 
@@ -57,8 +59,9 @@ public class MemqTopicCreationAction extends Action {
       return;
     }
     
+    logger.info("Attempting to create topic:" + topicName);
     Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
-    Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
+    Map<String, Map<String, Brokerset>> brokersetMap = brokersetMapAttr.getValue();
 
     // create
     Properties outputHandlerConfig = config.getOutputHandlerConfig();
@@ -79,7 +82,7 @@ public class MemqTopicCreationAction extends Action {
     notificationTopicConfigs.put("segment.bytes", "1048576");
     assignment.setConfig(notificationTopicConfigs);
 
-    Brokerset brokerset = brokersetMap.get(notificationBrokerset);
+    Brokerset brokerset = brokersetMap.get(notificationServerset).get(notificationBrokerset);
     if (brokerset == null) {
       markFailed("Brokerset:" + notificationBrokerset + " is not present");
       return;
