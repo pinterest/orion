@@ -51,6 +51,10 @@ public class MemqCluster extends Cluster {
   private transient CuratorFramework zkClient;
   @JsonIgnore
   private transient Map<String, AdminClient> readClusterClientMap = new ConcurrentHashMap<>();
+  private Map<String, String> notificationClusterConfig;
+  public static final String NOTIFICATION_BROKERSET = "notificationBrokerset";
+  public static final String NOTIFICATION_STRIDE = "notificationStride";
+  public static final String NOTIFICATION_CLUSTER_CONFIG = "notificationClusterConfig";
 
   public MemqCluster(String id,
                      String name,
@@ -65,12 +69,15 @@ public class MemqCluster extends Cluster {
         costCalculator);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected void bootstrapClusterInfo(Map<String, Object> config) throws PluginConfigurationException {
     this.config = config;
     setAttribute(ZK_CONNECTION_STRING, config.get(ZK_CONNECTION_STRING));
     setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
     setAttribute(CLUSTER_INFO_DIR, config.get(CLUSTER_INFO_DIR));
+    notificationClusterConfig = (Map<String, String>) config
+        .get(MemqCluster.NOTIFICATION_CLUSTER_CONFIG);
   }
 
   @Override
@@ -106,6 +113,10 @@ public class MemqCluster extends Cluster {
 
   public void setReadClusterClientMap(Map<String, AdminClient> readClusterClientMap) {
     this.readClusterClientMap = readClusterClientMap;
+  }
+
+  public Map<String, String> getNotificationClusterConfig() {
+    return notificationClusterConfig;
   }
 
   @Override

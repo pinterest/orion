@@ -34,8 +34,8 @@ public class MemqClusterSensor extends MemqSensor {
 
   public static final String WRITE_ASSIGNMENTS = "writeAssignments";
   public static final String TOPIC_CONFIG = "topicconfig";
-  private static final String BROKERS = "/brokers";
-  private static final String TOPICS = "/topics";
+  public static final String BROKERS = "/brokers";
+  public static final String TOPICS = "/topics";
   public static final String RAW_BROKER_INFO = "rawBrokerInfo";
 
   @Override
@@ -95,14 +95,14 @@ public class MemqClusterSensor extends MemqSensor {
         }
       }
 
-      Map<String, TopicConfig> topicInfo = new HashMap<>();
+      Map<String, TopicConfig> topicConfigMap = new HashMap<>();
       List<String> topics = zkClient.getChildren().forPath(TOPICS);
       for (String topic : topics) {
         byte[] topicData = zkClient.getData().forPath(TOPICS + "/" + topic);
         TopicConfig topicConfig = gson.fromJson(new String(topicData), TopicConfig.class);
-        topicInfo.put(topic, topicConfig);
+        topicConfigMap.put(topic, topicConfig);
       }
-      setAttribute(cluster, TOPIC_CONFIG, topicInfo);
+      setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
       setAttribute(cluster, RAW_BROKER_INFO, rawBrokerMap);
       setAttribute(cluster, WRITE_ASSIGNMENTS, writeBrokerAssignments);
     } catch (Exception e) {

@@ -75,7 +75,8 @@ public class BrokersetTopicOperator extends KafkaOperator {
     super.initialize(config);
     stepSize = (int) config.getOrDefault(CONF_STEP_SIZE_KEY, stepSize);
     if (config.containsKey(CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY)) {
-      maxNumStaleIntervals = Integer.parseInt(config.get(CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY).toString());
+      maxNumStaleIntervals = Integer
+          .parseInt(config.get(CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY).toString());
     }
   }
 
@@ -92,8 +93,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
     Set<String> sensorSet = new HashSet<>();
 
-    Attribute brokersetMapAttr = cluster
-        .getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
+    Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
     Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
     sensorSet.addAll(brokersetMapAttr.getPublishingSensors());
 
@@ -106,27 +106,24 @@ public class BrokersetTopicOperator extends KafkaOperator {
         .getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY);
     Map<String, KafkaTopicDescription> topicDescriptionMap = topicDescriptionMapAttr.getValue();
     long maxStalePeriod = -1L;
-    for(String sensorKey : topicDescriptionMapAttr.getPublishingSensors()) {
+    for (String sensorKey : topicDescriptionMapAttr.getPublishingSensors()) {
       maxStalePeriod = Long.max(
           cluster.getAutomationEngine().getSensorMap().get(sensorKey).getSensorInterval(),
-          maxStalePeriod
-      );
+          maxStalePeriod);
     }
     // bail out if the data is stale
-    if( maxStalePeriod != -1 &&
-        System.currentTimeMillis() - topicDescriptionMapAttr.getUpdateTimestamp() > maxNumStaleIntervals * maxStalePeriod * 1000L
-    ) {
+    if (maxStalePeriod != -1 && System.currentTimeMillis() - topicDescriptionMapAttr
+        .getUpdateTimestamp() > maxNumStaleIntervals * maxStalePeriod * 1000L) {
       cluster.getActionEngine().alert(AlertLevel.MEDIUM, new AlertMessage(
           "Stale topic info data on " + cluster.getClusterId(),
           "BrokersetTopicOperator has stale data from the topic sensors, please check if Kafka is stable",
-          "orion"
-      ));
+          "orion"));
       return;
     }
     sensorSet.addAll(topicDescriptionMapAttr.getPublishingSensors());
 
-    logger.info("Traversing through topicassignments to find deltas between ideal" +
-            " and actual for " + topicAssignments.size() + " topics");
+    logger.info("Traversing through topicassignments to find deltas between ideal"
+        + " and actual for " + topicAssignments.size() + " topics");
     for (TopicAssignment topicAssignment : topicAssignments) {
 
       // TODO: determine if the cluster supports topic deletion and delete if possible
@@ -139,44 +136,40 @@ public class BrokersetTopicOperator extends KafkaOperator {
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
       // create topic if topic exists in assignment file but is absent in the cluster
       if (actualTopicDescription == null) {
-        Action action = createIdealBalancedTopicAction(brokerset, topicAssignment, sensorSet);
+        Action action = createIdealBalancedTopicAction(brokerset, topicAssignment, sensorSet, stepSize);
         logger.info("Topic(" + topicName + ") doesn't exist planned creation");
         dispatch(action);
         return;
       }
 
-      int idealPartitionCount = getPartitionsFromBrokersetOrTopicAssignment(brokerset, topicAssignment);
+      int idealPartitionCount = getPartitionsFromBrokersetOrTopicAssignment(brokerset,
+          topicAssignment);
       int actualPartitionCount = actualTopicDescription.getPartitions().size();
       if (idealPartitionCount > actualPartitionCount) {
         // expansion
         logger.warning(
             "Topic " + topicName + " partition count is not ideal, expanding topic - Actual: "
-                + actualPartitionCount + " Ideal: "
-                + idealPartitionCount);
-        Action
-            action =
-            expandIdealBalancedTopicAction(brokerset, topicAssignment, actualPartitionCount,
-                sensorSet);
+                + actualPartitionCount + " Ideal: " + idealPartitionCount);
+        Action action = expandIdealBalancedTopicAction(brokerset, topicAssignment,
+            actualPartitionCount, sensorSet);
         dispatch(action);
         return;
       } else if (idealPartitionCount < actualPartitionCount) {
         // invalid: Kafka topics cannot be shrunk
         AlertMessage moreThanIdealPartitionsAlert = new AlertMessage(
-            cluster.getClusterId() + " topic " + topicName +" has more than ideal partitions",
+            cluster.getClusterId() + " topic " + topicName + " has more than ideal partitions",
             "Ideal count: " + idealPartitionCount + ", actual count: " + actualPartitionCount,
-            "orion"
-        );
+            "orion");
         cluster.getActionEngine().alert(AlertLevel.MEDIUM, moreThanIdealPartitionsAlert);
         logger
             .warning("Topic " + topicName + " ideal partition count is less than actual - Actual: "
-                + actualPartitionCount + " Ideal: "
-                + idealPartitionCount);
+                + actualPartitionCount + " Ideal: " + idealPartitionCount);
         continue;
       }
 
       // the topic's assignment is off from ideal
       Map<Integer, List<Integer>> idealAssignment = generateAssignmentForTopic(brokerset,
-          topicAssignment);
+          topicAssignment, stepSize);
       Map<Integer, List<Integer>> actualAssignment = getAssignmentFromTopicDescription(
           actualTopicDescription);
       Set<Integer> nonIdealPartitions = getTopicNonIdealPartitions(idealAssignment,
@@ -234,12 +227,13 @@ public class BrokersetTopicOperator extends KafkaOperator {
     return false;
   }
 
-  private Action createIdealBalancedTopicAction(Brokerset brokerset,
+  public static AssignmentCreateKafkaTopicAction createIdealBalancedTopicAction(Brokerset brokerset,
                                                 TopicAssignment topicAssignment,
-                                                Set<String> sensorSet) throws Exception {
+                                                Set<String> sensorSet,
+                                                int stepSize) throws Exception {
     Map<Integer, List<Integer>> assignments = generateAssignmentForTopic(brokerset,
-        topicAssignment);
-    Action action = new AssignmentCreateKafkaTopicAction();
+        topicAssignment, stepSize);
+    AssignmentCreateKafkaTopicAction action = new AssignmentCreateKafkaTopicAction();
     action.setAttribute(AssignmentCreateKafkaTopicAction.ATTR_TOPIC_NAME_KEY,
         topicAssignment.getTopicName(), sensorSet);
     action.setAttribute(OrionConstants.PROJECT, topicAssignment.getProject());
@@ -253,7 +247,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
                                                 int newPartitionStartIdx,
                                                 Set<String> sensorSet) throws Exception {
     Map<Integer, List<Integer>> assignments = generateAssignmentForTopic(brokerset,
-        topicAssignment);
+        topicAssignment, stepSize);
     Action action = new AssignmentExpandKafkaTopicAction();
     action.setAttribute(AssignmentExpandKafkaTopicAction.ATTR_TOPIC_NAME_KEY,
         topicAssignment.getTopicName(), sensorSet);
@@ -266,16 +260,14 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
   }
 
-  private static Map<Integer, List<Integer>> getAssignmentFromTopicDescription(
-      KafkaTopicDescription kafkaTopicDescription) {
+  private static Map<Integer, List<Integer>> getAssignmentFromTopicDescription(KafkaTopicDescription kafkaTopicDescription) {
     return kafkaTopicDescription.partitionMap().values().stream()
         .collect(Collectors.toMap(KafkaTopicPartitionInfo::getPartition,
             pInfo -> pInfo.getReplicas().stream().map(Node::id).collect(Collectors.toList())));
   }
 
-  private static Set<Integer> getTopicNonIdealPartitions(
-      Map<Integer, List<Integer>> idealAssignment,
-      Map<Integer, List<Integer>> actualAssignment) {
+  private static Set<Integer> getTopicNonIdealPartitions(Map<Integer, List<Integer>> idealAssignment,
+                                                         Map<Integer, List<Integer>> actualAssignment) {
     Set<Integer> nonIdealPartitions = new HashSet<>();
     for (int pIdx = 0; pIdx < idealAssignment.size(); pIdx++) {
       List<Integer> idealReplicas = idealAssignment.get(pIdx);
@@ -287,8 +279,9 @@ public class BrokersetTopicOperator extends KafkaOperator {
     return nonIdealPartitions;
   }
 
-  private Map<Integer, List<Integer>> generateAssignmentForTopic(Brokerset brokerset,
-                                                                 TopicAssignment topicAssignment) {
+  public static Map<Integer, List<Integer>> generateAssignmentForTopic(Brokerset brokerset,
+                                                                       TopicAssignment topicAssignment,
+                                                                       int stepSize) {
     int stride = topicAssignment.getStride();
     int partitions = getPartitionsFromBrokersetOrTopicAssignment(brokerset, topicAssignment);
     int topicReplicationFactor = topicAssignment.getReplicationFactor();
@@ -319,7 +312,6 @@ public class BrokersetTopicOperator extends KafkaOperator {
   public String getName() {
     return "BrokersetTopicOperator";
   }
-
 
   public static void main(String[] args) throws Exception {
     if (args.length < 3 || args.length > 5) {
@@ -374,8 +366,8 @@ public class BrokersetTopicOperator extends KafkaOperator {
       String topicName = topicAssignment.getTopicName();
       if (actualTopicMap.containsKey(topicName)) {
         Brokerset brokerset = e.getValue();
-        Map<Integer, List<Integer>> idealAssignment = optr.generateAssignmentForTopic(brokerset,
-            topicAssignment);
+        Map<Integer, List<Integer>> idealAssignment = generateAssignmentForTopic(brokerset,
+            topicAssignment, 3);
         KafkaTopicDescription actualTopicDescription = actualTopicMap.get(topicName);
         int actualSize = actualTopicDescription.getPartitions().size();
         int idealSize = idealAssignment.size();

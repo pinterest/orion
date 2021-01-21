@@ -16,7 +16,6 @@
 package com.pinterest.orion.core.kafka;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -31,6 +30,15 @@ public class Brokerset implements Iterable<Integer>, Serializable {
   private String brokersetAlias;
   private List<BrokersetRange> entries;
   private int partitions;   // will be final after all brokersets.json are refactored
+
+  public Brokerset() {
+  }
+  
+  public Brokerset(String brokersetAlias, List<BrokersetRange> entries, int partitions) {
+    this.brokersetAlias = brokersetAlias;
+    this.entries = entries;
+    this.partitions = partitions;
+  }
 
   @Override
   public Iterator<Integer> iterator() {
@@ -73,6 +81,18 @@ public class Brokerset implements Iterable<Integer>, Serializable {
     return brokersetAlias.hashCode();
   }
 
+  public void setBrokersetAlias(String brokersetAlias) {
+    this.brokersetAlias = brokersetAlias;
+  }
+
+  public void setEntries(List<BrokersetRange> entries) {
+    this.entries = entries;
+  }
+
+  public void setPartitions(int partitions) {
+    this.partitions = partitions;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
@@ -85,6 +105,14 @@ public class Brokerset implements Iterable<Integer>, Serializable {
 
     private int startBrokerIdx;
     private int endBrokerIdx;
+    
+    public BrokersetRange() {
+    }
+
+    public BrokersetRange(int startBrokerIdx, int endBrokerIdx) {
+      this.startBrokerIdx = startBrokerIdx;
+      this.endBrokerIdx = endBrokerIdx;
+    }
 
     @Override
     public Iterator<Integer> iterator() {
