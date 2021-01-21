@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import com.google.gson.Gson;
 import com.pinterest.orion.core.Attribute;
@@ -14,6 +15,8 @@ import com.pinterest.orion.core.memq.MemqCluster;
 
 public class MemqTopicRepoSensor extends MemqSensor {
 
+  private static final Logger logger = Logger
+      .getLogger(MemqTopicRepoSensor.class.getCanonicalName());
   public static final String TARGET_TOPIC_CONFIGS = "target_topic_configs";
 
   @Override
@@ -23,6 +26,9 @@ public class MemqTopicRepoSensor extends MemqSensor {
 
   @Override
   public void sense(MemqCluster cluster) throws Exception {
+    if (!cluster.containsAttribute(MemqCluster.CLUSTER_INFO_DIR)) {
+      throw new Exception("Missing cluster info directory");
+    }
     Attribute attribute = cluster.getAttribute(MemqCluster.CLUSTER_INFO_DIR);
     String clusterInfoDir = attribute.getValue();
 

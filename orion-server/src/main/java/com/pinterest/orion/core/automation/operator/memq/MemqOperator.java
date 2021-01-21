@@ -21,8 +21,6 @@ import com.pinterest.orion.core.memq.MemqCluster;
 
 public abstract class MemqOperator extends Operator {
 
-
-
   @Override
   public final void operate(Cluster cluster) throws Exception {
     if(cluster instanceof MemqCluster){
