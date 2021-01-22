@@ -91,10 +91,10 @@ public class RebootEC2InstanceAction extends NodeAction {
           node.setMaintenance(prevMaintenanceMode);
           markSucceeded();
         } catch (java.util.concurrent.TimeoutException e) {
-          markFailed("Post validaton timed out for node replacement on " + hostname);
+          markFailed("Post validaton timed out for node reboot on " + hostname);
           getEngine().alert(AlertLevel.HIGH,
               new AlertMessage("Replacement error on " + hostname,
-                  "Post replacement health check timed out", getOwner(), hostname));
+                  "Post reboot of " + hostname + " health check timed out", getOwner(), hostname));
           return;
         }
       }

@@ -168,7 +168,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
             + hostname);
         getEngine().alert(AlertLevel.HIGH,
             new AlertMessage("Replacement error on " + hostname,
-                "Post replacement health check timed out", getOwner(), hostname));
+                "Post replacement of " + hostname + " health check timed out", getOwner(), hostname));
         return;
       }
       if (nodeExists) {
