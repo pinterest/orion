@@ -39,6 +39,7 @@ public class OrionConf extends Configuration {
   private StatsConfiguration statsConfiguration = new StatsConfiguration();
   private Map<String, Object> additionalConfigs = new HashMap<>();
   private PluginConfig metricsStoreConfigs;
+  private List<PluginConfig> globalSensorConfigs;
 
   public List<ClusterConfig> getClusterConfigs() {
     return clusterConfigs;
@@ -160,6 +161,14 @@ public class OrionConf extends Configuration {
    */
   public void setMetricsStoreConfigs(PluginConfig metricsStoreConfigs) {
     this.metricsStoreConfigs = metricsStoreConfigs;
+  }
+
+  public List<PluginConfig> getGlobalSensorConfigs() {
+    return globalSensorConfigs;
+  }
+
+  public void setGlobalSensorConfigs(List<PluginConfig> globalSensorConfigs) {
+    this.globalSensorConfigs = globalSensorConfigs;
   }
 
   /* (non-Javadoc)

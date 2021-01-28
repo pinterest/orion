@@ -32,6 +32,7 @@ import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.ClusterManager;
 import com.pinterest.orion.core.ClusterStateSink;
 import com.pinterest.orion.core.CostCalculator;
+import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.ActionFactory;
 import com.pinterest.orion.core.actions.alert.AlertFactory;
 import com.pinterest.orion.core.actions.audit.ActionAuditor;
@@ -41,6 +42,7 @@ import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.automation.sensor.SensorFactory;
 import com.pinterest.orion.core.configs.ClusterConfig;
 import com.pinterest.orion.core.configs.PluginConfig;
+import com.pinterest.orion.core.global.sensor.GlobalPluginManager;
 import com.pinterest.orion.core.metrics.MetricsStore;
 import com.pinterest.orion.metrics.OpenTsdbStatsPusher;
 import com.pinterest.orion.metrics.StatsPusher;
@@ -109,9 +111,17 @@ public class OrionServer extends Application<OrionConf> {
         costCalculator);
     registerAdminAPIs(environment, configuration);
     registerAPIs(environment, configuration);
+    initializeGlobalPlugins(configuration, environment);
     initializeClusters(configuration);
     initializeMetrics(configuration, environment);
     additionalModules(configuration, environment);
+  }
+
+  private void initializeGlobalPlugins(OrionConf configuration, Environment environment) throws PluginConfigurationException {
+    List<PluginConfig> globalSensorConfigs = configuration.getGlobalSensorConfigs();
+    GlobalPluginManager mgr = new GlobalPluginManager();
+    mgr.initialize(globalSensorConfigs);
+    environment.lifecycle().manage(mgr);
   }
 
   protected CostCalculator initializeCostCalculator(OrionConf configuration) {
