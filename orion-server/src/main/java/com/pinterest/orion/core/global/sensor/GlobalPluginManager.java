@@ -1,5 +1,6 @@
 package com.pinterest.orion.core.global.sensor;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -7,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -21,11 +23,17 @@ public class GlobalPluginManager implements Managed {
       .getLogger(GlobalPluginManager.class.getCanonicalName());
   private static final Map<String, GlobalSensor> MAP = new ConcurrentHashMap<>();
   private ScheduledExecutorService es = null;
+  private List<PluginConfig> globalSensorConfigs;
 
   public void initialize(List<PluginConfig> globalSensorConfigs) throws PluginConfigurationException {
+    this.globalSensorConfigs = globalSensorConfigs;
     if (globalSensorConfigs == null) {
       return;
     }
+  }
+
+  @Override
+  public void start() throws Exception {
     es = Executors.newScheduledThreadPool(2);
     try {
       for (PluginConfig pluginConfig : globalSensorConfigs) {
@@ -37,12 +45,8 @@ public class GlobalPluginManager implements Managed {
         logger.info("Initialzing plugin:" + sensor.getName());
       }
     } catch (Exception e) {
-      throw new PluginConfigurationException(e);
+      logger.log(Level.SEVERE, "Failed to initialize plugin", e);
     }
-  }
-
-  @Override
-  public void start() throws Exception {
     for (Entry<String, GlobalSensor> entry : MAP.entrySet()) {
       GlobalSensor sensor = entry.getValue();
       es.scheduleAtFixedRate(sensor, sensor.getInterval(), sensor.getInterval(), TimeUnit.SECONDS);
@@ -65,5 +69,9 @@ public class GlobalPluginManager implements Managed {
   @VisibleForTesting
   public static void setSensorInstance(String sensorName, GlobalSensor sensor) {
     MAP.put(sensorName, sensor);
+  }
+
+  public static Collection<GlobalSensor> listSensors() {
+    return MAP.values();
   }
 }

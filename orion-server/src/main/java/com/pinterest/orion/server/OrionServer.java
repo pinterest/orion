@@ -117,11 +117,16 @@ public class OrionServer extends Application<OrionConf> {
     additionalModules(configuration, environment);
   }
 
-  private void initializeGlobalPlugins(OrionConf configuration, Environment environment) throws PluginConfigurationException {
+  private void initializeGlobalPlugins(OrionConf configuration,
+                                       Environment environment) throws PluginConfigurationException {
     List<PluginConfig> globalSensorConfigs = configuration.getGlobalSensorConfigs();
     GlobalPluginManager mgr = new GlobalPluginManager();
-    mgr.initialize(globalSensorConfigs);
-    environment.lifecycle().manage(mgr);
+    try {
+      mgr.initialize(globalSensorConfigs);
+      environment.lifecycle().manage(mgr);
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "Failed to initialize GlobalPluginManager", e);
+    }
   }
 
   protected CostCalculator initializeCostCalculator(OrionConf configuration) {

@@ -17,6 +17,7 @@ package com.pinterest.orion.server.api;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,8 @@ import com.pinterest.orion.core.ClusterCost;
 import com.pinterest.orion.core.ClusterManager;
 import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.Utilization;
+import com.pinterest.orion.core.global.sensor.GlobalPluginManager;
+import com.pinterest.orion.core.global.sensor.GlobalSensor;
 import com.pinterest.orion.server.config.OrionConf;
 
 @Path("/")
@@ -64,6 +67,12 @@ public class ClusterManagerApi extends BaseClustersApi {
       clusters.add(clusterSummary);
     }
     return clusters;
+  }
+  
+  @Path("/globalsensors")
+  @GET
+  public Collection<GlobalSensor> getGlobalSensors() {
+    return GlobalPluginManager.listSensors();
   }
 
   @Path("/utilizationsummary")

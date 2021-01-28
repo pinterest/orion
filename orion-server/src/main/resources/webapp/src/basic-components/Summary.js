@@ -21,25 +21,34 @@ import { makeStyles } from "@material-ui/core/styles";
 import AlertPanel from "./AlertPanel";
 import GlobalActions from "./GlobalActions";
 import GlobalAlerts from "./GlobalAlerts";
+import GlobalSensors from "./GlobalSensors";
 
 const routes = [
   {
     subpath: "global-actions",
     component: GlobalActions,
-    label: "Global Actions"
+    label: "Global Actions",
   },
   {
     subpath: "global-alerts",
     component: GlobalAlerts,
-    label: "Global Alerts"
-  }
+    label: "Global Alerts",
+  },
+  {
+    subpath: "global-sensors",
+    component: GlobalSensors,
+    label: "Global Sensors",
+  },
 ];
 
 export default function Summary(props) {
   let clusters = [];
-
+  let globalSensors = [];
   if (props.clusters) {
     clusters = props.clusters;
+  }
+  if (props.globalSensors) {
+    globalSensors = props.globalSensors;
   }
 
   return (
@@ -58,11 +67,11 @@ export default function Summary(props) {
         <Switch>
           {routes.map((route, idx) => {
             return (
-              <Route
-                key={idx}
-                path={"/homepage/summary/" + route.subpath}
-              >
-                <route.component clusters={clusters} />
+              <Route key={idx} path={"/homepage/summary/" + route.subpath}>
+                <route.component
+                  clusters={clusters}
+                  globalSensors={globalSensors}
+                />
               </Route>
             );
           })}

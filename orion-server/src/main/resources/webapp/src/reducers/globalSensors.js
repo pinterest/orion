@@ -13,19 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import { combineReducers } from "redux";
-import clustersSummary from "./clustersSummary";
-import globalSensors from "./globalSensors";
-import clusterView from "./cluster";
-import user from "./user";
-import app from "./app";
+import { GLOBAL_SENSOR_RECEIVED } from "../actions/clusterSummary";
 
-const rootReducer = combineReducers({
-  clusterView,
-  clustersSummary,
-  globalSensors,
-  user,
-  app,
-});
-
-export default rootReducer;
+export default function globalSensors(state = [], action) {
+  switch (action.type) {
+    case GLOBAL_SENSOR_RECEIVED:
+      return [...action.payload];
+    default:
+      return state;
+  }
+}

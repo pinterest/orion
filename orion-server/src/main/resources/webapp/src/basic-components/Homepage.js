@@ -42,10 +42,13 @@ const routes = [
 
 export default function Homepage(props) {
   let clusters = [];
+  let globalSensors = [];
   if (props.clusters) {
     clusters = props.clusters;
   }
-
+  if (props.globalSensors) {
+    globalSensors = props.globalSensors;
+  }
   let clusterCount = clusters.length;
   let nodeCount = clusters.map((c) => c.nodes).reduce((l1, l2) => l1 + l2, 0);
   let alertCount = clusters
@@ -87,7 +90,10 @@ export default function Homepage(props) {
             {routes.map((route, idx) => {
               return (
                 <Route key={idx} path={"/homepage/" + route.subpath}>
-                  <route.component clusters={clusters} />
+                  <route.component
+                    clusters={clusters}
+                    globalSensors={globalSensors}
+                  />
                 </Route>
               );
             })}
