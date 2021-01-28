@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.configs.PluginConfig;
 
@@ -59,5 +60,10 @@ public class GlobalPluginManager implements Managed {
 
   public static GlobalSensor getSensorInstance(String sensorName) {
     return MAP.get(sensorName);
+  }
+  
+  @VisibleForTesting
+  public static void setSensorInstance(String sensorName, GlobalSensor sensor) {
+    MAP.put(sensorName, sensor);
   }
 }
