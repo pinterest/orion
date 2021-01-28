@@ -28,6 +28,7 @@ import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import ErrorIcon from "@material-ui/icons/Error";
 import WarningIcon from "@material-ui/icons/Warning";
 import MaintenanceButton from "./MaintenanceButton";
+import { SensorCard } from "./SensorCard";
 
 function Automation(props) {
   let cluster = props.cluster;
@@ -35,20 +36,16 @@ function Automation(props) {
   let operators = cluster.automationEngine.operators;
   let maintenance = cluster.underMaintenance;
 
-  let sensorViews = sensors.map(mCntr => {
+  let sensorViews = sensors.map((mCntr) => {
     let m = mCntr.sensor;
     return (
-      <Grid
-        item
-        xs={6}
-        key={cluster.clusterId + "." + m.name}
-      >
+      <Grid item xs={6} key={cluster.clusterId + "." + m.name}>
         <SensorCard m={mCntr} />
       </Grid>
     );
   });
 
-  let operatorViews = operators.map(oCntr => {
+  let operatorViews = operators.map((oCntr) => {
     return (
       <Grid item key={cluster.clusterId + "." + oCntr.operator.name} xs={6}>
         <OperatorCard o={oCntr} maintenance={maintenance} />
@@ -86,58 +83,23 @@ function Automation(props) {
   );
 }
 
-function SensorCard(props) {
-  return (
-    <Card>
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography color={props.m.previousSuccess ? "textPrimary" : "error"}>
-            {props.m.sensor.name}
-          </Typography>
-        </Box>
-        <Box>
-          <Tooltip
-            title={
-              props.m && props.m.previousError
-                ? props.m.previousError.message
-                : "Operating normally"
-            }
-            aria-label="add"
-          >
-            {props.m.previousSuccess ? (
-              <CheckCircleIcon style={{ color: "green" }} />
-            ) : (
-              <ErrorIcon style={{ color: "red" }} />
-            )}
-          </Tooltip>
-        </Box>
-        <Typography>Every {props.m.sensor.interval} seconds</Typography>
-        <Typography>
-          Previous execution:{" "}
-          {new Date(props.m.previousFinishTime).toLocaleString()}
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-}
-
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   popover: {
-    pointerEvents: "none"
+    pointerEvents: "none",
   },
   paper: {
-    padding: theme.spacing(1)
+    padding: theme.spacing(1),
   },
   popoverTypography: {
-    whiteSpace: "pre-wrap"
-  }
+    whiteSpace: "pre-wrap",
+  },
 }));
 
 function OperatorCard(props) {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const handlePopoverOpen = event => {
+  const handlePopoverOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -175,17 +137,17 @@ function OperatorCard(props) {
       <Popover
         className={classes.popover}
         classes={{
-          paper: classes.paper
+          paper: classes.paper,
         }}
         open={Boolean(anchorEl) && props.o.previousOutput}
         anchorEl={anchorEl}
         anchorOrigin={{
           vertical: "bottom",
-          horizontal: "left"
+          horizontal: "left",
         }}
         transformOrigin={{
           vertical: "top",
-          horizontal: "left"
+          horizontal: "left",
         }}
         onClose={handlePopoverClose}
         disableRestoreFocus

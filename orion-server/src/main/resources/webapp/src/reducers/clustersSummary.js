@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import { CLUSTERS_SUMMARY_RECEIVED, CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED } from "../actions/clusterSummary";
+import {
+  CLUSTERS_SUMMARY_RECEIVED,
+  CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED,
+} from "../actions/clusterSummary";
 
 export default function clustersSummary(state = [], action) {
   switch (action.type) {
@@ -23,9 +26,10 @@ export default function clustersSummary(state = [], action) {
       for (let clusterIdx = 0; clusterIdx < state.length; clusterIdx++) {
         if (state[clusterIdx].clusterId === action.payload.clusterId) {
           let newState = [...state];
-          newState[clusterIdx].underMaintenance = action.payload.underMaintenance;
+          newState[clusterIdx].underMaintenance =
+            action.payload.underMaintenance;
           return newState;
-        };
+        }
       }
       return state;
     default:

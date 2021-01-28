@@ -15,7 +15,10 @@
  *******************************************************************************/
 export const CLUSTERS_SUMMARY_REQUESTED = "CLUSTERS_SUMMARY_REQUESTED";
 export const CLUSTERS_SUMMARY_RECEIVED = "CLUSTERS_SUMMARY_RECEIVED";
-export const CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED = "CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED";
+export const CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED =
+  "CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED";
+export const GLOBAL_SENSOR_REQUESTED = "GLOBAL_SENSOR_REQUESTED";
+export const GLOBAL_SENSOR_RECEIVED = "GLOBAL_SENSOR_RECEIVED";
 
 export function receiveClustersSummary(clustersSummary) {
   return { type: CLUSTERS_SUMMARY_RECEIVED, payload: clustersSummary };
@@ -25,6 +28,20 @@ export function requestClustersSummary() {
   return { type: CLUSTERS_SUMMARY_REQUESTED };
 }
 
-export function receiveClustersSummaryMaintenanceStatus(clusterId, underMaintenance) {
-  return { type: CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED, payload: {clusterId, underMaintenance} };
+export function receiveGlobalSensor(globalSensors) {
+  return { type: GLOBAL_SENSOR_RECEIVED, payload: globalSensors };
+}
+
+export function requestGlobalSensor() {
+  return { type: GLOBAL_SENSOR_REQUESTED };
+}
+
+export function receiveClustersSummaryMaintenanceStatus(
+  clusterId,
+  underMaintenance
+) {
+  return {
+    type: CLUSTERS_SUMMARY_MAINTENANCE_STATUS_RECEIVED,
+    payload: { clusterId, underMaintenance },
+  };
 }

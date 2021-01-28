@@ -43,6 +43,9 @@ import {
   CLUSTERS_SUMMARY_REQUESTED,
   receiveClustersSummary,
   requestClustersSummary,
+  GLOBAL_SENSOR_REQUESTED,
+  requestGlobalSensor,
+  receiveGlobalSensor,
 } from "../actions/clusterSummary";
 import { USER_REQUESTED, receiveUser, requestUserFail } from "../actions/user";
 import {
@@ -62,6 +65,7 @@ export default function* rootSaga() {
   yield fork(fetchCustomEndpoint);
   yield fork(utilizationWatcher);
   yield fork(costWatcher);
+  yield fork(globalSensorWatcher);
 }
 
 function* clusterSummaryWatcher() {
@@ -82,6 +86,10 @@ function* userWatcher() {
 
 function* clusterWatcher() {
   yield takeEvery(CLUSTER_REQUESTED, fetchCluster);
+}
+
+function* globalSensorWatcher() {
+  yield takeEvery(GLOBAL_SENSOR_REQUESTED, fetchGlobalSensors);
 }
 
 function* fetchCost() {
@@ -114,6 +122,19 @@ function* fetchClusterSummaryAndRetry(action) {
     yield put(showAppError(e));
     yield delay(5000);
     yield put(requestClustersSummary());
+  }
+}
+
+function* fetchGlobalSensors(action) {
+  try {
+    const resp = yield fetch("/api/globalsensors");
+    const data = yield resp.json();
+    yield put(hideAppError());
+    yield put(receiveGlobalSensor(data));
+  } catch (e) {
+    yield put(showAppError(e));
+    yield delay(5000);
+    yield put(requestGlobalSensor());
   }
 }
 

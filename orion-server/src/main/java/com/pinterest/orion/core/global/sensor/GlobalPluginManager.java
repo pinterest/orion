@@ -1,5 +1,6 @@
 package com.pinterest.orion.core.global.sensor;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -68,5 +69,9 @@ public class GlobalPluginManager implements Managed {
   @VisibleForTesting
   public static void setSensorInstance(String sensorName, GlobalSensor sensor) {
     MAP.put(sensorName, sensor);
+  }
+
+  public static Collection<GlobalSensor> listSensors() {
+    return MAP.values();
   }
 }

@@ -26,7 +26,7 @@ import {
   Container,
   Backdrop,
   CircularProgress,
-  LinearProgress
+  LinearProgress,
 } from "@material-ui/core";
 import { Icon } from "gestalt";
 import React, { useState, useEffect } from "react";
@@ -37,56 +37,63 @@ import AccountCircle from "@material-ui/icons/AccountCircle";
 import { connect } from "react-redux";
 import Summary from "./Summary";
 import Homepage from "./Homepage";
-import { requestClustersSummary } from "../actions/clusterSummary";
+import {
+  requestClustersSummary,
+  requestGlobalSensor,
+} from "../actions/clusterSummary";
 import { requestUser } from "../actions/user";
 import { hideLoading, initializeApp } from "../actions/app";
 import { makeStyles } from "@material-ui/core/styles";
 
-const mapState = state => {
-  const { clustersSummary, user, app } = state;
+const mapState = (state) => {
+  const { clustersSummary, user, app, globalSensors } = state;
   return {
     clustersSummary,
+    globalSensors,
     user,
-    app
+    app,
   };
 };
 
 const mapDispatch = {
   requestClustersSummary,
   requestUser,
-  initializeApp
+  requestGlobalSensor,
+  initializeApp,
 };
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   backdrop: {
     zIndex: theme.zIndex.drawer + 1,
-    color: "#fff"
+    color: "#fff",
   },
   autoRefreshTimer: {
     width: "100%",
     zIndex: theme.zIndex.drawer + 2,
   },
   appBar: {
-    zIndex: theme.zIndex.drawer + 1
-  }
+    zIndex: theme.zIndex.drawer + 1,
+  },
 }));
 
 function Layout({
   clustersSummary,
   user,
+  globalSensors,
   app,
   requestClustersSummary,
   requestUser,
-  initializeApp
+  requestGlobalSensor,
+  initializeApp,
 }) {
   const classes = useStyles();
 
   useEffect(() => {
     requestClustersSummary();
     requestUser();
+    requestGlobalSensor();
     initializeApp();
-  }, [initializeApp, requestClustersSummary, requestUser]);
-
+  }, [initializeApp, requestClustersSummary, requestUser, requestGlobalSensor]);
   return (
     <Box display="flex">
       <Backdrop
@@ -110,17 +117,19 @@ function Layout({
                 size={30}
                 color="red"
               />
-              <Typography variant="h6" style={{ paddingLeft: "10px" }}>Orion</Typography>
+              <Typography variant="h6" style={{ paddingLeft: "10px" }}>
+                Orion
+              </Typography>
             </Box>
           </Link>
           <UserIconMenu user={user} />
         </Toolbar>
-        {app.refreshInfo && <AutoRefreshTimer {...app.refreshInfo}/>}
+        {app.refreshInfo && <AutoRefreshTimer {...app.refreshInfo} />}
       </AppBar>
       {app.showError && (
         <Box marginTop={10}>
-          No Clusters currently available to view. If Orion was recently
-          started please wait a few minutes before checking. UI will attempt
+          No Clusters currently available to view. If Orion was recently started
+          please wait a few minutes before checking. UI will attempt
           auto-refresh in 5s.
         </Box>
       )}
@@ -132,19 +141,26 @@ function Layout({
             <Toolbar />
             <Route
               path="/:rootPath?/:subPath?"
-              render={routeProps => {
-                if (routeProps.match.params.rootPath === "clusters" &&
-                    routeProps.match.params.subPath) {
+              render={(routeProps) => {
+                if (
+                  routeProps.match.params.rootPath === "clusters" &&
+                  routeProps.match.params.subPath
+                ) {
                   return (
                     <Cluster clusterId={routeProps.match.params.subPath} />
                   );
                 } else {
-                  return <Homepage clusters={clustersSummary} />
+                  return (
+                    <Homepage
+                      clusters={clustersSummary}
+                      globalSensors={globalSensors}
+                    />
+                  );
                 }
               }}
             />
           </Container>
-          </Box>
+        </Box>
       )}
     </Box>
   );
@@ -157,20 +173,20 @@ function UserIconMenu({ user }) {
     setAnchorEl(null);
   };
 
-  const handleMenu = event => {
+  const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
   const logout = () => {
     fetch("/__logout")
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
           this.setState({ showError: true });
           return "";
         }
         return response.text();
       })
-      .then(data => {
+      .then((data) => {
         console.log("logged out");
         handleClose();
       });
@@ -179,7 +195,7 @@ function UserIconMenu({ user }) {
   return (
     <Grid container alignItems="flex-start" justify="flex-end" direction="row">
       <IconButton onClick={handleMenu}>
-        <AccountCircle style={{ fill: "white" }}/>
+        <AccountCircle style={{ fill: "white" }} />
         <Typography style={{ color: "white" }}>{user.name}</Typography>
       </IconButton>
       {user.auth && (
@@ -188,12 +204,12 @@ function UserIconMenu({ user }) {
           anchorEl={anchorEl}
           anchorOrigin={{
             vertical: "top",
-            horizontal: "right"
+            horizontal: "right",
           }}
           keepMounted
           transformOrigin={{
             vertical: "top",
-            horizontal: "right"
+            horizontal: "right",
           }}
           open={Boolean(anchorEl)}
           onClose={handleClose}
@@ -207,23 +223,28 @@ function UserIconMenu({ user }) {
   );
 }
 
-function AutoRefreshTimer({lastUpdateTime, interval}) {
+function AutoRefreshTimer({ lastUpdateTime, interval }) {
   const classes = useStyles();
   const [progress, setProgress] = useState(0);
 
   let timer = () => {
-    setProgress(Math.max(0, Math.min(100, 100*(Date.now() - lastUpdateTime)/interval)));
-  }
+    setProgress(
+      Math.max(
+        0,
+        Math.min(100, (100 * (Date.now() - lastUpdateTime)) / interval)
+      )
+    );
+  };
 
   useEffect(() => {
     const timerInterval = setInterval(timer, 100);
-    return () => clearInterval(timerInterval)
-  })
+    return () => clearInterval(timerInterval);
+  });
   return (
     <Box className={classes.autoRefreshTimer}>
       <LinearProgress variant="determinate" value={progress} />
     </Box>
-  )
+  );
 }
 
 export default connect(mapState, mapDispatch)(Layout);
