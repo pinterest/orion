@@ -59,7 +59,7 @@ public class MemqTopicSensor extends MemqSensor {
           readClusterClientMap.put(serversetFile, adminClient);
         }
         topicDescriptionMap.putAll(KafkaCluster.getTopicDescriptions(adminClient, logger,
-            topicDescriptionMap, cluster.getClusterId()));
+            topicDescriptionMap, cluster.getClusterId(), 30_000L));
         KafkaTopicSensor.populateTopicConfigInfo(adminClient, topicDescriptionMap);
       }
       MemqTopicDescription desc = new MemqTopicDescription();
