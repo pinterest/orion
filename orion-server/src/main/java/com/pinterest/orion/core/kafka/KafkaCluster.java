@@ -174,14 +174,7 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
                                                                                   ExecutionException, TimeoutException {
-    AdminClient adminClient = getAdminClient();
-    Map<String, KafkaTopicDescription> cachedTopicMap = containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)
-        ? getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue()
-        : null;
-    Map<String, KafkaTopicDescription> ret = getTopicDescriptions(adminClient, logger(),
-        cachedTopicMap,
-        clusterId, 30_000L);
-    return ret;
+    return getTopicDescriptionFromKafka(30_000L);
   }
 
   @JsonIgnore
