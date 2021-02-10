@@ -18,6 +18,7 @@ package com.pinterest.orion.core.actions.kafka;
 import com.google.common.collect.Lists;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.Action;
+import com.pinterest.orion.core.kafka.KafkaCluster;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +39,7 @@ public class KafkaIdealBalanceAction extends Action {
   private static final String[] attrArr = new String[]{ATTR_ACTUAL_ASSIGNMENTS_KEY, ATTR_IDEAL_ASSIGNMENTS_KEY, ATTR_TOPIC_KEY};
 
   public int batchSize = 60;
-  public long metadataTimeoutMs = 30_000L;
+  public long metadataTimeoutMs = KafkaCluster.DEFAULT_METADATA_TIMEOUT_MS;  // initialize as default
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {

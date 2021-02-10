@@ -62,6 +62,7 @@ public class KafkaCluster extends Cluster {
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(KafkaCluster.class.getCanonicalName());
   public static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
+  public static final long DEFAULT_METADATA_TIMEOUT_MS = 30_000L;
   private transient Properties props;
   private AdminClient adminClient;
   private KafkaConsumer<byte[], byte[]> kafkaConsumer;
@@ -174,7 +175,7 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
                                                                                   ExecutionException, TimeoutException {
-    return getTopicDescriptionFromKafka(30_000L);
+    return getTopicDescriptionFromKafka(DEFAULT_METADATA_TIMEOUT_MS);
   }
 
   @JsonIgnore

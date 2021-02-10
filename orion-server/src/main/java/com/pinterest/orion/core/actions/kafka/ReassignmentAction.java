@@ -47,7 +47,7 @@ public class ReassignmentAction extends AbstractKafkaAction {
   @Override
   public void run(String zkString, AdminClient adminClient) {
     Boolean waitForPrevious = false;
-    long metadataFetchTimeoutMs = 30_000L; // default
+    long metadataFetchTimeoutMs = KafkaCluster.DEFAULT_METADATA_TIMEOUT_MS; // default
     Attribute attribute = getAttribute(ATTR_REASSIGNMENT_KEY);
     Attribute metadataFetchTimeoutMsAttr = getAttribute(KafkaIdealBalanceAction.CONF_METADATA_FETCH_TIMEOUT_MS_KEY);
     KafkaCluster kakfaCluster = (KafkaCluster) getEngine().getCluster();
