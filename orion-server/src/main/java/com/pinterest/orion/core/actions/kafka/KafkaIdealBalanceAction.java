@@ -31,18 +31,23 @@ public class KafkaIdealBalanceAction extends Action {
   private static Logger logger = Logger.getLogger(KafkaIdealBalanceAction.class.getCanonicalName());
 
   public static final String CONF_BATCH_SIZE_KEY = "batchSize";
+  public static final String CONF_METADATA_FETCH_TIMEOUT_MS_KEY = "metadataTimeoutMs";
   public static final String ATTR_ACTUAL_ASSIGNMENTS_KEY = "actualAssignments";
   public static final String ATTR_IDEAL_ASSIGNMENTS_KEY = "idealAssignments";
   public static final String ATTR_TOPIC_KEY = "topic";
   private static final String[] attrArr = new String[]{ATTR_ACTUAL_ASSIGNMENTS_KEY, ATTR_IDEAL_ASSIGNMENTS_KEY, ATTR_TOPIC_KEY};
 
   public int batchSize = 60;
+  public long metadataTimeoutMs = 30_000L;
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
     super.initialize(config);
     if(config.containsKey(CONF_BATCH_SIZE_KEY)) {
       batchSize = Integer.parseInt(config.get(CONF_BATCH_SIZE_KEY).toString());
+    }
+    if (config.containsKey(CONF_METADATA_FETCH_TIMEOUT_MS_KEY)) {
+      metadataTimeoutMs = Long.parseLong(config.get(CONF_METADATA_FETCH_TIMEOUT_MS_KEY).toString());
     }
   }
 
@@ -131,6 +136,7 @@ public class KafkaIdealBalanceAction extends Action {
           shrinkReassignmentAction = new ShrinkReassignmentAction(replicaIdx, batchIdx + 1, batchedPartitions.size());
           kafkaReassignment = newKafkaReassignmentFromTopic(topic, shrinkReassignments);
           shrinkReassignmentAction.setAttribute(ReassignmentAction.ATTR_REASSIGNMENT_KEY, kafkaReassignment);
+          shrinkReassignmentAction.setAttribute(CONF_METADATA_FETCH_TIMEOUT_MS_KEY, metadataTimeoutMs);
           this.getChildren().add(shrinkReassignmentAction);
         }
 
@@ -138,6 +144,7 @@ public class KafkaIdealBalanceAction extends Action {
           expandReassignmentAction = new ExpandReassignmentAction(replicaIdx, batchIdx + 1, batchedPartitions.size());
           kafkaReassignment = newKafkaReassignmentFromTopic(topic, expandReassignments);
           expandReassignmentAction.setAttribute(ReassignmentAction.ATTR_REASSIGNMENT_KEY, kafkaReassignment);
+          expandReassignmentAction.setAttribute(CONF_METADATA_FETCH_TIMEOUT_MS_KEY, metadataTimeoutMs);
           this.getChildren().add(expandReassignmentAction);
         }
 
@@ -173,6 +180,7 @@ public class KafkaIdealBalanceAction extends Action {
       Action reassignmentAction = new ShrinkReplicationFactorAction(actualReplicationFactor, idealReplicationFactor);
       Map<String, Map<Integer, List<Integer>>> kafkaReassignment = newKafkaReassignmentFromTopic(topic, idealAssignments);
       reassignmentAction.setAttribute(ReassignmentAction.ATTR_REASSIGNMENT_KEY, kafkaReassignment);
+      reassignmentAction.setAttribute(CONF_METADATA_FETCH_TIMEOUT_MS_KEY, metadataTimeoutMs);
       this.getChildren().add(reassignmentAction);
       getEngine().dispatchChild(this, reassignmentAction);
       logger.info("Shrinking replication factor");

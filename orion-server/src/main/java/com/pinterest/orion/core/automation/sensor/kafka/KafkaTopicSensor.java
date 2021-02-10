@@ -18,6 +18,7 @@ package com.pinterest.orion.core.automation.sensor.kafka;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -130,7 +131,8 @@ public class KafkaTopicSensor extends KafkaSensor {
     }
   }
 
-  private Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka(KafkaCluster cluster) throws InterruptedException, ExecutionException {
+  private Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka(KafkaCluster cluster)
+          throws InterruptedException, ExecutionException, TimeoutException {
     return cluster.getTopicDescriptionFromKafka();
   }
 
