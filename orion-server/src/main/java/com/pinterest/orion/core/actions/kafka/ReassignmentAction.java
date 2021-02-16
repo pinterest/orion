@@ -47,8 +47,13 @@ public class ReassignmentAction extends AbstractKafkaAction {
   @Override
   public void run(String zkString, AdminClient adminClient) {
     Boolean waitForPrevious = false;
+    long metadataFetchTimeoutMs = KafkaCluster.DEFAULT_METADATA_TIMEOUT_MS; // default
     Attribute attribute = getAttribute(ATTR_REASSIGNMENT_KEY);
+    Attribute metadataFetchTimeoutMsAttr = getAttribute(KafkaIdealBalanceAction.CONF_METADATA_FETCH_TIMEOUT_MS_KEY);
     KafkaCluster kakfaCluster = (KafkaCluster) getEngine().getCluster();
+    if (metadataFetchTimeoutMsAttr != null) {
+      metadataFetchTimeoutMs = metadataFetchTimeoutMsAttr.getValue();
+    }
     if (containsAttribute("wait_for_previous")) {
       waitForPrevious = getAttribute(this, "wait_for_previous").getValue();
     }
@@ -73,7 +78,7 @@ public class ReassignmentAction extends AbstractKafkaAction {
         }
 
         zkClient.create().forPath(REASSIGNMENT_PATH, assignmentJson.getBytes());
-        waitForISRsToMatchAssignments(kakfaCluster, assignmentMap, 15_000);
+        waitForISRsToMatchAssignments(kakfaCluster, assignmentMap, 15_000, metadataFetchTimeoutMs);
         waitForURPsToBeResolved(kakfaCluster, 15_000);
         CuratorClient.waitForZnodeToBeDeleted(zkClient, REASSIGNMENT_PATH);
         markSucceeded();
@@ -85,19 +90,21 @@ public class ReassignmentAction extends AbstractKafkaAction {
 
   private void waitForISRsToMatchAssignments(KafkaCluster cluster,
                                              Map<String, Map<Integer, List<Integer>>> assignments,
-                                             long checkFrequencyMillis)
+                                             long checkFrequencyMillis,
+                                             long metadataFetchTimeoutMs)
       throws Exception {
-    while (!doesISRsMatchAssignments(cluster, assignments)) {
+    while (!doesISRsMatchAssignments(cluster, assignments, metadataFetchTimeoutMs)) {
       logger.info("Waiting for ISRs to match assignments");
       Thread.sleep(checkFrequencyMillis);
     }
   }
 
   private boolean doesISRsMatchAssignments(KafkaCluster cluster,
-                                           Map<String, Map<Integer, List<Integer>>> assignments)
+                                           Map<String, Map<Integer, List<Integer>>> assignments,
+                                           long metadataFetchTimeoutMs)
       throws Exception {
     Map<String, Map<Integer, Set<Integer>>> isrs =
-        cluster.getTopicDescriptionFromKafka().values().stream().collect(Collectors.toMap(
+        cluster.getTopicDescriptionFromKafka(metadataFetchTimeoutMs).values().stream().collect(Collectors.toMap(
             KafkaTopicDescription::getName,
             td -> td.getPartitions().stream().collect(Collectors.toMap(
                 KafkaTopicPartitionInfo::getPartition,

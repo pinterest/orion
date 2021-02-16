@@ -26,6 +26,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -60,6 +62,7 @@ public class KafkaCluster extends Cluster {
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(KafkaCluster.class.getCanonicalName());
   public static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
+  public static final long DEFAULT_METADATA_TIMEOUT_MS = 30_000L;
   private transient Properties props;
   private AdminClient adminClient;
   private KafkaConsumer<byte[], byte[]> kafkaConsumer;
@@ -171,27 +174,35 @@ public class KafkaCluster extends Cluster {
 
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
-                                                                           ExecutionException {
+                                                                                  ExecutionException, TimeoutException {
+    return getTopicDescriptionFromKafka(DEFAULT_METADATA_TIMEOUT_MS);
+  }
+
+  @JsonIgnore
+  public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka(long metadataFetchTimeoutMs)
+          throws ExecutionException, InterruptedException, TimeoutException {
     AdminClient adminClient = getAdminClient();
     Map<String, KafkaTopicDescription> cachedTopicMap = containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)
-        ? getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue()
-        : null;
+            ? getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue()
+            : null;
     Map<String, KafkaTopicDescription> ret = getTopicDescriptions(adminClient, logger(),
-        cachedTopicMap,
-        clusterId);
+                                                                  cachedTopicMap,
+                                                                  clusterId,
+                                                                  metadataFetchTimeoutMs);
     return ret;
   }
 
   public static Map<String, KafkaTopicDescription> getTopicDescriptions(AdminClient adminClient,
                                                                         Logger logger,
                                                                         Map<String, KafkaTopicDescription> cachedTopicMap,
-                                                                        String clusterId) throws InterruptedException,
-                                                                                          ExecutionException {
+                                                                        String clusterId,
+                                                                        long metadataFetchTimeoutMs) throws InterruptedException,
+                                                                                          ExecutionException, TimeoutException {
     long start = System.currentTimeMillis();
     Map<String, KafkaTopicDescription> ret = new HashMap<>();
     Set<String> topics;
     try {
-      topics = adminClient.listTopics(new ListTopicsOptions().listInternal(true)).names().get();
+      topics = adminClient.listTopics(new ListTopicsOptions().listInternal(true)).names().get(metadataFetchTimeoutMs, TimeUnit.MILLISECONDS);
     } catch (ExecutionException e) {
       if (cachedTopicMap != null) {
         logger.log(Level.WARNING,
@@ -206,7 +217,7 @@ public class KafkaCluster extends Cluster {
         .partition(new ArrayList<>(topics), Integer.min(topics.size(), 10)).stream()
         .map(subset -> adminClient.describeTopics(subset).all()).collect(Collectors.toList());
     for (Future<Map<String, TopicDescription>> f : futures) {
-      ret.putAll(f.get().entrySet().stream().collect(
+      ret.putAll(f.get(metadataFetchTimeoutMs, TimeUnit.MILLISECONDS).entrySet().stream().collect(
           Collectors.toMap(Entry::getKey, entry -> new KafkaTopicDescription(entry.getValue()))));
     }
     long desc = System.currentTimeMillis();
@@ -218,7 +229,7 @@ public class KafkaCluster extends Cluster {
 
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getURPFromClusters() throws InterruptedException,
-                                                                 ExecutionException {
+                                                                        ExecutionException, TimeoutException {
     Map<String, KafkaTopicDescription> clusterMD = getTopicDescriptionFromKafka();
     return getURP(clusterMD);
   }
