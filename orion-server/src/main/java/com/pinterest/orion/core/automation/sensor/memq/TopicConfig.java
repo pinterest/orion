@@ -27,7 +27,7 @@ public class TopicConfig implements Comparable<TopicConfig> {
 
   private int tickFrequencyMillis = 1000;
 
-  private boolean enableBucketing2Processor = false;
+  private boolean enableBucketing2Processor = true;
 
   /**
    * file or s3
