@@ -24,6 +24,9 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.collect.Sets;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Node;
@@ -37,8 +40,6 @@ import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.core.kafka.KafkaTopicDescription;
 import com.pinterest.orion.core.kafka.KafkaTopicPartitionInfo;
 import com.pinterest.orion.utils.OrionConstants;
-import com.google.common.collect.Sets;
-import org.apache.commons.lang3.StringUtils;
 
 public class BrokerHealingOperator extends KafkaOperator {
   private static final Logger logger = Logger.getLogger(BrokerHealingOperator.class.getCanonicalName());
@@ -131,6 +132,26 @@ public class BrokerHealingOperator extends KafkaOperator {
 
     // hosts that are unhealthy (service is down) but might be recoverable, try restarting the service and wait for a while before replacing
     Set<String> maybeDeadBrokers = Sets.intersection(unhealthyKafkaBrokers, unhealthyServiceNodes);
+    
+    // alert on brokers where agents are down but there are no URPs  
+    Set<String> unhealthyAgentBrokersWithoutURPs = Sets.difference(unhealthyAgentNodes, deadBrokers);
+    if (!unhealthyAgentBrokersWithoutURPs.isEmpty()) {
+      cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
+          "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster",
+          unhealthyAgentBrokersWithoutURPs.toString(),
+          "orion"
+      ));
+    }
+    
+    // alert on brokers where broker service is unhealthy but there are no URPs
+    Set<String> unhealthyBrokersWithoutURPs = Sets.difference(unhealthyServiceNodes, deadBrokers);
+    if (!unhealthyBrokersWithoutURPs.isEmpty()) {
+      cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
+          "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster",
+          unhealthyBrokersWithoutURPs.toString(),
+          "orion"
+      ));
+    }
 
     setMessage("offline brokers: " + unhealthyKafkaBrokers + "\nunhealthy agent orion nodes: " + unhealthyAgentNodes +
         "\nunhealthy service orion nodes: " + maybeDeadBrokers + "\nnon-existent Brokers: "+ nonExistentBrokers);
@@ -170,7 +191,7 @@ public class BrokerHealingOperator extends KafkaOperator {
       logger.info( "Dispatching BrokerRecoveryAction on " + cluster.getClusterId() + " for node: " +  deadBrokerId);
       dispatch(brokerRecoveryAction);
     } else if (candidates.size() > 1){
-      cluster.getActionEngine().alert(AlertLevel.MEDIUM, new AlertMessage(
+      cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
           candidates.size() + " brokers on " + cluster.getClusterId() + " are unhealthy",
           "Brokers " + candidates + " are unhealthy",
           "orion"
