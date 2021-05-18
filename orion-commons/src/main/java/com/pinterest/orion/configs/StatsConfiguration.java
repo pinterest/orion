@@ -17,6 +17,7 @@ package com.pinterest.orion.configs;
 
 public class StatsConfiguration {
   private boolean enabled = true;
+  private String metricsPrefix = "orion.server";
   private String destinationHostname = "localhost";
   private int destinationPort = 18126;
   private int pushInterval = 60000;
@@ -32,6 +33,14 @@ public class StatsConfiguration {
    */
   public void setEnabled(boolean enabled) {
     this.enabled = enabled;
+  }
+
+  public String getMetricsPrefix() {
+    return metricsPrefix;
+  }
+
+  public void setMetricsPrefix(String metricsPrefix) {
+    this.metricsPrefix = metricsPrefix;
   }
 
   /**

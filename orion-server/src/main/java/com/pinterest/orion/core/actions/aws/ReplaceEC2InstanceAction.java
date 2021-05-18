@@ -23,8 +23,10 @@ import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.schema.AttributeSchema;
 import com.pinterest.orion.core.actions.schema.TextEnumValue;
 import com.pinterest.orion.core.actions.schema.TextValue;
+import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 
+import io.dropwizard.metrics5.MetricName;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
@@ -93,10 +95,18 @@ public class ReplaceEC2InstanceAction extends NodeAction {
       skipClusterHealthCheck = getAttribute(ATTR_SKIP_CLUSTER_HEALTH_CHECK_KEY).getValue();
     }
 
+    // base metric with tag
+    MetricName metricPrefix = MetricName.build("replace_ec2_instance_action")
+        .tagged(
+            "cluster", getEngine().getCluster().getClusterId(),
+            "instance", hostname);
+
     // Used to record the reason of replacement
     if (containsAttribute(ATTR_CAUSE_KEY)) {
+      String cause = getAttribute(ATTR_CAUSE_KEY).getValue();
       this.getResult()
-          .appendOut("Cause of replacement: " + getAttribute(ATTR_CAUSE_KEY).getValue() + "\n");
+          .appendOut("Cause of replacement: " + cause + "\n");
+      metricPrefix.tagged("cause", cause);
     }
 
     // put the node into maintenance mode if node exists in the clusterMap
@@ -113,6 +123,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         InstanceStateAndRequest stateAndRequest;
         try {
           stateAndRequest = getInstanceStateAndRequest(ec2Client, nodeExists);
+          metricPrefix.tagged("instance_id", instanceId);
         } catch (Exception e) {
           // alert if the instance state / run instance request cannot be populated
           logger().log(Level.SEVERE, "Failed to get state and/or info of broker " + hostname, e);
@@ -133,6 +144,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
             return;
           }
           getResult().appendOut("Instance terminated.");
+          OrionServer.METRICS.counter(metricPrefix.resolve("terminated")).inc();
         } else {
           getResult().appendOut("Skipping termination since host is not in RUNNING state.");
         }
@@ -142,6 +154,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
             ec2Client,
             stateAndRequest.getRunInstancesRequest()
         );
+        OrionServer.METRICS.counter(metricPrefix.resolve("launched")).inc();
 
         // privateIpAddress will be null if the launch failed
         if(privateIpAddress == null) {
@@ -162,6 +175,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
       try {
         // this will check if there are any URPs, unless the emergency flag was enabled
         checkAndWaitForNodeToRecover();
+        OrionServer.METRICS.counter(metricPrefix.resolve("replace_success")).inc();
         markSucceeded();
       } catch (java.util.concurrent.TimeoutException e) {
         markFailed("Post validaton timed out for node replacement on "

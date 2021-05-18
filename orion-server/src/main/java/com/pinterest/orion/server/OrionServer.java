@@ -206,7 +206,7 @@ public class OrionServer extends Application<OrionConf> {
     if (configuration.getStatsConfiguration().isEnabled()) {
       StatsConfiguration statsConfiguration = configuration.getStatsConfiguration();
       StatsPusher stats = new OpenTsdbStatsPusher();
-      stats.configure(NetworkUtils.getHostnameForLocalhost(), "lancer.server",
+      stats.configure(NetworkUtils.getHostnameForLocalhost(), statsConfiguration.getMetricsPrefix(),
           statsConfiguration.getDestinationHostname(), statsConfiguration.getDestinationPort(),
           statsConfiguration.getPushInterval());
       stats.start();
