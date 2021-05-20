@@ -138,7 +138,7 @@ public class BrokerHealingOperator extends KafkaOperator {
     if (!unhealthyAgentBrokersWithoutURPs.isEmpty()) {
       cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
           "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster",
-          unhealthyAgentBrokersWithoutURPs.toString(),
+          "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + unhealthyAgentBrokersWithoutURPs,
           "orion"
       ));
     }
@@ -148,7 +148,7 @@ public class BrokerHealingOperator extends KafkaOperator {
     if (!unhealthyBrokersWithoutURPs.isEmpty()) {
       cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
           "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster",
-          unhealthyBrokersWithoutURPs.toString(),
+          "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + unhealthyBrokersWithoutURPs,
           "orion"
       ));
     }
