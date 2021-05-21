@@ -16,6 +16,7 @@
 package com.pinterest.orion.core.automation.operator.kafka;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,10 +48,15 @@ public class BrokerHealingOperator extends KafkaOperator {
   private static final String CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY = "maxNumStaleSensorIntervals";
   private static final String
       CONF_UNHEALTHY_BROKER_URP_RATIO_THRESHOLD_KEY = "unhealthyBrokerURPRatioThreshold";
+  private static final String CONF_UNHEALTHY_ALERT_FAIL_THRESHOLD_KEY = "unhealthyAlertFailThreshold";
   private long configDeadBrokerThresholdMillis = 300_000; // default 5 minutes
   private long maxNumStaleIntervals = 2; // default 2 times
   private double unhealthyBrokerURPRatioThreshold = 0; // default no URPs allowed
+  private int unhealthyAlertFailThreshold = 3;
   private static final long cooldownMilliseconds = 43200_000L;
+
+  private Map<String, Integer> unhealthyAgentBrokersWithoutURPs = new HashMap<>();
+  private Map<String, Integer> unhealthyBrokersWithoutURPs = new HashMap<>();
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
@@ -69,7 +75,9 @@ public class BrokerHealingOperator extends KafkaOperator {
         throw new PluginConfigurationException("URP ratio threshold should be within range [0,1], is set to " + unhealthyBrokerURPRatioThreshold);
       }
     }
-
+    if (config.containsKey(CONF_UNHEALTHY_ALERT_FAIL_THRESHOLD_KEY)) {
+      unhealthyAlertFailThreshold = Integer.parseInt(config.get(CONF_UNHEALTHY_ALERT_FAIL_THRESHOLD_KEY).toString());
+    }
   }
 
   @Override
@@ -133,22 +141,44 @@ public class BrokerHealingOperator extends KafkaOperator {
     // hosts that are unhealthy (service is down) but might be recoverable, try restarting the service and wait for a while before replacing
     Set<String> maybeDeadBrokers = Sets.intersection(unhealthyKafkaBrokers, unhealthyServiceNodes);
     
-    // alert on brokers where agents are down but there are no URPs  
-    Set<String> unhealthyAgentBrokersWithoutURPs = Sets.difference(unhealthyAgentNodes, deadBrokers);
-    if (!unhealthyAgentBrokersWithoutURPs.isEmpty()) {
+    // alert on brokers where agents are down but there are no URPs if they show up for 3 consecutive times
+    Set<String> currentUnhealthyAgentBrokersWithoutURPs = Sets.difference(unhealthyAgentNodes, deadBrokers);
+    Set<String> alertableUnhealthyAgentBrokersWithoutURPs = new HashSet<>();
+    for (String b : Sets.difference(unhealthyBrokersWithoutURPs.keySet(), currentUnhealthyAgentBrokersWithoutURPs)) {
+      unhealthyAgentBrokersWithoutURPs.remove(b);
+    }
+    for (String b : currentUnhealthyAgentBrokersWithoutURPs) {
+      int count = unhealthyAgentBrokersWithoutURPs.compute(b, (k, v) -> v == null ? 1 : v + 1);
+      if (count >= unhealthyAlertFailThreshold) {
+        alertableUnhealthyAgentBrokersWithoutURPs.add(b);
+        unhealthyAgentBrokersWithoutURPs.remove(b);
+      }
+    }
+    if (!alertableUnhealthyAgentBrokersWithoutURPs.isEmpty()) {
       cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
           "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster",
-          "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + unhealthyAgentBrokersWithoutURPs,
+          "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyAgentBrokersWithoutURPs,
           "orion"
       ));
     }
     
-    // alert on brokers where broker service is unhealthy but there are no URPs
-    Set<String> unhealthyBrokersWithoutURPs = Sets.difference(unhealthyServiceNodes, deadBrokers);
-    if (!unhealthyBrokersWithoutURPs.isEmpty()) {
+    // alert on brokers where broker service is unhealthy but there are no URPs if they show up for 3 consecutive times
+    Set<String> currentUnhealthyBrokersWithoutURPs = Sets.difference(unhealthyServiceNodes, deadBrokers);
+    Set<String> alertableUnhealthyBrokersWithoutURPs = new HashSet<>();
+    for (String b : Sets.difference(unhealthyBrokersWithoutURPs.keySet(), currentUnhealthyBrokersWithoutURPs)) {
+      unhealthyBrokersWithoutURPs.remove(b);
+    }
+    for (String b : currentUnhealthyBrokersWithoutURPs) {
+      int count = unhealthyBrokersWithoutURPs.compute(b, (k, v) -> v == null ? 1 : v + 1);
+      if (count >= unhealthyAlertFailThreshold) {
+        alertableUnhealthyBrokersWithoutURPs.add(b);
+        unhealthyBrokersWithoutURPs.remove(b);
+      }
+    }
+    if (!alertableUnhealthyBrokersWithoutURPs.isEmpty()) {
       cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
           "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster",
-          "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + unhealthyBrokersWithoutURPs,
+          "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyBrokersWithoutURPs,
           "orion"
       ));
     }
