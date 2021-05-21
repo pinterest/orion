@@ -63,7 +63,7 @@ public class PagerDutyAlert extends Alert {
   private void sendPager(AlertMessage message) {
     Map<String, Object> customDetails = new HashMap<>();
     customDetails.put("message_body", message.getBody());
-    String summary = "[Orion] " + message.getBody();
+    String summary = "[Orion] " + message.getTitle();
     PagerDutyEvent event = new PagerDutyEvent(pagerdutyServiceToken, summary, message.getEntity(), customDetails);
     String payload = null;
     try {
