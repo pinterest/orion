@@ -213,6 +213,9 @@ public class KafkaCluster extends Cluster {
       }
     }
     long list = System.currentTimeMillis();
+    if (topics.isEmpty()) {
+      return ret;
+    }
     List<Future<Map<String, TopicDescription>>> futures = Lists
         .partition(new ArrayList<>(topics), Integer.min(topics.size(), 10)).stream()
         .map(subset -> adminClient.describeTopics(subset).all()).collect(Collectors.toList());
