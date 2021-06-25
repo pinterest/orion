@@ -122,39 +122,75 @@ plugins:
     - key: rollingRestart
       class: com.pinterest.orion.core.actions.kafka.ConcurrentKafkaRestartAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Rolling Restart"
+        label: "Rolling restart selected nodes"
+        icon: "replay"
     - key: start
       class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelClusterStartAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Rolling Start"
+        label: "Start service on selected nodes"
+        icon: "play_arrow"
     - key: stop
       class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelClusterStopAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Stop"
+        label: "Stop service on selected nodes"
+        icon: "stop"
     - key: rollingReplacement
       class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$RollingReplacementAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Rolling Replacement"
+        label: "Replace nodes"
+        icon: "swap_vert"
     - key: rollingReboot
       class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$RollingRebootAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Reboot"
+        label: "Reboot nodes"
+        icon: "power_settings_new"
     - key: rollingUpgrade
       class: com.pinterest.orion.core.actions.kafka.KafkaClusterRollingUpgrade
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Rolling Upgrade"
+        label: "Upgrade nodes"
+        icon: "update"
     - key: decommission
       class: com.pinterest.orion.core.actions.kafka.KafkaClusterDecommissionBrokers
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Decommission"
+        label: "Decommission nodes"
+        icon: "delete_forever"
     - key: enablenodemaintenance
       class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelEnableNodeMaintenanceModeAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Enable Node Maintenance"
+        label: "Put nodes into maintenance"
+        icon: "work"
     - key: disablenodemaintenance
       class: com.pinterest.orion.core.actions.generic.GenericClusterWideAction$ParallelDisableNodeMaintenanceModeAction
       enabled: true
-      endpointEnabled: true
+      endpoint:
+        enabled: true
+        displayName: "Disable Node Maintenance"
+        label: "Remove nodes from maintenance"
+        icon: "work_off"
 #   The following actions are not exposed in the API
     - key: configupdate
       class: com.pinterest.orion.core.actions.generic.GenericActions$ServiceConfigUpdateAction
