@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonSyntaxException;
 import com.pinterest.orion.core.Cluster;
+import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.kafka.Brokerset;
 import com.pinterest.orion.core.kafka.ConsumerInfo;
 import com.pinterest.orion.core.kafka.KafkaCluster;
@@ -75,7 +76,7 @@ public class KafkaClusterInfoSensor extends KafkaSensor {
     return jsonfileToObject(file, new TypeReference<List<TopicAssignment>>(){});
   }
 
-  private void loadAndSetBrokerset(File infoDir, KafkaCluster cluster) {
+  protected void loadAndSetBrokerset(File infoDir, KafkaCluster cluster) {
     Map<String, Brokerset> brokersetMap = new ConcurrentHashMap<>();
     File file = new File(infoDir, "brokerset.json");
     try {
@@ -94,7 +95,7 @@ public class KafkaClusterInfoSensor extends KafkaSensor {
     return jsonfileToObject(file, new TypeReference<List<Brokerset>>(){});
   }
 
-  private void loadAndSetConsumerInfo(File infoDir, KafkaCluster cluster) {
+  protected void loadAndSetConsumerInfo(File infoDir, KafkaCluster cluster) {
     Map<String, ConsumerInfo> consumerInfoMap = new ConcurrentHashMap<>();
     File file = new File(infoDir, "consumers.json");
     if(!file.exists()) {
