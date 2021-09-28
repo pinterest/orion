@@ -315,9 +315,9 @@ public class BrokerHealingOperator extends KafkaOperator {
     existingHostname = existingHostname.split("\\.", 2)[0]; // sanitize potential suffixes
     int diff = nonExistingId.length() - existingId.length();
     if ( diff > 0 ) {
-      existingId = StringUtils.leftPad(existingId, diff, '0');
+      existingId = StringUtils.leftPad(existingId, nonExistingId.length(), '0');
     } else if (diff < 0) {
-      nonExistingId = StringUtils.leftPad(nonExistingId, -diff, '0');
+      nonExistingId = StringUtils.leftPad(nonExistingId, existingId.length(), '0');
     }
 
     String ret = existingHostname.replace(existingId, nonExistingId);
@@ -334,5 +334,10 @@ public class BrokerHealingOperator extends KafkaOperator {
 
   protected BrokerRecoveryAction newBrokerRecoveryAction() {
     return new BrokerRecoveryAction();
+  }
+
+  public static void main(String[] args) {
+    BrokerHealingOperator o = new BrokerHealingOperator();
+    System.out.println(o.deriveNonexistentHostname("testkafka041", "41", "2"));
   }
 }
