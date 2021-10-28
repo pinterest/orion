@@ -162,6 +162,9 @@ plugins:
     - key: createtopic
       class: com.pinterest.orion.core.actions.kafka.AssignmentCreateKafkaTopicAction
       enabled: true
+    - key: deletetopic
+      class: com.pinterest.orion.core.actions.kafka.AssignmentDeleteKafkaTopicAction
+      enabled: true
     - key: rebalancetopic
       class: com.pinterest.orion.core.actions.kafka.KafkaIdealBalanceAction
       enabled: true

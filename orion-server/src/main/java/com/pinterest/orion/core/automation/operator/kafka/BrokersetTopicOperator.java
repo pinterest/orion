@@ -25,6 +25,7 @@ import com.pinterest.orion.core.actions.kafka.AssignmentCreateKafkaTopicAction;
 import com.pinterest.orion.core.actions.kafka.AssignmentExpandKafkaTopicAction;
 import com.pinterest.orion.core.actions.kafka.KafkaIdealBalanceAction;
 import com.pinterest.orion.core.actions.kafka.ReassignmentAction;
+import com.pinterest.orion.core.actions.kafka.AssignmentDeleteKafkaTopicAction;
 import com.pinterest.orion.core.automation.sensor.kafka.KafkaClusterInfoSensor;
 import com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicSensor;
 import com.pinterest.orion.core.kafka.Brokerset;
@@ -126,14 +127,22 @@ public class BrokersetTopicOperator extends KafkaOperator {
         + " and actual for " + topicAssignments.size() + " topics");
     for (TopicAssignment topicAssignment : topicAssignments) {
 
-      // TODO: determine if the cluster supports topic deletion and delete if possible
-      if (topicAssignment.isDelete()) {
-        continue;
-      }
+
       String brokersetAlias = topicAssignment.getBrokerset();
       String topicName = topicAssignment.getTopicName();
       KafkaTopicDescription actualTopicDescription = topicDescriptionMap.get(topicName);
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
+
+      if (topicAssignment.isDelete()) {
+        if (actualTopicDescription == null) {
+          continue;
+        }
+        Action action = createDeleteTopicAction(topicAssignment.getTopicName(), sensorSet);
+        logger.info("Topic(" + topicName + ") exists and is marked for deletion. Starting deletion.");
+        dispatch(action);
+        continue;
+      }
+
       // create topic if topic exists in assignment file but is absent in the cluster
       if (actualTopicDescription == null) {
         Action action = createIdealBalancedTopicAction(brokerset, topicAssignment, sensorSet, stepSize);
@@ -239,6 +248,13 @@ public class BrokersetTopicOperator extends KafkaOperator {
     action.setAttribute(OrionConstants.PROJECT, topicAssignment.getProject());
     action.setAttribute(AssignmentCreateKafkaTopicAction.ATTR_REPLICAS_ASSIGNMENTS_KEY, assignments,
         sensorSet);
+    return action;
+  }
+
+  public static AssignmentDeleteKafkaTopicAction createDeleteTopicAction(String topicName,
+                                                                         Set<String> sensorSet) throws Exception {
+    AssignmentDeleteKafkaTopicAction action = new AssignmentDeleteKafkaTopicAction();
+    action.setAttribute(AssignmentDeleteKafkaTopicAction.ATTR_TOPIC_NAME_KEY, topicName);
     return action;
   }
 
