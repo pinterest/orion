@@ -38,6 +38,7 @@ public class KafkaClusterInfoSensor extends KafkaSensor {
   public static final String ATTR_BROKERSET_KEY = "brokerset";
   public static final String CONF_CLUSTER_INFO_DIR_KEY = "clusterInfoDir";
   public static final String ATTR_TOPIC_ASSIGNMENTS_KEY = "topicAssignment";
+  public static final String ATTR_TOPIC_DELETION_ENABLED = "enableTopicDeletion";
 
   @Override
   public String getName() {

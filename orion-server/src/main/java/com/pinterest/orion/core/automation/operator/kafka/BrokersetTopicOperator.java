@@ -92,6 +92,13 @@ public class BrokersetTopicOperator extends KafkaOperator {
       return;
     }
 
+    boolean enableTopicDeletion;
+    if (cluster.containsAttribute(KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED)) {
+      enableTopicDeletion = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED).getValue();
+    } else {
+      enableTopicDeletion = false;
+    }
+
     Set<String> sensorSet = new HashSet<>();
 
     Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
@@ -133,7 +140,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
       KafkaTopicDescription actualTopicDescription = topicDescriptionMap.get(topicName);
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
 
-      if (topicAssignment.isDelete()) {
+      if (enableTopicDeletion && topicAssignment.isDelete()) {
         if (actualTopicDescription == null) {
           continue;
         }

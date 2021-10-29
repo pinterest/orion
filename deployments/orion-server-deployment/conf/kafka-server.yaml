@@ -58,7 +58,7 @@ clusterConfigs:
     configuration:
       serversetPath: /var/serverset/discovery.testkafka.prod
       clusterInfoDir: /opt/orion/configs/kafka/clusters/testkafka
-
+      enableTopicDeletion: false
 customApiFactoryClasses:
   - com.pinterest.orion.server.api.kafka.KafkaApiFactory
 plugins:
