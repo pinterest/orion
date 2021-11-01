@@ -56,6 +56,8 @@ import com.pinterest.orion.core.actions.audit.ActionAuditor;
 import com.pinterest.orion.core.automation.operator.Operator;
 import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicSensor;
+import com.pinterest.orion.core.automation.sensor.kafka.KafkaClusterInfoSensor;
+
 
 public class KafkaCluster extends Cluster {
 
@@ -122,6 +124,12 @@ public class KafkaCluster extends Cluster {
   @Override
   public void bootstrapClusterInfo(Map<String, Object> config) {
     props = new Properties();
+    if (config.containsKey(KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED)) {
+      setAttribute(
+              KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED,
+              config.get(KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED)
+      );
+    }
   }
 
   public void addBrokerset(Brokerset brokerset) {

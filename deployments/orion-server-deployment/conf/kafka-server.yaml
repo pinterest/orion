@@ -58,7 +58,7 @@ clusterConfigs:
     configuration:
       serversetPath: /var/serverset/discovery.testkafka.prod
       clusterInfoDir: /opt/orion/configs/kafka/clusters/testkafka
-
+      enableTopicDeletion: false
 customApiFactoryClasses:
   - com.pinterest.orion.server.api.kafka.KafkaApiFactory
 plugins:
@@ -161,6 +161,9 @@ plugins:
       enabled: true
     - key: createtopic
       class: com.pinterest.orion.core.actions.kafka.AssignmentCreateKafkaTopicAction
+      enabled: true
+    - key: deletetopic
+      class: com.pinterest.orion.core.actions.kafka.AssignmentDeleteKafkaTopicAction
       enabled: true
     - key: rebalancetopic
       class: com.pinterest.orion.core.actions.kafka.KafkaIdealBalanceAction

@@ -13,6 +13,13 @@ Class: `com.pinterest.orion.core.actions.kafka.SimpleCreateKafkaTopicAction`
 Description: Creates a Kafka Topic with supplied attributes
 
 
+**Delete Kafka Topic**
+
+Class: `com.pinterest.orion.core.actions.kafka.AssignmentDeleteKafkaTopicAction`
+
+Description: Delete the specified kafka topic if it includes the field `"delete": true`
+
+
 **Partition Reassignment**
 
 Class: `com.pinterest.orion.core.actions.kafka.ReassignmentAction`
