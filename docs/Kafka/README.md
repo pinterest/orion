@@ -18,6 +18,8 @@ Description: Creates a Kafka Topic with supplied attributes
 Class: `com.pinterest.orion.core.actions.kafka.AssignmentDeleteKafkaTopicAction`
 
 Description: Delete the specified kafka topic if it includes the field `"delete": true`
+AND the server description includes `enableTopicDeletion: false` in the configuration of
+the specific cluster that has topics you want to delete.
 
 
 **Partition Reassignment**
