@@ -66,10 +66,13 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
   private static final String CONF_STEP_SIZE_KEY = "stepSize";
   private static final String CONF_REPLICATION_FACTOR = "replicationFactor";
+  public static final String ATTR_TOPIC_DELETION_ENABLED = "enableTopicDeletion";
+
   private int stepSize = 3;
   private int zookeeperCheckTimeoutSeconds = 5;
   private static final String CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY = "maxNumStaleSensorIntervals";
   private long maxNumStaleIntervals = 2; // default 2 times
+  private boolean enableTopicDeletion = false;
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
@@ -78,6 +81,9 @@ public class BrokersetTopicOperator extends KafkaOperator {
     if (config.containsKey(CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY)) {
       maxNumStaleIntervals = Integer
           .parseInt(config.get(CONF_MAX_NUM_STALE_SENSOR_INTERVALS_KEY).toString());
+    }
+    if (config.containsKey(ATTR_TOPIC_DELETION_ENABLED)) {
+      enableTopicDeletion = Boolean.parseBoolean(config.get(ATTR_TOPIC_DELETION_ENABLED).toString());
     }
   }
 
@@ -90,13 +96,6 @@ public class BrokersetTopicOperator extends KafkaOperator {
         || !cluster.containsAttribute(KafkaClusterInfoSensor.ATTR_TOPIC_ASSIGNMENTS_KEY)
         || !cluster.containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)) {
       return;
-    }
-
-    boolean enableTopicDeletion;
-    if (cluster.containsAttribute(KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED)) {
-      enableTopicDeletion = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_TOPIC_DELETION_ENABLED).getValue();
-    } else {
-      enableTopicDeletion = false;
     }
 
     Set<String> sensorSet = new HashSet<>();
