@@ -1,0 +1,12 @@
+[
+  {
+    "brokersetAlias": "Capacity_B3_P3_0",
+    "partitions": 3,
+    "entries": [
+      {
+        "startBrokerIdx": 3,
+        "endBrokerIdx": 1
+      }
+    ]
+  }
+]

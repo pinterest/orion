@@ -15,22 +15,25 @@
  *******************************************************************************/
 package com.pinterest.orion.core.automation.sensor.kafka;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonSyntaxException;
+import com.pinterest.orion.core.Cluster;
+import com.pinterest.orion.core.kafka.Brokerset;
+import com.pinterest.orion.core.kafka.ConsumerInfo;
+import com.pinterest.orion.core.kafka.KafkaCluster;
+import com.pinterest.orion.core.kafka.TopicAssignment;
+
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonSyntaxException;
-import com.pinterest.orion.core.Cluster;
-import com.pinterest.orion.core.PluginConfigurationException;
-import com.pinterest.orion.core.kafka.Brokerset;
-import com.pinterest.orion.core.kafka.ConsumerInfo;
-import com.pinterest.orion.core.kafka.KafkaCluster;
-import com.pinterest.orion.core.kafka.TopicAssignment;
+import static com.pinterest.orion.core.kafka.Brokerset.BrokersetRangeMap;
 
 public class KafkaClusterInfoSensor extends KafkaSensor {
 
@@ -79,20 +82,36 @@ public class KafkaClusterInfoSensor extends KafkaSensor {
   protected void loadAndSetBrokerset(File infoDir, KafkaCluster cluster) {
     Map<String, Brokerset> brokersetMap = new ConcurrentHashMap<>();
     File file = new File(infoDir, "brokerset.json");
+    File overrideFile = new File(infoDir, "brokersetOverrides.json");
     try {
-      List<Brokerset> brokersets = loadBrokersetsFromFile(file);
+      List<Brokerset> brokersets = loadBrokersetsFromFile(file, overrideFile);
       for (Brokerset brokerset : brokersets) {
         brokersetMap.put(brokerset.getBrokersetAlias(), brokerset);
       }
-    } catch (JsonSyntaxException | IOException e) {
+    } catch (Exception e) {
       logger.log(Level.SEVERE,
-          "Failed to load brokerset file for cluster:" + cluster.getClusterId());
+              "Failed to load brokerset for cluster:" + cluster.getClusterId(), e);
     }
     setAttribute(cluster, ATTR_BROKERSET_KEY, brokersetMap);
   }
 
   public static List<Brokerset> loadBrokersetsFromFile(File file) throws IOException {
-    return jsonfileToObject(file, new TypeReference<List<Brokerset>>(){});
+    return loadBrokersetsFromFile(file, null);
+  }
+
+  public static List<Brokerset> loadBrokersetsFromFile(File file, @Nullable File overrides) throws IOException{
+    List<Brokerset> unsanitized;
+    unsanitized = jsonfileToObject(file, new TypeReference<List<Brokerset>>() {});
+    if (overrides == null || !overrides.exists() || overrides.length() == 0) {
+      return unsanitized;
+    }
+    List<Brokerset> sanitized;
+    BrokersetRangeMap map = jsonfileToObject(overrides, new TypeReference<BrokersetRangeMap>(){});
+    sanitized = unsanitized.stream().
+            map(brokerset -> brokerset.applyBrokerOverrides(map)).
+            collect(Collectors.toList());
+
+    return sanitized;
   }
 
   protected void loadAndSetConsumerInfo(File infoDir, KafkaCluster cluster) {
@@ -120,7 +139,10 @@ public class KafkaClusterInfoSensor extends KafkaSensor {
 
   public static <T> T jsonfileToObject(File jsonFile, TypeReference<T> typeReference ) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
-    return mapper.readValue(jsonFile, typeReference);
+    try {
+      return mapper.readValue(jsonFile, typeReference);
+    } catch (Exception e){
+      throw new IOException("Problem found when reading " + jsonFile, e);
+    }
   }
-
 }

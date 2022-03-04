@@ -1,0 +1,26 @@
+[
+  {
+    "brokersetAlias": "Capacity_B5_P5_0",
+    "partitions": 5,
+    "entries": [
+      {
+        "startBrokerIdx": 1,
+        "endBrokerIdx": 2
+      },
+      {
+        "startBrokerIdx": 5,
+        "endBrokerIdx": 7
+      }
+    ]
+  },
+  {
+    "brokersetAlias": "Capacity_B3_P3_0",
+    "partitions": 3,
+    "entries": [
+      {
+        "startBrokerIdx": 1,
+        "endBrokerIdx": 3
+      }
+    ]
+  }
+]
