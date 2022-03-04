@@ -46,6 +46,23 @@ Example:
 - Execution of custom workflows like Kafka topic rebalancing
 - Maintain settings e.g. monitor and fix topic configurations in Kafka
 
+### Temporarily move topics off of particular brokers
+
+In order to temporarily move all topics off of a set of brokers, you can add a `brokersetOverrides.json` in a
+cluster's config folder with the `brokerset.json`.
+This file should take the form:
+```json
+{
+  "startBrokerIn": 1,
+  "endBrokerIn": 3,
+  "startBrokerOut": 4,
+  "endBrokerOut": 6
+}
+```
+This configuration will make sure that any brokerset that includes the brokers from 1-3 are replaced with the brokers 4-6
+This makes it easier to move multiple topics off of particular brokers for maintenance. Once finished, remove the file
+to let the original brokers reassert themselves.
+
 ## Architecture
 ![Image of Orion's Architecture](docs/images/orion-architecture.png)
 
