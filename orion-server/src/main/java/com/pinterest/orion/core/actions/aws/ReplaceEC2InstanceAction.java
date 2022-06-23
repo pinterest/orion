@@ -440,6 +440,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     return new AttributeSchema()
         .addValue(
             new TextEnumValue(ATTR_INSTANCE_TYPE_KEY, "Instance Type (optional, will inherit current type if not selected)", false)
+              .addOption("i4i.xlarge", "i4i.xlarge")
               .addOption("i4i.2xlarge", "i4i.2xlarge")
               .addOption("i4i.4xlarge", "i4i.4xlarge")
               .addOption("i4i.8xlarge", "i4i.8xlarge")
