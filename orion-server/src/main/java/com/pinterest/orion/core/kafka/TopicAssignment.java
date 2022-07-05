@@ -18,6 +18,7 @@ package com.pinterest.orion.core.kafka;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,26 @@ public class TopicAssignment {
   private String jira;
   private Map<String, String> config;
   private long dailyTraffic;
+
+  /**
+   * Copy constructor
+   * @param topicAssignment the TopicAssignment to copy from
+   */
+  public TopicAssignment(TopicAssignment topicAssignment) {
+    this.topicName = topicAssignment.getTopicName();
+    this.delete = topicAssignment.isDelete();
+    this.partitions = topicAssignment.getPartitions();
+    this.brokerset = topicAssignment.getBrokerset();
+    this.replicationFactor = topicAssignment.getReplicationFactor();
+    this.stride = topicAssignment.getStride();
+    this.project = topicAssignment.getProject();
+    this.description = topicAssignment.getDescription();
+    this.jira = topicAssignment.getJira();
+    this.config = new HashMap<>(topicAssignment.getConfig());
+    this.dailyTraffic = topicAssignment.getDailyTraffic();
+  }
+
+  public TopicAssignment() {}
 
   /**
    * @return the topicName
