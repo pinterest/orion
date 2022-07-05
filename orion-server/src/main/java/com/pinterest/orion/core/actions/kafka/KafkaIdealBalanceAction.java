@@ -69,6 +69,15 @@ public class KafkaIdealBalanceAction extends Action {
       return;
     }
 
+    int defaultSize = idealAssignments.get(0).size();
+    for (List<Integer> replicas : idealAssignments.values()) {
+      if (replicas.size() != defaultSize) {
+        markFailed("Assignment map is not uniform!");
+        return;
+      }
+      defaultSize = replicas.size();
+    }
+
     if(actualAssignmentsSrc.isEmpty()){
       markSucceeded();
       return;

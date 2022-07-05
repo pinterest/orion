@@ -160,13 +160,23 @@ public class BrokersetTopicOperator extends KafkaOperator {
       int idealPartitionCount = getPartitionsFromBrokersetOrTopicAssignment(brokerset,
           topicAssignment);
       int actualPartitionCount = actualTopicDescription.getPartitions().size();
+
+      int idealRepFactor = topicAssignment.getReplicationFactor();
+      int actualRepFactor = actualTopicDescription.getSampledReplicationFactor();
+
       if (idealPartitionCount > actualPartitionCount) {
         // expansion
         logger.warning(
             "Topic " + topicName + " partition count is not ideal, expanding topic - Actual: "
                 + actualPartitionCount + " Ideal: " + idealPartitionCount);
-        Action action = expandIdealBalancedTopicAction(brokerset, topicAssignment,
-            actualPartitionCount, sensorSet);
+        TopicAssignment ta = topicAssignment;
+        if (idealRepFactor != actualRepFactor) {
+          // Make ta copy and override ideal rep factor
+          ta = new TopicAssignment(topicAssignment);
+          ta.setReplicationFactor(actualRepFactor);
+        }
+        Action action = expandIdealBalancedTopicAction(brokerset, ta,
+                actualPartitionCount, sensorSet);
         dispatch(action);
         return;
       } else if (idealPartitionCount < actualPartitionCount) {
