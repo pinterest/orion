@@ -64,12 +64,17 @@ public class KafkaIdealBalanceAction extends Action {
     Map<Integer, List<Integer>> actualAssignmentsSrc = getAttribute(this, ATTR_ACTUAL_ASSIGNMENTS_KEY).getValue();
     Map<Integer, List<Integer>> idealAssignments = getAttribute(this, ATTR_IDEAL_ASSIGNMENTS_KEY).getValue();
     String topic = getAttribute(this, ATTR_TOPIC_KEY).getValue();
+    if (idealAssignments.isEmpty()) {
+      markFailed("idealAssignment can't be empty");
+      return;
+    }
+
     if (!actualAssignmentsSrc.keySet().equals(idealAssignments.keySet())) {
       markFailed("actualAssignment does not have same partitions as idealAssignment!");
       return;
     }
 
-    int defaultSize = idealAssignments.get(0).size();
+    int defaultSize = idealAssignments.values().iterator().next().size();
     for (List<Integer> replicas : idealAssignments.values()) {
       if (replicas.size() != defaultSize) {
         markFailed("Assignment map is not uniform!");
