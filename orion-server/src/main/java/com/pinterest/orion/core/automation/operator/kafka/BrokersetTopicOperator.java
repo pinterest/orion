@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -166,6 +167,17 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
       if (idealPartitionCount > actualPartitionCount) {
         // expansion
+        // reject expasion if topic has compact in cleanup policy
+        if (topicAssignment.getConfig() != null &&
+                topicAssignment.getConfig().containsKey("cleanup.policy")) {
+          List<String> policy = Arrays.asList(topicAssignment.getConfig().get("cleanup.policy").split(","));
+          if (policy.stream().anyMatch(s -> s.equals("compact"))) {
+            logger.warning(
+                    "Compacted topic " + topicName + " partition count can't be increased, rejecting expansion - Actual: "
+                            + actualPartitionCount + " Ideal: " + idealPartitionCount);
+            return;
+          }
+        }
         logger.warning(
             "Topic " + topicName + " partition count is not ideal, expanding topic - Actual: "
                 + actualPartitionCount + " Ideal: " + idealPartitionCount);
