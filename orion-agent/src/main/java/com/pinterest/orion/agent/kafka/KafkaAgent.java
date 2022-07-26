@@ -66,7 +66,7 @@ public class KafkaAgent extends BaseAgent {
   private final static String[] KAFKA_UPDATE_CONFIGS_CMD = new String[] { "sudo", "pwrapper",
       "--enable" };
   private static final String[] KAFKA_PROBE_NETSTAT_CMD = new String[] { "netstat", "-atW" };
-  private static long KAFKA_CLIENT_TIMEOUT_SEC = 3L;
+  private static long KAFKA_CLIENT_TIMEOUT_SEC = 6L;
 
   private volatile Properties kafkaBrokerProperties = new Properties();
   private AdminClient adminClient;
@@ -198,7 +198,7 @@ public class KafkaAgent extends BaseAgent {
       Future<Long> kafkaUptimeFuture = getKafkaUptime();
       DescribeClusterResult result = heartbeatAdminClient.describeCluster();
       result.clusterId().get(KAFKA_CLIENT_TIMEOUT_SEC, TimeUnit.SECONDS);
-      status.setUptime(kafkaUptimeFuture.get(3, TimeUnit.SECONDS));
+      status.setUptime(kafkaUptimeFuture.get(6, TimeUnit.SECONDS));
       logger.info("Kafka uptime: " + kafkaUptimeFuture.get());
       status.setStatusType(StatusType.OK);
     } catch (Exception e) {
