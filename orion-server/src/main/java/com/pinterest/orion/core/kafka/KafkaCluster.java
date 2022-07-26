@@ -204,7 +204,7 @@ public class KafkaCluster extends Cluster {
     Set<String> topics;
     try {
       topics = adminClient.listTopics(new ListTopicsOptions().listInternal(true)).names().get(metadataFetchTimeoutMs, TimeUnit.MILLISECONDS);
-    } catch (ExecutionException e) {
+    } catch (Exception e) {
       if (cachedTopicMap != null) {
         logger.log(Level.WARNING,
             "Failed to list topics for " + clusterId + ", fallback to previous topic data.", e);
