@@ -134,19 +134,26 @@ public class BrokersetTopicOperator extends KafkaOperator {
         + " and actual for " + topicAssignments.size() + " topics");
     for (TopicAssignment topicAssignment : topicAssignments) {
 
-
       String brokersetAlias = topicAssignment.getBrokerset();
       String topicName = topicAssignment.getTopicName();
       KafkaTopicDescription actualTopicDescription = topicDescriptionMap.get(topicName);
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
 
-      if (enableTopicDeletion && topicAssignment.isDelete()) {
-        if (actualTopicDescription == null) {
-          continue;
+      if (brokerset == null) {
+        logger.info("Topic(" + topicName + ") Attempted to use Brokerset(" + brokersetAlias + ") which doesn't exist.");
+        continue;
+      }
+
+      if (topicAssignment.isDelete()) {
+        if (enableTopicDeletion) {
+          if (actualTopicDescription == null) {
+            logger.info("Topic(" + topicName + ") exists and is marked for deletion. However deletion is not enabled in the server config file.");
+          } else {
+            Action action = createDeleteTopicAction(topicAssignment.getTopicName(), sensorSet);
+            logger.info("Topic(" + topicName + ") exists and is marked for deletion. Starting deletion.");
+            dispatch(action);
+          }
         }
-        Action action = createDeleteTopicAction(topicAssignment.getTopicName(), sensorSet);
-        logger.info("Topic(" + topicName + ") exists and is marked for deletion. Starting deletion.");
-        dispatch(action);
         continue;
       }
 
