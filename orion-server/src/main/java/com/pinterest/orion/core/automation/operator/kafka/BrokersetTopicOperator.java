@@ -140,7 +140,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
 
       if (brokerset == null) {
-        logger.info("Topic(" + topicName + ") Attempted to use Brokerset(" + brokersetAlias + ") which doesn't exist.");
+        logger.warning("Topic(" + topicName + ") Attempted to use Brokerset(" + brokersetAlias + ") which doesn't exist.");
         continue;
       }
 
