@@ -41,7 +41,10 @@ import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
 import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.TerminateInstancesResponse;
 
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -53,11 +56,12 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   public static final String ATTR_SKIP_CLUSTER_HEALTH_CHECK_KEY = "skip_cluster_health_check";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_HOSTNAME_KEY = "hostname";
+  public static final String ATTR_FALLBACK_MAPPING = "instanceFallBackMapping";
   private String confRoute53ZoneId;
   private String confRoute53Name;
-
   private String hostname;
   private String instanceId;
+  private Map<String, List<String>> fallbacksMap = new HashMap<>();
   protected boolean skipClusterHealthCheck = false;
 
   @Override
@@ -70,6 +74,9 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     if (!config.containsKey(Ec2Utils.CONF_ROUTE53_ZONE_NAME)) {
       throw new PluginConfigurationException(
           "Cannot find key " + Ec2Utils.CONF_ROUTE53_ZONE_NAME + " in config " + getName());
+    }
+    if (config.containsKey(ATTR_FALLBACK_MAPPING)) {
+      fallbacksMap = (Map<String, List<String>>)config.get(ATTR_FALLBACK_MAPPING);
     }
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
@@ -251,7 +258,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   protected RunInstancesResponse runInstance(Ec2Client ec2Client,
                                              RunInstancesRequest runInstancesRequest)
       throws Exception {
-    RunInstancesResponse runInstancesResponse;
+    RunInstancesResponse runInstancesResponse = null;
     try {
       runInstancesResponse = ec2Client.runInstances(runInstancesRequest);
     } catch (Ec2Exception ec2e) {
@@ -262,6 +269,30 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         logger().warning("IP conflict: " + ec2e + " , retry without using same address");
         runInstancesRequest = runInstancesRequest.toBuilder().privateIpAddress(null).build();
         runInstancesResponse = ec2Client.runInstances(runInstancesRequest);
+      } else if (ec2e.awsErrorDetails().errorCode().equals("InsufficientInstanceCapacity")
+          && !fallbacksMap.isEmpty()) {
+        String currentInstanceType = runInstancesRequest.instanceType().toString();
+        // Get fallback options from config if available
+        List<String>
+            fallbacks =
+            fallbacksMap.containsKey(currentInstanceType) ? fallbacksMap.get(currentInstanceType)
+                                                          : new ArrayList<>();
+        //Attempt to launch fallback instance type
+        for (String fallback : fallbacks) {
+          getResult().appendOut(
+              "Instance type " + currentInstanceType
+                  + " unavailable, attempting to fallback to " + fallback + " instead");
+          logger().warning(
+              "Instance type " + currentInstanceType + " unavailable: " + ec2e
+                  + ", attempting to fallback to " + fallback + " instead");
+          runInstancesRequest = runInstancesRequest.toBuilder().instanceType(fallback).build();
+          runInstancesResponse = checkForFallback(ec2Client, runInstancesRequest);
+          // break if succesfull
+          if (runInstancesResponse != null) {
+            break;
+          }
+          currentInstanceType = fallback;
+        }
       } else {
         throw ec2e;
       }
@@ -435,6 +466,16 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     this.instanceId = instanceId;
   }
 
+  protected RunInstancesResponse checkForFallback(Ec2Client ec2Client, RunInstancesRequest runInstanceRequest) {
+    RunInstancesResponse rir;
+    try {
+      // try to launch given instance, return null if no success
+      rir = ec2Client.runInstances(runInstanceRequest);
+    } catch (Ec2Exception ec2e) {
+      rir = null;
+    }
+    return rir;
+  }
   @Override
   public AttributeSchema generateSchema(Map<String, Object> config) {
     return new AttributeSchema()
