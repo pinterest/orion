@@ -34,9 +34,11 @@ import com.pinterest.orion.core.kafka.KafkaTopicDescription;
 import com.pinterest.orion.core.kafka.KafkaTopicPartitionInfo;
 import com.pinterest.orion.core.kafka.TopicAssignment;
 import com.pinterest.orion.core.utils.kafka.CuratorClient;
+import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import io.dropwizard.metrics5.MetricName;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.shaded.com.google.common.collect.Sets;
 import org.apache.curator.shaded.com.google.common.collect.Sets.SetView;
@@ -90,6 +92,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
   @Override
   public void operate(KafkaCluster cluster) throws Exception {
+    MetricName metric = MetricName.build("pinterest_brokerset_topic_operator").tagged("cluster", cluster.getName());
     AdminClient adminClient = cluster.getAdminClient();
     if (adminClient == null) {
       return;
@@ -136,11 +139,13 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
       String brokersetAlias = topicAssignment.getBrokerset();
       String topicName = topicAssignment.getTopicName();
+      metric.tagged("topic", topicName);
       KafkaTopicDescription actualTopicDescription = topicDescriptionMap.get(topicName);
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
 
       if (brokerset == null) {
         logger.warning("Topic(" + topicName + ") Attempted to use Brokerset(" + brokersetAlias + ") which doesn't exist.");
+        OrionServer.METRICS.counter(metric.resolve("non_existent_brokerset")).inc();
         continue;
       }
 
@@ -151,6 +156,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
           } else {
             Action action = createDeleteTopicAction(topicAssignment.getTopicName(), sensorSet);
             logger.info("Topic(" + topicName + ") exists and is marked for deletion. Starting deletion.");
+            OrionServer.METRICS.counter(metric.resolve("deleted_topic")).inc();
             dispatch(action);
           }
         }
