@@ -156,7 +156,6 @@ public class BrokersetTopicOperator extends KafkaOperator {
           } else {
             Action action = createDeleteTopicAction(topicAssignment.getTopicName(), sensorSet);
             logger.info("Topic(" + topicName + ") exists and is marked for deletion. Starting deletion.");
-            OrionServer.METRICS.counter(metric.resolve("deleted_topic")).inc();
             dispatch(action);
           }
         }
