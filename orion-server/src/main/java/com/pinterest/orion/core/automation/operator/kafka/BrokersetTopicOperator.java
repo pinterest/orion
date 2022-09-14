@@ -92,7 +92,7 @@ public class BrokersetTopicOperator extends KafkaOperator {
 
   @Override
   public void operate(KafkaCluster cluster) throws Exception {
-    MetricName metric = MetricName.build("pinterest_brokerset_topic_operator").tagged("cluster", cluster.getName());
+    MetricName metric = MetricName.build("brokerset_topic_operator").tagged("cluster", cluster.getName());
     AdminClient adminClient = cluster.getAdminClient();
     if (adminClient == null) {
       return;
