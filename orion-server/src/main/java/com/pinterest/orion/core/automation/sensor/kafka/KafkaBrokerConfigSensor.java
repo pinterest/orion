@@ -18,6 +18,7 @@ package com.pinterest.orion.core.automation.sensor.kafka;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.DescribeConfigsOptions;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.config.ConfigResource;
@@ -54,8 +55,12 @@ public class KafkaBrokerConfigSensor extends KafkaSensor {
       brokerIds.add(new ConfigResource(ConfigResource.Type.BROKER, broker.idString()));
     }
 
+    DescribeConfigsOptions describeConfigsOptions = new DescribeConfigsOptions();
+    if (containsKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster)) {
+      describeConfigsOptions.timeoutMs(getKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster));
+    }
+    DescribeConfigsResult describeConfigs = adminClient.describeConfigs(brokerIds, describeConfigsOptions);
     // add broker configs
-    DescribeConfigsResult describeConfigs = adminClient.describeConfigs(brokerIds);
     Map<ConfigResource, Config> map = describeConfigs.all().get();
     for (Map.Entry<ConfigResource, Config> entry : map.entrySet()) {
       com.pinterest.orion.core.Node node = cluster.getNodeMap().get(entry.getKey().name());

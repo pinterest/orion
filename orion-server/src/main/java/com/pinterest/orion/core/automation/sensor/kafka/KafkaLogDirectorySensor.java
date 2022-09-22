@@ -47,7 +47,11 @@ public class KafkaLogDirectorySensor extends KafkaSensor {
       Map<Integer, org.apache.kafka.common.Node> attribute = cluster
           .getAttribute(KafkaBrokerSensor.ATTR_BROKERS_KEY).getValue();
       List<Integer> brokers = new ArrayList<>(attribute.keySet());
-      DescribeLogDirsResult describeLogDirs = adminClient.describeLogDirs(brokers);
+      DescribeLogDirsOptions describeLogDirsOptions = new DescribeLogDirsOptions();
+      if (containsKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster)) {
+        describeLogDirsOptions.timeoutMs(getKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster));
+      }
+      DescribeLogDirsResult describeLogDirs = adminClient.describeLogDirs(brokers, describeLogDirsOptions);
       Map<Integer, Map<String, LogDirInfo>> map = describeLogDirs.all().get();
       setHiddenAttribute(cluster, ATTR_BROKER_LOG_DIRS_KEY, map);
       logger.info("Updated log directory");

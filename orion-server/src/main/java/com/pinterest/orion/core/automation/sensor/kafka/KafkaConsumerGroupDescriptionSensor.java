@@ -21,6 +21,7 @@ import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsOptions;
 
 import com.pinterest.orion.core.kafka.KafkaCluster;
+import org.apache.kafka.clients.admin.ListConsumerGroupsOptions;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,14 +39,19 @@ public class KafkaConsumerGroupDescriptionSensor extends KafkaSensor {
       return;
     }
 
+    ListConsumerGroupsOptions listConsumerGroupsOptions = new ListConsumerGroupsOptions();
+    DescribeConsumerGroupsOptions describeConsumerGroupsOptions = new DescribeConsumerGroupsOptions();
+    if (containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster)) {
+      listConsumerGroupsOptions.timeoutMs(getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster));
+      describeConsumerGroupsOptions.timeoutMs(getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster));
+    }
     long start = System.currentTimeMillis();
-    Collection<ConsumerGroupListing>
-        listConsumerGroupResult = adminClient.listConsumerGroups().all().get();
+    Collection<ConsumerGroupListing> listConsumerGroupResult = adminClient.listConsumerGroups(
+            listConsumerGroupsOptions).all().get();
     List<String> groupIds = listConsumerGroupResult.stream().map(ConsumerGroupListing::groupId).collect(
         Collectors.toList());
-    Map<String, ConsumerGroupDescription>
-        consumerGroupDescriptionMap = adminClient.describeConsumerGroups(groupIds, new DescribeConsumerGroupsOptions().timeoutMs(120_000)).all().get();
-
+    Map<String, ConsumerGroupDescription> consumerGroupDescriptionMap = adminClient.describeConsumerGroups(
+            groupIds, describeConsumerGroupsOptions).all().get();
     logger.info(String.format("Updated %d consumer groups of %s in %d ms", groupIds.size(), cluster.getClusterId(), System.currentTimeMillis() - start));
     setHiddenAttribute(cluster, ATTR_CONSUMER_GROUP_IDS_KEY, groupIds);
     setHiddenAttribute(cluster, ATTR_CONSUMER_GROUP_DESC_KEY, consumerGroupDescriptionMap);

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.clients.admin.DescribeConfigsOptions;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigResource;
@@ -39,6 +40,7 @@ import com.pinterest.orion.core.kafka.TopicAssignment;
 
 public class KafkaTopicSensor extends KafkaSensor {
   public static final String ATTR_TOPICINFO_MAP_KEY = "topicinfo";
+  private static int kafkaAdminClientClusterRequestTimeoutMs = -1; // -1 means using default value.
 
   @Override
   public String getName() {
@@ -58,7 +60,9 @@ public class KafkaTopicSensor extends KafkaSensor {
     } else {
       assignments = new ArrayList<>();
     }
-
+    if (containsKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster)) {
+      kafkaAdminClientClusterRequestTimeoutMs = getKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster);
+    }
     Map<String, KafkaTopicDescription> topicDescriptionMap = getTopicDescriptionFromKafka(cluster);
     try {
       populateTopicBrokersetInfo(assignments, topicDescriptionMap);
@@ -77,7 +81,11 @@ public class KafkaTopicSensor extends KafkaSensor {
                                          Map<String, KafkaTopicDescription> topicDescriptionMap) throws ExecutionException, InterruptedException {
     List<ConfigResource> request = topicDescriptionMap.keySet().stream()
         .map(m -> new ConfigResource(Type.TOPIC, m)).collect(Collectors.toList());
-    DescribeConfigsResult describeConfigs = adminClient.describeConfigs(request);
+    DescribeConfigsOptions describeConfigsOptions = new DescribeConfigsOptions();
+    if (kafkaAdminClientClusterRequestTimeoutMs > 0) {
+      describeConfigsOptions.timeoutMs(kafkaAdminClientClusterRequestTimeoutMs);
+    }
+    DescribeConfigsResult describeConfigs = adminClient.describeConfigs(request, describeConfigsOptions);
     Map<ConfigResource, Config> map = describeConfigs.all().get();
     map.entrySet().stream().forEach(e -> {
       KafkaTopicDescription kafkaTopicDescription = topicDescriptionMap.get(e.getKey().name());
