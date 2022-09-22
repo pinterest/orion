@@ -44,7 +44,6 @@ public class KafkaBrokerSensor extends KafkaSensor {
   public static final String ATTR_BOOTSTRAP_SERVERS_KEY = "bootstrapBrokers";
   public static final String ATTR_CONTROLLER_ID_KEY = "controllerId";
   public static final String ATTR_BROKERS_KEY = "brokers";
-  public static final int KAFKA_ADMIN_REQUEST_TIMEOUT_SECONDS = 30;
 
   @Override
   public String getName() {
@@ -57,8 +56,11 @@ public class KafkaBrokerSensor extends KafkaSensor {
     if (adminClient == null) {
       adminClient = initializeAdminClient(cluster);
     }
-
-    DescribeClusterResult clusterResult = adminClient.describeCluster(new DescribeClusterOptions().timeoutMs(KAFKA_ADMIN_REQUEST_TIMEOUT_SECONDS * 1000));
+    DescribeClusterOptions describeClusterOptions = new DescribeClusterOptions();
+    if (containsKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster)) {
+      describeClusterOptions.timeoutMs(getKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster));
+    }
+    DescribeClusterResult clusterResult = adminClient.describeCluster(describeClusterOptions);
     Collection<org.apache.kafka.common.Node> brokersList = clusterResult.nodes().get();
     brokersList.stream().forEach(n -> {
       NodeInfo info = new NodeInfo();

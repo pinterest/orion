@@ -18,6 +18,8 @@ package com.pinterest.orion.core.automation.sensor.kafka;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsOptions;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.TopicPartition;
@@ -76,9 +78,14 @@ public class KafkaConsumerGroupOffsetSensor extends KafkaSensor {
     Map<String, ConsumerGroupDescription> consumerGroupDescriptionMap = cluster.getAttribute(KafkaConsumerGroupDescriptionSensor.ATTR_CONSUMER_GROUP_DESC_KEY).getValue();
     Map<TopicPartition, TopicPartitionOffsets> topicPartitionOffsetsMap = cluster.getAttribute(KafkaTopicOffsetSensor.ATTR_TOPIC_OFFSET_KEY).getValue();
     List<KafkaFuture<Map<TopicPartition, OffsetAndMetadata>>> offsetFutures = new ArrayList<>();
-
+    ListConsumerGroupOffsetsOptions listConsumerGroupOffsetsOptions = new ListConsumerGroupOffsetsOptions();
+    if (containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster)) {
+      listConsumerGroupOffsetsOptions.timeoutMs(getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster));
+    }
     for (String groupId : groupIds) {
-      offsetFutures.add(adminClient.listConsumerGroupOffsets(groupId).partitionsToOffsetAndMetadata());
+      ListConsumerGroupOffsetsResult listConsumerGroupOffsetsResult = adminClient.listConsumerGroupOffsets(
+              groupId, listConsumerGroupOffsetsOptions);
+      offsetFutures.add(listConsumerGroupOffsetsResult.partitionsToOffsetAndMetadata());
     }
 
     for( int i = 0; i < groupIds.size(); i++ ) {

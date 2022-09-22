@@ -22,6 +22,7 @@ import com.pinterest.orion.core.kafka.KafkaTopicPartitionInfo;
 import com.pinterest.orion.core.kafka.TopicPartitionOffsets;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ListOffsetsOptions;
 import org.apache.kafka.clients.admin.ListOffsetsResult;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.common.KafkaFuture;
@@ -43,6 +44,7 @@ public class KafkaTopicOffsetSensor extends KafkaSensor {
   public static final String ATTR_TOPIC_OFFSET_KEY = "topicOffsets";
 
   private static final int OFFSET_API_BATCH_SIZE = 1_000;
+  private static int kafkaAdminClientTopicRequestTimeout = -1; // -1 means using default value.
 
   @Override
   public void sense(KafkaCluster cluster) throws Exception {
@@ -57,6 +59,9 @@ public class KafkaTopicOffsetSensor extends KafkaSensor {
     }
 
     Map<String, KafkaTopicDescription> topicDescriptionMap = cluster.getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue();
+    if (containsKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster)) {
+      kafkaAdminClientTopicRequestTimeout = getKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster);
+    }
 
     try {
       Map<TopicPartition, TopicPartitionOffsets> topicPartitionOffsetMap = getTopicOffsets(adminClient, topicDescriptionMap.values());
@@ -103,9 +108,13 @@ public class KafkaTopicOffsetSensor extends KafkaSensor {
     Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets = new HashMap<>();
     List<KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>>> beginningOffsetsFutures = new ArrayList<>();
     List<KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>>> endOffsetsFutures = new ArrayList<>();
+    ListOffsetsOptions listOffsetsOptions = new ListOffsetsOptions();
+    if (kafkaAdminClientTopicRequestTimeout > 0) {
+      listOffsetsOptions.timeoutMs(kafkaAdminClientTopicRequestTimeout);
+    }
     for (int i = 0; i < batchCount; ++i) {
-      beginningOffsetsFutures.add(adminClient.listOffsets(partitionsBeginningOffsetsReqBatches.get(i)).all());
-      endOffsetsFutures.add(adminClient.listOffsets(partitionsEndOffsetsReqBatches.get(i)).all());
+      beginningOffsetsFutures.add(adminClient.listOffsets(partitionsBeginningOffsetsReqBatches.get(i), listOffsetsOptions).all());
+      endOffsetsFutures.add(adminClient.listOffsets(partitionsEndOffsetsReqBatches.get(i), listOffsetsOptions).all());
     }
 
     for (KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> f: beginningOffsetsFutures) {
