@@ -52,11 +52,13 @@ public abstract class KafkaSensor extends Sensor {
   public abstract void sense(KafkaCluster cluster) throws Exception;
 
   private static Map<String, Object> getClusterConfMap(Cluster cluster) {
-    Map<String, Object> confMap = new HashMap<>();
     if (cluster.containsAttribute(Cluster.ATTR_CONF_KEY)) {
-      confMap = cluster.getAttribute(Cluster.ATTR_CONF_KEY).getValue();
+      Map<String, Object> confMap = cluster.getAttribute(Cluster.ATTR_CONF_KEY).getValue();
+      if (confMap != null) {
+        return confMap;
+      }
     }
-    return confMap;
+    return new HashMap<>();
   }
 
   protected static boolean containsKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {

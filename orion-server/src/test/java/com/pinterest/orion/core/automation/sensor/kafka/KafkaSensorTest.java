@@ -27,6 +27,9 @@ public class KafkaSensorTest {
     public void testGetKafkaAdminClientClusterRequestTimeoutMilliseconds() throws Exception {
         KafkaCluster cluster = Mockito.mock(KafkaCluster.class);
         Mockito.when(cluster.containsAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(true);
+        // Cluster config is null
+        Mockito.when(cluster.getAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(new Attribute(null, null, System.currentTimeMillis()));
+        assertFalse(KafkaSensor.containsKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster));
         // Cluster does not have timeout attribute
         Mockito.when(cluster.getAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(new Attribute(null, EMPTY_MAP, System.currentTimeMillis()));
         assertFalse(KafkaSensor.containsKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster));
@@ -40,6 +43,9 @@ public class KafkaSensorTest {
     public void testGetKafkaAdminClientTopicRequestTimeoutMilliseconds() throws Exception {
         KafkaCluster cluster = Mockito.mock(KafkaCluster.class);
         Mockito.when(cluster.containsAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(true);
+        // Cluster config is null
+        Mockito.when(cluster.getAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(new Attribute(null, null, System.currentTimeMillis()));
+        assertFalse(KafkaSensor.containsKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster));
         // Cluster does not have timeout attribute
         Mockito.when(cluster.getAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(new Attribute(null, EMPTY_MAP, System.currentTimeMillis()));
         assertFalse(KafkaSensor.containsKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster));
@@ -53,6 +59,9 @@ public class KafkaSensorTest {
     public void testGetKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds() throws Exception {
         KafkaCluster cluster = Mockito.mock(KafkaCluster.class);
         Mockito.when(cluster.containsAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(true);
+        // Cluster config is null
+        Mockito.when(cluster.getAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(new Attribute(null, null, System.currentTimeMillis()));
+        assertFalse(KafkaSensor.containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster));
         // Cluster does not have timeout attribute
         Mockito.when(cluster.getAttribute(Cluster.ATTR_CONF_KEY)).thenReturn(new Attribute(null, EMPTY_MAP, System.currentTimeMillis()));
         assertFalse(KafkaSensor.containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster));
