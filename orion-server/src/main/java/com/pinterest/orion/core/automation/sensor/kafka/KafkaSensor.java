@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.pinterest.orion.core.automation.sensor.kafka;
 
+import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.kafka.KafkaCluster;
@@ -53,9 +54,12 @@ public abstract class KafkaSensor extends Sensor {
 
   private static Map<String, Object> getClusterConfMap(Cluster cluster) {
     if (cluster.containsAttribute(Cluster.ATTR_CONF_KEY)) {
-      Map<String, Object> confMap = cluster.getAttribute(Cluster.ATTR_CONF_KEY).getValue();
-      if (confMap != null) {
-        return confMap;
+      Attribute confAttribute = cluster.getAttribute(Cluster.ATTR_CONF_KEY);
+      if (confAttribute != null) {
+        Map<String, Object> confMap = confAttribute.getValue();
+        if (confMap != null) {
+          return confMap;
+        }
       }
     }
     return new HashMap<>();
