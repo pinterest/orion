@@ -19,6 +19,9 @@ import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class KafkaSensor extends Sensor {
 
   // These cluster attributes are used to define the timeout values of the Kafka AdminClient API calls.
@@ -30,11 +33,11 @@ public abstract class KafkaSensor extends Sensor {
   // KafkaAdminClientConsumerGroupRequestTimeoutMs is used for AdminClient consumer group related APIs.
   //    Ex: listConsumerGroups, describeConsumerGroups and listConsumerGroupOffsets
   protected static final String ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY =
-          "KafkaAdminClientClusterRequestTimeoutMs";
+          "kafkaAdminClientClusterRequestTimeoutMs";
   protected static final String ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY =
-          "KafkaAdminClientTopicRequestTimeoutMs";
+          "kafkaAdminClientTopicRequestTimeoutMs";
   protected static final String ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY =
-          "KafkaAdminClientConsumerGroupRequestTimeoutMs";
+          "kafkaAdminClientConsumerGroupRequestTimeoutMs";
 
   @Override
   public final void observe(Cluster cluster) throws Exception {
@@ -48,30 +51,40 @@ public abstract class KafkaSensor extends Sensor {
 
   public abstract void sense(KafkaCluster cluster) throws Exception;
 
+  private static Map<String, Object> getClusterConfMap(Cluster cluster) {
+    if (cluster.containsAttribute(Cluster.ATTR_CONF_KEY)) {
+      Map<String, Object> confMap = cluster.getAttribute(Cluster.ATTR_CONF_KEY).getValue();
+      if (confMap != null) {
+        return confMap;
+      }
+    }
+    return new HashMap<>();
+  }
+
   protected static boolean containsKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {
-    return cluster.containsAttribute(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY);
+    return getClusterConfMap(cluster).containsKey(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY);
   }
 
   protected static int getKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {
     return Integer.valueOf(
-              cluster.getAttribute(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY).getValue());
+            getClusterConfMap(cluster).get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
   }
 
   protected static boolean containsKafkaAdminClientTopicRequestTimeoutMilliseconds(Cluster cluster) {
-    return cluster.containsAttribute(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY);
+    return getClusterConfMap(cluster).containsKey(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY);
   }
 
   protected static int getKafkaAdminClientTopicRequestTimeoutMilliseconds(Cluster cluster) {
     return Integer.valueOf(
-              cluster.getAttribute(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY).getValue());
+            getClusterConfMap(cluster).get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
   }
 
   protected static boolean containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(Cluster cluster) {
-    return cluster.containsAttribute(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY);
+    return getClusterConfMap(cluster).containsKey(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY);
   }
 
   protected static int getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(Cluster cluster) {
     return Integer.valueOf(
-              cluster.getAttribute(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY).getValue());
+            getClusterConfMap(cluster).get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
   }
 }
