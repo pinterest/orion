@@ -76,6 +76,7 @@ public class KafkaCluster extends Cluster {
           "kafkaAdminClientTopicRequestTimeoutMs";
   protected static final String ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY =
           "kafkaAdminClientConsumerGroupRequestTimeoutMs";
+  public static final int DEFAULT_KAFKA_ADMIN_CLIENT_REQUEST_TIMEOUT_MILLISECONDS = 30000;
 
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(KafkaCluster.class.getCanonicalName());
@@ -399,8 +400,18 @@ public class KafkaCluster extends Cluster {
   }
 
   public int getKafkaAdminClientClusterRequestTimeoutMilliseconds() {
-    return Integer.valueOf(
-            getClusterConfMap().get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+    Map<String, Object> clusterConfMap = getClusterConfMap();
+    int timeoutMs = DEFAULT_KAFKA_ADMIN_CLIENT_REQUEST_TIMEOUT_MILLISECONDS;
+    if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
+      timeoutMs = Integer.valueOf(
+              clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+      logger.log(Level.INFO,
+              "getKafkaAdminClientClusterRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
+    } else {
+      logger.log(Level.WARNING,
+              "getKafkaAdminClientClusterRequestTimeoutMilliseconds is called without required value. Use default value: " + timeoutMs);
+    }
+    return timeoutMs;
   }
 
   public boolean containsKafkaAdminClientTopicRequestTimeoutMilliseconds() {
@@ -408,8 +419,18 @@ public class KafkaCluster extends Cluster {
   }
 
   public int getKafkaAdminClientTopicRequestTimeoutMilliseconds() {
-    return Integer.valueOf(
-            getClusterConfMap().get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+    Map<String, Object> clusterConfMap = getClusterConfMap();
+    int timeoutMs = DEFAULT_KAFKA_ADMIN_CLIENT_REQUEST_TIMEOUT_MILLISECONDS;
+    if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
+      timeoutMs = Integer.valueOf(
+              clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+      logger.log(Level.INFO,
+              "getKafkaAdminClientTopicRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
+    } else {
+      logger.log(Level.WARNING,
+              "getKafkaAdminClientTopicRequestTimeoutMilliseconds is called without required value. Use default value: " + timeoutMs);
+    }
+    return timeoutMs;
   }
 
   public boolean containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds() {
@@ -417,8 +438,17 @@ public class KafkaCluster extends Cluster {
   }
 
   public int getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds() {
-    return Integer.valueOf(
-            getClusterConfMap().get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+    Map<String, Object> clusterConfMap = getClusterConfMap();
+    int timeoutMs = DEFAULT_KAFKA_ADMIN_CLIENT_REQUEST_TIMEOUT_MILLISECONDS;
+    if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
+      timeoutMs = Integer.valueOf(
+              clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+      logger.log(Level.INFO,
+              "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
+    } else {
+      logger.log(Level.WARNING,
+              "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds is called without required value. Use default value: " + timeoutMs);
+    }
+    return timeoutMs;
   }
-
 }
