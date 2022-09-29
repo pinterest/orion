@@ -65,29 +65,29 @@ public abstract class KafkaSensor extends Sensor {
     return new HashMap<>();
   }
 
-  protected static boolean containsKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {
+  public static boolean containsKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {
     return getClusterConfMap(cluster).containsKey(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY);
   }
 
-  protected static int getKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {
+  public static int getKafkaAdminClientClusterRequestTimeoutMilliseconds(Cluster cluster) {
     return Integer.valueOf(
             getClusterConfMap(cluster).get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
   }
 
-  protected static boolean containsKafkaAdminClientTopicRequestTimeoutMilliseconds(Cluster cluster) {
+  public static boolean containsKafkaAdminClientTopicRequestTimeoutMilliseconds(Cluster cluster) {
     return getClusterConfMap(cluster).containsKey(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY);
   }
 
-  protected static int getKafkaAdminClientTopicRequestTimeoutMilliseconds(Cluster cluster) {
+  public static int getKafkaAdminClientTopicRequestTimeoutMilliseconds(Cluster cluster) {
     return Integer.valueOf(
             getClusterConfMap(cluster).get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
   }
 
-  protected static boolean containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(Cluster cluster) {
+  public static boolean containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(Cluster cluster) {
     return getClusterConfMap(cluster).containsKey(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY);
   }
 
-  protected static int getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(Cluster cluster) {
+  public static int getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(Cluster cluster) {
     return Integer.valueOf(
             getClusterConfMap(cluster).get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
   }

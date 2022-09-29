@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DescribeClusterOptions;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -107,7 +108,11 @@ public class KafkaCluster extends Cluster {
   public int getClusterDefaultReplicationFactor() {
     int defaultRf = -1;
     try {
-      Set<Integer> nodeIds = adminClient.describeCluster().nodes().get().stream()
+      DescribeClusterOptions describeClusterOptions = new DescribeClusterOptions();
+      if (KafkaTopicSensor.containsKafkaAdminClientClusterRequestTimeoutMilliseconds(this)) {
+        describeClusterOptions.timeoutMs(KafkaTopicSensor.getKafkaAdminClientClusterRequestTimeoutMilliseconds(this));
+      }
+      Set<Integer> nodeIds = adminClient.describeCluster(describeClusterOptions).nodes().get().stream()
           .map(org.apache.kafka.common.Node::id).collect(Collectors.toSet());
       ConfigResource brokerConfigResource = new ConfigResource(ConfigResource.Type.BROKER,
           nodeIds.iterator().next().toString());
@@ -176,6 +181,9 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
                                                                                   ExecutionException, TimeoutException {
+    if (KafkaTopicSensor.containsKafkaAdminClientTopicRequestTimeoutMilliseconds(this)) {
+      return getTopicDescriptionFromKafka(KafkaTopicSensor.getKafkaAdminClientTopicRequestTimeoutMilliseconds(this));
+    }
     return getTopicDescriptionFromKafka(DEFAULT_METADATA_TIMEOUT_MS);
   }
 
