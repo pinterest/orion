@@ -48,8 +48,8 @@ public class KafkaLogDirectorySensor extends KafkaSensor {
           .getAttribute(KafkaBrokerSensor.ATTR_BROKERS_KEY).getValue();
       List<Integer> brokers = new ArrayList<>(attribute.keySet());
       DescribeLogDirsOptions describeLogDirsOptions = new DescribeLogDirsOptions();
-      if (containsKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster)) {
-        describeLogDirsOptions.timeoutMs(getKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster));
+      if (cluster.containsKafkaAdminClientTopicRequestTimeoutMilliseconds()) {
+        describeLogDirsOptions.timeoutMs(cluster.getKafkaAdminClientTopicRequestTimeoutMilliseconds());
       }
       DescribeLogDirsResult describeLogDirs = adminClient.describeLogDirs(brokers, describeLogDirsOptions);
       Map<Integer, Map<String, LogDirInfo>> map = describeLogDirs.all().get();

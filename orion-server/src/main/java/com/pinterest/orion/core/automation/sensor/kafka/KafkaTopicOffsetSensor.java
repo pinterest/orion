@@ -59,8 +59,8 @@ public class KafkaTopicOffsetSensor extends KafkaSensor {
     }
 
     Map<String, KafkaTopicDescription> topicDescriptionMap = cluster.getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue();
-    if (containsKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster)) {
-      kafkaAdminClientTopicRequestTimeout = getKafkaAdminClientTopicRequestTimeoutMilliseconds(cluster);
+    if (cluster.containsKafkaAdminClientTopicRequestTimeoutMilliseconds()) {
+      kafkaAdminClientTopicRequestTimeout = cluster.getKafkaAdminClientTopicRequestTimeoutMilliseconds();
     }
 
     try {
