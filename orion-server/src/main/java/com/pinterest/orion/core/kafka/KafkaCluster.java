@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.pinterest.orion.core.Attribute;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeClusterOptions;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
@@ -60,6 +61,21 @@ import com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicSensor;
 
 
 public class KafkaCluster extends Cluster {
+
+  // These cluster attributes are used to define the timeout values of the Kafka AdminClient API calls.
+  // If cluster does not have required attributes, the AdminClient call will use default timeout values.
+  // KafkaAdminClientClusterRequestTimeoutMs is used for AdminClient cluster/broker config APIs.
+  //    Ex: describeConfigs and describeCluster
+  // KafkaAdminClientTopicRequestTimeoutMs is used for AdminClient topic/partition related APIs.
+  //    Ex: describeLogDirs and listOffsets
+  // KafkaAdminClientConsumerGroupRequestTimeoutMs is used for AdminClient consumer group related APIs.
+  //    Ex: listConsumerGroups, describeConsumerGroups and listConsumerGroupOffsets
+  protected static final String ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY =
+          "kafkaAdminClientClusterRequestTimeoutMs";
+  protected static final String ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY =
+          "kafkaAdminClientTopicRequestTimeoutMs";
+  protected static final String ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY =
+          "kafkaAdminClientConsumerGroupRequestTimeoutMs";
 
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(KafkaCluster.class.getCanonicalName());
@@ -109,8 +125,8 @@ public class KafkaCluster extends Cluster {
     int defaultRf = -1;
     try {
       DescribeClusterOptions describeClusterOptions = new DescribeClusterOptions();
-      if (KafkaTopicSensor.containsKafkaAdminClientClusterRequestTimeoutMilliseconds(this)) {
-        describeClusterOptions.timeoutMs(KafkaTopicSensor.getKafkaAdminClientClusterRequestTimeoutMilliseconds(this));
+      if (containsKafkaAdminClientClusterRequestTimeoutMilliseconds()) {
+        describeClusterOptions.timeoutMs(getKafkaAdminClientClusterRequestTimeoutMilliseconds());
       }
       Set<Integer> nodeIds = adminClient.describeCluster(describeClusterOptions).nodes().get().stream()
           .map(org.apache.kafka.common.Node::id).collect(Collectors.toSet());
@@ -181,8 +197,8 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
                                                                                   ExecutionException, TimeoutException {
-    if (KafkaTopicSensor.containsKafkaAdminClientTopicRequestTimeoutMilliseconds(this)) {
-      return getTopicDescriptionFromKafka(KafkaTopicSensor.getKafkaAdminClientTopicRequestTimeoutMilliseconds(this));
+    if (containsKafkaAdminClientTopicRequestTimeoutMilliseconds()) {
+      return getTopicDescriptionFromKafka(getKafkaAdminClientTopicRequestTimeoutMilliseconds());
     }
     return getTopicDescriptionFromKafka(DEFAULT_METADATA_TIMEOUT_MS);
   }
@@ -364,4 +380,45 @@ public class KafkaCluster extends Cluster {
   public Logger logger() {
     return logger;
   }
+
+  private Map<String, Object> getClusterConfMap() {
+    if (containsAttribute(ATTR_CONF_KEY)) {
+      Attribute confAttribute = getAttribute(Cluster.ATTR_CONF_KEY);
+      if (confAttribute != null) {
+        Map<String, Object> confMap = confAttribute.getValue();
+        if (confMap != null) {
+          return confMap;
+        }
+      }
+    }
+    return new HashMap<>();
+  }
+
+  public boolean containsKafkaAdminClientClusterRequestTimeoutMilliseconds() {
+    return getClusterConfMap().containsKey(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY);
+  }
+
+  public int getKafkaAdminClientClusterRequestTimeoutMilliseconds() {
+    return Integer.valueOf(
+            getClusterConfMap().get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+  }
+
+  public boolean containsKafkaAdminClientTopicRequestTimeoutMilliseconds() {
+    return getClusterConfMap().containsKey(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY);
+  }
+
+  public int getKafkaAdminClientTopicRequestTimeoutMilliseconds() {
+    return Integer.valueOf(
+            getClusterConfMap().get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+  }
+
+  public boolean containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds() {
+    return getClusterConfMap().containsKey(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY);
+  }
+
+  public int getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds() {
+    return Integer.valueOf(
+            getClusterConfMap().get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY).toString());
+  }
+
 }

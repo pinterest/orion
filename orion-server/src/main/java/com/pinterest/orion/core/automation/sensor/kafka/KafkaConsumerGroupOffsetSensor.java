@@ -79,8 +79,8 @@ public class KafkaConsumerGroupOffsetSensor extends KafkaSensor {
     Map<TopicPartition, TopicPartitionOffsets> topicPartitionOffsetsMap = cluster.getAttribute(KafkaTopicOffsetSensor.ATTR_TOPIC_OFFSET_KEY).getValue();
     List<KafkaFuture<Map<TopicPartition, OffsetAndMetadata>>> offsetFutures = new ArrayList<>();
     ListConsumerGroupOffsetsOptions listConsumerGroupOffsetsOptions = new ListConsumerGroupOffsetsOptions();
-    if (containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster)) {
-      listConsumerGroupOffsetsOptions.timeoutMs(getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds(cluster));
+    if (cluster.containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds()) {
+      listConsumerGroupOffsetsOptions.timeoutMs(cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds());
     }
     for (String groupId : groupIds) {
       ListConsumerGroupOffsetsResult listConsumerGroupOffsetsResult = adminClient.listConsumerGroupOffsets(

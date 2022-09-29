@@ -60,8 +60,8 @@ public class KafkaTopicSensor extends KafkaSensor {
     } else {
       assignments = new ArrayList<>();
     }
-    if (containsKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster)) {
-      kafkaAdminClientClusterRequestTimeoutMs = getKafkaAdminClientClusterRequestTimeoutMilliseconds(cluster);
+    if (cluster.containsKafkaAdminClientClusterRequestTimeoutMilliseconds()) {
+      kafkaAdminClientClusterRequestTimeoutMs = cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds();
     }
     Map<String, KafkaTopicDescription> topicDescriptionMap = getTopicDescriptionFromKafka(cluster);
     try {
