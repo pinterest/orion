@@ -12,7 +12,12 @@ import static org.junit.Assert.assertEquals;
 public class KafkaClusterTest {
 
     private static final Map<String, Object> EMPTY_MAP = new HashMap<>();
-    private static final Map<String, String> RESULT_MAP = new HashMap<String, String>() {{
+    private static final Map<String, Integer> RESULT_INT_MAP = new HashMap<String, Integer>() {{
+        put(KafkaCluster.ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY, 11111);
+        put(KafkaCluster.ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY, 22222);
+        put(KafkaCluster.ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY, 33333);
+    }};
+    private static final Map<String, String> RESULT_STRING_MAP = new HashMap<String, String>() {{
         put(KafkaCluster.ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY, "11111");
         put(KafkaCluster.ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY, "22222");
         put(KafkaCluster.ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY, "33333");
@@ -31,7 +36,9 @@ public class KafkaClusterTest {
         cluster.setAttribute(cluster.ATTR_CONF_KEY, EMPTY_MAP);
         assertEquals(-1, cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds());
         // Cluster has cluster admin client timeout attribute
-        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_MAP);
+        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_INT_MAP);
+        assertEquals(11111, cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds());
+        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_STRING_MAP);
         assertEquals(11111, cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds());
     }
 
@@ -48,7 +55,9 @@ public class KafkaClusterTest {
         cluster.setAttribute(cluster.ATTR_CONF_KEY, EMPTY_MAP);
         assertEquals(-1, cluster.getKafkaAdminClientTopicRequestTimeoutMilliseconds());
         // Cluster has topic admin client timeout attribute
-        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_MAP);
+        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_INT_MAP);
+        assertEquals(22222, cluster.getKafkaAdminClientTopicRequestTimeoutMilliseconds());
+        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_STRING_MAP);
         assertEquals(22222, cluster.getKafkaAdminClientTopicRequestTimeoutMilliseconds());
     }
 
@@ -65,7 +74,9 @@ public class KafkaClusterTest {
         cluster.setAttribute(cluster.ATTR_CONF_KEY, EMPTY_MAP);
         assertEquals(-1, cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds());
         // Cluster has consumer group admin client timeout attribute
-        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_MAP);
+        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_INT_MAP);
+        assertEquals(33333, cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds());
+        cluster.setAttribute(cluster.ATTR_CONF_KEY, RESULT_STRING_MAP);
         assertEquals(33333, cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds());
     }
 }
