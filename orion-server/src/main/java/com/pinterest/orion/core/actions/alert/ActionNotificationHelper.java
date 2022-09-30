@@ -122,7 +122,7 @@ public class ActionNotificationHelper {
         if (isSendingSlackNotification) {
             sendSlackNotifications();
         } else {
-            getAction().logger().log(
+            getLogger().log(
                     Level.INFO, "ActionNotificationHelper does not send any notification.");
         }
     }
