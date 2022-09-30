@@ -406,6 +406,9 @@ public class KafkaCluster extends Cluster {
         logger.log(Level.INFO,
                 "getKafkaAdminClientClusterRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
         return timeoutMs;
+      } else {
+        logger.log(Level.WARNING,
+                ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is null.");
       }
     }
     return -1;
@@ -420,6 +423,9 @@ public class KafkaCluster extends Cluster {
         logger.log(Level.INFO,
                 "getKafkaAdminClientTopicRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
         return timeoutMs;
+      } else {
+        logger.log(Level.WARNING,
+                ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is null.");
       }
     }
     return -1;
@@ -434,6 +440,9 @@ public class KafkaCluster extends Cluster {
         logger.log(Level.INFO,
                 "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
         return timeoutMs;
+      } else {
+        logger.log(Level.WARNING,
+                ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is null.");
       }
     }
     return -1;
