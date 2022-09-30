@@ -41,9 +41,10 @@ public class KafkaConsumerGroupDescriptionSensor extends KafkaSensor {
 
     ListConsumerGroupsOptions listConsumerGroupsOptions = new ListConsumerGroupsOptions();
     DescribeConsumerGroupsOptions describeConsumerGroupsOptions = new DescribeConsumerGroupsOptions();
-    if (cluster.containsKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds()) {
-      listConsumerGroupsOptions.timeoutMs(cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds());
-      describeConsumerGroupsOptions.timeoutMs(cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds());
+    int kafkaAdminClientConsumerGroupRequestTimeoutMs = cluster.getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds();
+    if (kafkaAdminClientConsumerGroupRequestTimeoutMs > 0) {
+      listConsumerGroupsOptions.timeoutMs(kafkaAdminClientConsumerGroupRequestTimeoutMs);
+      describeConsumerGroupsOptions.timeoutMs(kafkaAdminClientConsumerGroupRequestTimeoutMs);
     }
     long start = System.currentTimeMillis();
     Collection<ConsumerGroupListing> listConsumerGroupResult = adminClient.listConsumerGroups(

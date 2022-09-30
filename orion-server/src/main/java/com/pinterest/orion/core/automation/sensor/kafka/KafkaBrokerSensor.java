@@ -57,8 +57,9 @@ public class KafkaBrokerSensor extends KafkaSensor {
       adminClient = initializeAdminClient(cluster);
     }
     DescribeClusterOptions describeClusterOptions = new DescribeClusterOptions();
-    if (cluster.containsKafkaAdminClientClusterRequestTimeoutMilliseconds()) {
-      describeClusterOptions.timeoutMs(cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds());
+    int kafkaAdminClientClusterRequestTimeoutMs = cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds();
+    if (kafkaAdminClientClusterRequestTimeoutMs > 0) {
+      describeClusterOptions.timeoutMs(kafkaAdminClientClusterRequestTimeoutMs);
     }
     DescribeClusterResult clusterResult = adminClient.describeCluster(describeClusterOptions);
     Collection<org.apache.kafka.common.Node> brokersList = clusterResult.nodes().get();

@@ -60,9 +60,7 @@ public class KafkaTopicSensor extends KafkaSensor {
     } else {
       assignments = new ArrayList<>();
     }
-    if (cluster.containsKafkaAdminClientClusterRequestTimeoutMilliseconds()) {
-      kafkaAdminClientClusterRequestTimeoutMs = cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds();
-    }
+    kafkaAdminClientClusterRequestTimeoutMs = cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds();
     Map<String, KafkaTopicDescription> topicDescriptionMap = getTopicDescriptionFromKafka(cluster);
     try {
       populateTopicBrokersetInfo(assignments, topicDescriptionMap);
