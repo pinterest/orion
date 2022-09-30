@@ -403,11 +403,7 @@ public class KafkaCluster extends Cluster {
     if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
       Object timeoutObject = clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY);
       if (timeoutObject != null) {
-        if (timeoutObject instanceof String) {
-          timeoutMs = Integer.valueOf((String) timeoutObject);
-          logger.log(Level.INFO,
-                  "getKafkaAdminClientClusterRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
-        } else if (timeoutObject instanceof Integer) {
+        if (timeoutObject instanceof Integer) {
           timeoutMs = (int) timeoutObject;
           logger.log(Level.INFO,
                   "getKafkaAdminClientClusterRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
@@ -429,11 +425,7 @@ public class KafkaCluster extends Cluster {
     if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
       Object timeoutObject = clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY);
       if (timeoutObject != null) {
-        if (timeoutObject instanceof String) {
-          timeoutMs = Integer.valueOf((String) timeoutObject);
-          logger.log(Level.INFO,
-                  "getKafkaAdminClientTopicRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
-        } else if (timeoutObject instanceof Integer) {
+        if (timeoutObject instanceof Integer) {
           timeoutMs = (int) timeoutObject;
           logger.log(Level.INFO,
                   "getKafkaAdminClientTopicRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
@@ -455,11 +447,7 @@ public class KafkaCluster extends Cluster {
     if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
       Object timeoutObject = clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY);
       if (timeoutObject != null) {
-        if (timeoutObject instanceof String) {
-          timeoutMs = Integer.valueOf((String) timeoutObject);
-          logger.log(Level.INFO,
-                  "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
-        } else if (timeoutObject instanceof Integer) {
+        if (timeoutObject instanceof Integer) {
           timeoutMs = (int) timeoutObject;
           logger.log(Level.INFO,
                   "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
