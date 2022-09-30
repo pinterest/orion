@@ -17,6 +17,7 @@ package com.pinterest.orion.core.actions.aws;
 
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.PluginConfigurationException;
+import com.pinterest.orion.core.actions.alert.ActionNotificationHelper;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
 import com.pinterest.orion.core.actions.alert.AlertMessage;
 import com.pinterest.orion.core.actions.generic.NodeAction;
@@ -62,6 +63,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   private String hostname;
   private String instanceId;
   private Map<String, List<String>> fallbacksMap = new HashMap<>();
+  private ActionNotificationHelper notificationHelper;
   protected boolean skipClusterHealthCheck = false;
 
   @Override
@@ -78,6 +80,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     if (config.containsKey(ATTR_FALLBACK_MAPPING)) {
       fallbacksMap = (Map<String, List<String>>)config.get(ATTR_FALLBACK_MAPPING);
     }
+    notificationHelper = new ActionNotificationHelper(this, config);
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
     setAttribute(RECOVERY_TIMEOUT, 3600_000);
@@ -115,6 +118,9 @@ public class ReplaceEC2InstanceAction extends NodeAction {
           .appendOut("Cause of replacement: " + cause + "\n");
       metricPrefix.tagged("cause", cause);
     }
+
+    // Send notifications
+    notificationHelper.sendNotifications();
 
     // put the node into maintenance mode if node exists in the clusterMap
     boolean prevMaintenanceMode = false;
