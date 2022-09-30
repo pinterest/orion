@@ -56,8 +56,9 @@ public class KafkaBrokerConfigSensor extends KafkaSensor {
     }
 
     DescribeConfigsOptions describeConfigsOptions = new DescribeConfigsOptions();
-    if (cluster.containsKafkaAdminClientClusterRequestTimeoutMilliseconds()) {
-      describeConfigsOptions.timeoutMs(cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds());
+    int kafkaAdminClientClusterRequestTimeoutMs = cluster.getKafkaAdminClientClusterRequestTimeoutMilliseconds();
+    if (kafkaAdminClientClusterRequestTimeoutMs > 0) {
+      describeConfigsOptions.timeoutMs(kafkaAdminClientClusterRequestTimeoutMs);
     }
     DescribeConfigsResult describeConfigs = adminClient.describeConfigs(brokerIds, describeConfigsOptions);
     // add broker configs
