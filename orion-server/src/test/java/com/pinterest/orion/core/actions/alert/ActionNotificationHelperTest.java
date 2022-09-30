@@ -31,8 +31,8 @@ public class ActionNotificationHelperTest {
         ActionNotificationHelper notificationHelper = new ActionNotificationHelper(
                 action, emptyConfig
         );
-        // Validate sendNotification method
-        notificationHelper.sendNotification();
+        // Validate sendNotifications method
+        notificationHelper.sendNotifications();
         verify(action, times(0)).getEngine();
     }
 
@@ -68,8 +68,8 @@ public class ActionNotificationHelperTest {
         );
         SlackAlert testSlackAlert = new SlackAlert();
         testSlackAlert.setWebTargets(ActionNotificationHelper.getWebTargetsFromWebhookUrlList(testWebhookUrlList));
-        // Validate sendNotification method
-        notificationHelper.sendNotification();
+        // Validate sendNotifications method
+        notificationHelper.sendNotifications();
         verify(action, times(1)).getEngine();
         verify(engine, times(1)).alert(testSlackAlert, testSlackAlertMessage);
     }

@@ -120,7 +120,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     }
 
     // Send notifications
-    notificationHelper.sendNotification();
+    notificationHelper.sendNotifications();
 
     // put the node into maintenance mode if node exists in the clusterMap
     boolean prevMaintenanceMode = false;

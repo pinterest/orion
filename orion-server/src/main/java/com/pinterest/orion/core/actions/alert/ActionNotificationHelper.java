@@ -118,7 +118,7 @@ public class ActionNotificationHelper {
         }
     }
 
-    public void sendNotification() {
+    public void sendNotifications() {
         if (isSendingSlackNotification) {
             sendSlackNotifications();
         } else {
