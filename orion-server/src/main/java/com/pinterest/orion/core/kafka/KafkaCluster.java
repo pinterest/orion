@@ -399,52 +399,67 @@ public class KafkaCluster extends Cluster {
 
   public int getKafkaAdminClientClusterRequestTimeoutMilliseconds() {
     Map<String, Object> clusterConfMap = getClusterConfMap();
+    int timeoutMs = -1;
     if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
       Object timeoutObject = clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY);
       if (timeoutObject != null) {
-        int timeoutMs = Integer.valueOf((String) timeoutObject);
-        logger.log(Level.INFO,
-                "getKafkaAdminClientClusterRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
-        return timeoutMs;
+        if (timeoutObject instanceof Integer) {
+          timeoutMs = (int) timeoutObject;
+          logger.log(Level.INFO,
+                  "getKafkaAdminClientClusterRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
+        } else {
+          logger.log(Level.WARNING,
+                  ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is unacceptable type.");
+        }
       } else {
         logger.log(Level.WARNING,
                 ATTR_KAFKA_ADMIN_CLIENT_CLUSTER_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is null.");
       }
     }
-    return -1;
+    return timeoutMs;
   }
 
   public int getKafkaAdminClientTopicRequestTimeoutMilliseconds() {
     Map<String, Object> clusterConfMap = getClusterConfMap();
+    int timeoutMs = -1;
     if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
       Object timeoutObject = clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY);
       if (timeoutObject != null) {
-        int timeoutMs = Integer.valueOf((String) timeoutObject);
-        logger.log(Level.INFO,
-                "getKafkaAdminClientTopicRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
-        return timeoutMs;
+        if (timeoutObject instanceof Integer) {
+          timeoutMs = (int) timeoutObject;
+          logger.log(Level.INFO,
+                  "getKafkaAdminClientTopicRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
+        } else {
+          logger.log(Level.WARNING,
+                  ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is unacceptable type.");
+        }
       } else {
         logger.log(Level.WARNING,
                 ATTR_KAFKA_ADMIN_CLIENT_TOPIC_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is null.");
       }
     }
-    return -1;
+    return timeoutMs;
   }
 
   public int getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds() {
     Map<String, Object> clusterConfMap = getClusterConfMap();
+    int timeoutMs = -1;
     if (clusterConfMap.containsKey(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY)) {
       Object timeoutObject = clusterConfMap.get(ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY);
       if (timeoutObject != null) {
-        int timeoutMs = Integer.valueOf((String) timeoutObject);
-        logger.log(Level.INFO,
-                "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
-        return timeoutMs;
+        if (timeoutObject instanceof Integer) {
+          timeoutMs = (int) timeoutObject;
+          logger.log(Level.INFO,
+                  "getKafkaAdminClientConsumerGroupRequestTimeoutMilliseconds returns timeout value: " + timeoutMs);
+        } else {
+          logger.log(Level.WARNING,
+                  ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is unacceptable type.");
+        }
       } else {
         logger.log(Level.WARNING,
                 ATTR_KAFKA_ADMIN_CLIENT_CONSUMER_GROUP_REQUEST_TIMEOUT_MILLISECONDS_KEY + " value is null.");
       }
     }
-    return -1;
+    return timeoutMs;
   }
 }
