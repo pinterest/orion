@@ -112,7 +112,6 @@ public class ActionNotificationHelper {
         );
         try {
             getAction().getEngine().alert(slackAlert, slackAlertMessage);
-            getLogger().log(Level.INFO, "ActionNotificationHelper has sent slack notifications.");
         } catch (Exception e) {
             getLogger().log(Level.WARNING, "ActionNotificationHelper fails to send Slack message: " + e);
         }
@@ -121,8 +120,6 @@ public class ActionNotificationHelper {
     public void sendNotifications() {
         if (isSendingSlackNotification) {
             sendSlackNotifications();
-        } else {
-            getLogger().log(Level.INFO, "ActionNotificationHelper does not send any notification.");
         }
     }
 }
