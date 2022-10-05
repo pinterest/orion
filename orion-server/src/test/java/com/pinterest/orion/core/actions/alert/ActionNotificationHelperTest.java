@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -33,7 +35,8 @@ public class ActionNotificationHelperTest {
         );
         // Validate sendNotifications method
         notificationHelper.sendNotifications();
-        verify(action, times(0)).getEngine();
+        assertFalse(notificationHelper.isSendingNotifications());
+        verify(action, times(1)).getEngine(); // just non-null check, no execution
     }
 
     @Test
@@ -69,8 +72,9 @@ public class ActionNotificationHelperTest {
         SlackAlert testSlackAlert = new SlackAlert();
         testSlackAlert.setWebTargets(ActionNotificationHelper.getWebTargetsFromWebhookUrlList(testWebhookUrlList));
         // Validate sendNotifications method
+        assertTrue(notificationHelper.isSendingNotifications());
         notificationHelper.sendNotifications();
-        verify(action, times(1)).getEngine();
+        verify(action, times(2)).getEngine(); // non-null check and execution
         verify(engine, times(1)).alert(testSlackAlert, testSlackAlertMessage);
     }
 

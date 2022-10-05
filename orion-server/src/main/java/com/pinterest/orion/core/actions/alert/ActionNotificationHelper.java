@@ -13,10 +13,11 @@ import java.util.logging.Logger;
 public class ActionNotificationHelper {
 
     public static final String ATTR_SLACK_WEBHOOK_URL_LIST_KEY = "slackWebhookUrlList";
-    public static final String LOGGING_PREFIX = "[ActionNotificationHelper]";
+    public static final String LOGGING_PREFIX = "[ActionNotificationHelper] ";
     private Action action;
     private String alertTitle;
     private String alertMessage;
+    private String alertOwner;
     private boolean isSendingSlackNotification = false;
     private List<String> slackWebhookUrlList = new ArrayList<String>();
     private Logger logger;
@@ -24,8 +25,6 @@ public class ActionNotificationHelper {
     public ActionNotificationHelper(Action action, Map<String, Object> config) {
         // Use action and its config to construct ActionNotificationHelper.
         setAction(action);
-        setAlertTitle(action.getName());
-        setAlertMessage(action.getName());
         setLogger(action.logger());
         // Config determines which types of notification will be sent. Can add more types of notifications here.
         if (config.containsKey(ATTR_SLACK_WEBHOOK_URL_LIST_KEY)) {
@@ -68,13 +67,15 @@ public class ActionNotificationHelper {
     }
 
     public void setAlertTitle(String alertTitle) {
-        // Call this in Action class if you need personalized alert title.
         this.alertTitle = alertTitle;
     }
 
     public void setAlertMessage(String alertMessage) {
-        // Call this in Action class if you need personalized alert message.
         this.alertMessage = alertMessage;
+    }
+
+    public void setAlertOwner(String alertOwner) {
+        this.alertOwner = alertOwner;
     }
 
     public void setLogger(Logger logger) {
@@ -86,16 +87,36 @@ public class ActionNotificationHelper {
         }
     }
 
+    public boolean isSendingNotifications() {
+        return this.isSendingSlackNotification;
+    }
+
     public Action getAction() {
         return this.action;
     }
 
     public String getAlertTitle(){
+        if (this.alertTitle == null) {
+            // Use action name by default
+            return getAction().getName();
+        }
         return this.alertTitle;
     }
 
     public String getAlertMessage() {
+        if (this.alertMessage == null) {
+            // Use action name by default
+            return getAction().getName();
+        }
         return this.alertMessage;
+    }
+
+    public String getAlertOwner() {
+        if (this.alertOwner == null) {
+            // Use action owner by default
+            return getAction().getOwner();
+        }
+        return this.alertOwner;
     }
 
     public Logger getLogger() {
@@ -129,7 +150,7 @@ public class ActionNotificationHelper {
         AlertMessage slackAlertMessage = new AlertMessage(
                 getAlertTitle(),
                 getAlertMessage(),
-                getAction().getOwner()
+                getAlertOwner()
         );
         try {
             getAction().getEngine().alert(slackAlert, slackAlertMessage);
@@ -140,7 +161,10 @@ public class ActionNotificationHelper {
     }
 
     public void sendNotifications() {
-        if (isSendingSlackNotification) {
+        if (getAction() == null || getAction().getEngine() == null) {
+            getLogger().log(Level.WARNING,
+                    LOGGING_PREFIX + "Action engine has not been initialized. Cannot send message.");
+        } else if (isSendingSlackNotification) {
             sendSlackNotifications();
         }
     }
