@@ -73,4 +73,38 @@ public class ActionNotificationHelperTest {
         verify(action, times(1)).getEngine();
         verify(engine, times(1)).alert(testSlackAlert, testSlackAlertMessage);
     }
+
+    @Test
+    public void testHelperConstructor() throws Exception {
+        Action action = Mockito.mock(Action.class);
+        Logger logger = Mockito.mock(Logger.class);
+        Mockito.when(action.logger()).thenReturn(logger);
+        List<String> testWebhookUrlList = new ArrayList<String>();
+        // WebhookUrlList is empty; helper is empty
+        Map<String, Object> config = new HashMap<String, Object>(){{
+            put(ActionNotificationHelper.ATTR_SLACK_WEBHOOK_URL_LIST_KEY, testWebhookUrlList);
+        }};
+        ActionNotificationHelper notificationHelper = new ActionNotificationHelper(
+                action, config
+        );
+        assertEquals(new ArrayList<String>(), notificationHelper.getSlackWebhookUrlList());
+        // WebhookUrlList only contains null value; helper is empty
+        testWebhookUrlList.add(null);
+        config = new HashMap<String, Object>(){{
+            put(ActionNotificationHelper.ATTR_SLACK_WEBHOOK_URL_LIST_KEY, testWebhookUrlList);
+        }};
+        notificationHelper = new ActionNotificationHelper(
+                action, config
+        );
+        assertEquals(new ArrayList<String>(), notificationHelper.getSlackWebhookUrlList());
+        // WebhookUrlList contains both null and url; helper only keeps url
+        testWebhookUrlList.add("test_url");
+        config = new HashMap<String, Object>(){{
+            put(ActionNotificationHelper.ATTR_SLACK_WEBHOOK_URL_LIST_KEY, testWebhookUrlList);
+        }};
+        notificationHelper = new ActionNotificationHelper(
+                action, config
+        );
+        assertEquals(new ArrayList<String>() {{add("test_url");}}, notificationHelper.getSlackWebhookUrlList());
+    }
 }

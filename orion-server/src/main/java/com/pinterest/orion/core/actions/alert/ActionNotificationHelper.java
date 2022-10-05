@@ -13,11 +13,12 @@ import java.util.logging.Logger;
 public class ActionNotificationHelper {
 
     public static final String ATTR_SLACK_WEBHOOK_URL_LIST_KEY = "slackWebhookUrlList";
+    public static final String LOGGING_PREFIX = "[ActionNotificationHelper]";
     private Action action;
     private String alertTitle;
     private String alertMessage;
     private boolean isSendingSlackNotification = false;
-    private List<String> slackWebhookUrlList;
+    private List<String> slackWebhookUrlList = new ArrayList<String>();
     private Logger logger;
 
     public ActionNotificationHelper(Action action, Map<String, Object> config) {
@@ -31,14 +32,33 @@ public class ActionNotificationHelper {
             Object slackWebhookUrlListObject = config.get(ATTR_SLACK_WEBHOOK_URL_LIST_KEY);
             if (slackWebhookUrlListObject != null) {
                 if (slackWebhookUrlListObject instanceof List) {
-                    this.isSendingSlackNotification = true;
-                    this.slackWebhookUrlList = (List<String>) config.get(ATTR_SLACK_WEBHOOK_URL_LIST_KEY);
+                    List<String> tmpSlackWebhookUrlList = (List<String>) config.get(ATTR_SLACK_WEBHOOK_URL_LIST_KEY);
+                    for (int i = 0; i < tmpSlackWebhookUrlList.size(); i++) {
+                        String slackWebhookUrl = tmpSlackWebhookUrlList.get(i);
+                        if (slackWebhookUrl != null) {
+                            this.slackWebhookUrlList.add(slackWebhookUrl);
+                        }
+                    }
+                    if (this.slackWebhookUrlList.size() > 0) {
+                        this.isSendingSlackNotification = true;
+                        if (this.slackWebhookUrlList.size() < tmpSlackWebhookUrlList.size()) {
+                            // Null value is detected in config list. Still sends notifications for other urls.
+                            getLogger().log(Level.WARNING,
+                                    LOGGING_PREFIX + ATTR_SLACK_WEBHOOK_URL_LIST_KEY + " contains null value.");
+                        }
+                    } else {
+                        // Config list only contains null value.
+                        getLogger().log(Level.WARNING,
+                                LOGGING_PREFIX + ATTR_SLACK_WEBHOOK_URL_LIST_KEY + " only contains null value.");
+                    }
                 } else {
                     // Log warn if slackWebhookUrlList cannot be parsed from config.
-                    getLogger().log(Level.WARNING, ATTR_SLACK_WEBHOOK_URL_LIST_KEY + " value is unacceptable type.");
+                    getLogger().log(Level.WARNING,
+                            LOGGING_PREFIX + ATTR_SLACK_WEBHOOK_URL_LIST_KEY + " value is unacceptable type.");
                 }
             } else {
-                getLogger().log(Level.WARNING, ATTR_SLACK_WEBHOOK_URL_LIST_KEY + " value is null.");
+                getLogger().log(Level.WARNING,
+                        LOGGING_PREFIX + ATTR_SLACK_WEBHOOK_URL_LIST_KEY + " value is null.");
             }
         }
     }
@@ -102,7 +122,8 @@ public class ActionNotificationHelper {
             List<WebTarget> webTargets = getWebTargetsFromWebhookUrlList(getSlackWebhookUrlList());
             slackAlert.setWebTargets(webTargets);
         } catch (Exception e) {
-            getLogger().log(Level.WARNING, "ActionNotificationHelper fails to get web targets: " + e);
+            getLogger().log(Level.WARNING,
+                    LOGGING_PREFIX + "Fail to get web targets: " + e);
             return;
         }
         AlertMessage slackAlertMessage = new AlertMessage(
@@ -113,7 +134,8 @@ public class ActionNotificationHelper {
         try {
             getAction().getEngine().alert(slackAlert, slackAlertMessage);
         } catch (Exception e) {
-            getLogger().log(Level.WARNING, "ActionNotificationHelper fails to send Slack message: " + e);
+            getLogger().log(Level.WARNING,
+                    LOGGING_PREFIX + "Fail to send Slack message: " + e);
         }
     }
 
