@@ -120,7 +120,12 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     }
 
     // Send notifications
-    notificationHelper.sendNotifications();
+    if (notificationHelper.isSendingNotifications()) {
+      notificationHelper.setAlertTitle("Executing ReplaceEC2InstanceAction on " + getEngine().getCluster().getClusterId());
+      notificationHelper.setAlertMessage("Action name: " + this.getName()); // Name is from the child action.
+      notificationHelper.setAlertOwner(this.getOwner());
+      notificationHelper.sendNotifications();
+    }
 
     // put the node into maintenance mode if node exists in the clusterMap
     boolean prevMaintenanceMode = false;
