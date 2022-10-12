@@ -122,7 +122,7 @@ public abstract class BaseAgent {
       metricFutures.add(MetricsRetriever.getMetric(task));
     }
     for (Future<Metric> metricFuture : metricFutures) {
-      Metric metric = metricFuture.get(10, TimeUnit.SECONDS);
+      Metric metric = metricFuture.get(getConfig().getMetricsCallTimeoutSec(), TimeUnit.SECONDS);
       metrics.addToMetrics(metric);
     }
     return metrics;
