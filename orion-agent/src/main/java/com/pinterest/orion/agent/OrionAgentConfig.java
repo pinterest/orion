@@ -102,6 +102,10 @@ public class OrionAgentConfig {
     return Long.parseLong(agentConfigs.getOrDefault("pollInterval", "5000"));
   }
 
+  public long getMetricsCallTimeoutSec() {
+    return Long.parseLong(agentConfigs.getOrDefault("metricsCallTimeoutSecond", "10"));
+  }
+
   public long getMetricsPollInterval() {
     return Long.parseLong(agentConfigs.getOrDefault("metricsPollInterval", "30000"));
   }
