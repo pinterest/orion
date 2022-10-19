@@ -85,6 +85,9 @@ public class KafkaCluster extends Cluster {
   private transient Properties props;
   private AdminClient adminClient;
   private KafkaConsumer<byte[], byte[]> kafkaConsumer;
+  private Set<String> cachedTopicSet;
+  private long cachedTopicSetLastUpdateEpochTime = -1;
+  private long cachedTopicSetRefreshIntervalMill = 600_000L; // 10 minutes by default
 
   public KafkaCluster(String clusterId,
                       String name,
@@ -97,6 +100,93 @@ public class KafkaCluster extends Cluster {
                       CostCalculator costCalculator) {
     super(clusterId, name, "Kafka", monitors, operators, actionFactory, alertFactory, historySink,
         stateSink, costCalculator);
+  }
+
+  public Set<String> getKafkaTopicSetFromAttribute() {
+    /**
+     * Load topic set from Cluster topic info config. It's a backup logic if remote listTopic call fails.
+     */
+    Map<String, KafkaTopicDescription> topicMap = containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)
+            ? getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue()
+            : null;
+    if (topicMap != null) {
+      return topicMap.keySet();
+    } else {
+      return null;
+    }
+  }
+
+  public void resetCachedTopicSetLastUpdateTime() {
+    /**
+     * Set cache timestamp to -1, which can force getKafkaTopicSet to trigger another remote listTopic call.
+     * Use when topic list is changed.
+     */
+    this.cachedTopicSetLastUpdateEpochTime = -1;
+  }
+
+  private void refreshCacheTopicSetLastUpdateEpochTime() {
+    /**
+     * Refresh TTL by setting cachedTopicSetLastUpdateEpochTime to current timestamp.
+     * Use after changing cachedTopicSet.
+     */
+    this.cachedTopicSetLastUpdateEpochTime = System.currentTimeMillis();
+  }
+
+  public void setCachedTopicSetRefreshIntervalMill(long intervalMill) {
+    this.cachedTopicSetRefreshIntervalMill = intervalMill;
+  }
+
+  public long getCachedTopicSetRefreshIntervalMill() {
+    return this.cachedTopicSetRefreshIntervalMill;
+  }
+
+  private boolean isCachedTopicSetNeedRefresh() {
+    /**
+     * Determine whether the cachedTopicSet needs to be loaded from adminClient.listTopics call:
+     *  Cached value is null.
+     *  LastUpdateTime is -1 (resetCachedTopicSetLastUpdateTime is called)
+     *  TTL is reached.
+     */
+    return cachedTopicSet == null || cachedTopicSetLastUpdateEpochTime == -1
+            || cachedTopicSetLastUpdateEpochTime + getCachedTopicSetRefreshIntervalMill() < System.currentTimeMillis();
+  }
+
+  public Set<String> getKafkaTopicSet(long metadataFetchTimeoutMs) {
+    /**
+     * Return cluster topic set from cache, adminClient.listTopics call or config attribute.
+     *  If the cached value needs refresh, refresh the cache by making a remote adminClient.listTopics call.
+     *    If the listTopic call fails, return the existing cached value.
+     *    If the cached value is not there, check the config attribute to load static map.
+     *    If the attribute value does not exist as well, return an empty set.
+     *  If the ttl is not reached, just return the cached value.
+     */
+    if (isCachedTopicSetNeedRefresh())  {
+      try {
+        long start = System.currentTimeMillis();
+        ListTopicsOptions listTopicsOptions = new ListTopicsOptions().listInternal(true).timeoutMs((int) metadataFetchTimeoutMs);
+        cachedTopicSet = adminClient.listTopics(listTopicsOptions).names().get(metadataFetchTimeoutMs, TimeUnit.MILLISECONDS);
+        refreshCacheTopicSetLastUpdateEpochTime();
+        long desc = System.currentTimeMillis();
+        logger.info(String.format("[KafkaCluster.getKafkaTopicSet] ClusterId: %s; ListTopics %d ms", clusterId, desc - start));
+      } catch (Exception e) {
+        if (cachedTopicSet != null) {
+          logger.log(Level.WARNING,
+                  String.format("[KafkaCluster.getKafkaTopicSet] ClusterId: %s; Cannot refresh topic list by using adminClient.listTopics call. Use cached topic list:", clusterId), e);
+        } else {
+          Set<String> topicSetFromAttribute = getKafkaTopicSetFromAttribute();
+          if (topicSetFromAttribute != null) {
+            logger.log(Level.WARNING,
+                    String.format("[KafkaCluster.getKafkaTopicSet] ClusterId: %s; Cannot load topic list by using adminClient.listTopics call. Use topic list from config topic map:", clusterId), e);
+            return topicSetFromAttribute;
+          } else {
+            logger.log(Level.SEVERE,
+                    String.format("[KafkaCluster.getKafkaTopicSet] ClusterId: %s; Cannot initialize topic set: ", clusterId), e);
+            return Collections.emptySet();
+          }
+        }
+      }
+    }
+    return cachedTopicSet;
   }
 
   @Override
@@ -199,6 +289,10 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka() throws InterruptedException,
                                                                                   ExecutionException, TimeoutException {
+    /**
+     * Wrapper for getTopicDescriptionFromKafka(long metadataFetchTimeoutMs)
+     * Used if caller does not provide metadataFetchTimeoutMs as input.
+     */
     int kafkaAdminClientTopicRequestTimeoutMs = getKafkaAdminClientTopicRequestTimeoutMilliseconds();
     if (kafkaAdminClientTopicRequestTimeoutMs > 0) {
       return getTopicDescriptionFromKafka(kafkaAdminClientTopicRequestTimeoutMs);
@@ -209,38 +303,75 @@ public class KafkaCluster extends Cluster {
   @JsonIgnore
   public Map<String, KafkaTopicDescription> getTopicDescriptionFromKafka(long metadataFetchTimeoutMs)
           throws ExecutionException, InterruptedException, TimeoutException {
-    AdminClient adminClient = getAdminClient();
-    Map<String, KafkaTopicDescription> cachedTopicMap = containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY)
-            ? getAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY).getValue()
-            : null;
-    Map<String, KafkaTopicDescription> ret = getTopicDescriptions(adminClient, logger(),
-                                                                  cachedTopicMap,
-                                                                  clusterId,
-                                                                  metadataFetchTimeoutMs);
-    return ret;
+    /**
+     * Get topic set and use the topic set to get topic_name to topic_description map.
+     * This method is non-static and used by action or sensor who has kafka cluster class.
+     * It uses getKafkaTopicSet and getTopicDescriptionsFromTopicSet.
+     */
+    Set<String> topics = getKafkaTopicSet(metadataFetchTimeoutMs);
+    return getTopicDescriptionsFromTopicSet(adminClient, logger(), topics, clusterId, metadataFetchTimeoutMs);
   }
 
   public static Map<String, KafkaTopicDescription> getTopicDescriptions(AdminClient adminClient,
                                                                         Logger logger,
-                                                                        Map<String, KafkaTopicDescription> cachedTopicMap,
+                                                                        Map<String, KafkaTopicDescription> topicDescriptionMap,
                                                                         String clusterId,
                                                                         long metadataFetchTimeoutMs) throws InterruptedException,
-                                                                                          ExecutionException, TimeoutException {
+          ExecutionException, TimeoutException {
+    /**
+     * Input: AdminClient, backup map
+     * Output: a map that key is topic name, value is topic description.
+     * This method is static and used by action or sensor who may only have AdminClient.
+     * It uses getTopicSetFromAdminClient and getTopicDescriptionsFromTopicSet.
+     */
+    Set<String> topicSet = KafkaCluster.getTopicSetFromAdminClient(adminClient, logger, topicDescriptionMap, clusterId, metadataFetchTimeoutMs);
+    return KafkaCluster.getTopicDescriptionsFromTopicSet(adminClient, logger, topicSet, clusterId, metadataFetchTimeoutMs);
+  }
+
+  public static Set<String> getTopicSetFromAdminClient(AdminClient adminClient,
+                                                       Logger logger,
+                                                       Map<String, KafkaTopicDescription> topicDescriptionMap,
+                                                       String clusterId,
+                                                       long metadataFetchTimeoutMs)
+          throws InterruptedException, ExecutionException, TimeoutException {
+    /**
+     * Input: AdminClient, backup map
+     * Output: A topic set coming from AdminClient listTopics call
+     * If the listTopic fails, it will return backup map. If backup map is null, it will throw exception.
+     * This method is static and used by action or sensor who may only have AdminClient.
+     */
     long start = System.currentTimeMillis();
-    Map<String, KafkaTopicDescription> ret = new HashMap<>();
     Set<String> topics;
     try {
       topics = adminClient.listTopics(new ListTopicsOptions().listInternal(true)).names().get(metadataFetchTimeoutMs, TimeUnit.MILLISECONDS);
     } catch (ExecutionException e) {
-      if (cachedTopicMap != null) {
+      if (topicDescriptionMap != null) {
         logger.log(Level.WARNING,
-            "Failed to list topics for " + clusterId + ", fallback to previous topic data.", e);
-        topics = cachedTopicMap.keySet();
+                "[KafkaCluster.getTopicSetFromAdminClient] Failed to list topics for " + clusterId + ", fallback to previous topic data.", e);
+        topics = topicDescriptionMap.keySet();
       } else {
         throw e;
       }
     }
-    long list = System.currentTimeMillis();
+    long desc = System.currentTimeMillis();
+    logger.info(String.format(
+            "[KafkaCluster.getTopicSetFromAdminClient] ClusterId: %s; ListTopics %d ms", clusterId, desc - start));
+    return topics;
+  }
+
+  public static Map<String, KafkaTopicDescription> getTopicDescriptionsFromTopicSet(AdminClient adminClient,
+                                                                                    Logger logger,
+                                                                                    Set<String> topics,
+                                                                                    String clusterId,
+                                                                                    long metadataFetchTimeoutMs)
+          throws InterruptedException, ExecutionException, TimeoutException {
+    /**
+     * Input: a set of topic name, admin client
+     * Output: a map that key is topic name, value is topic description.
+     * The method is looping through the topic set and make describeTopics call for all topics in the set.
+     */
+    long start = System.currentTimeMillis();
+    Map<String, KafkaTopicDescription> ret = new HashMap<>();
     if (topics.isEmpty()) {
       return ret;
     }
@@ -252,9 +383,8 @@ public class KafkaCluster extends Cluster {
           Collectors.toMap(Entry::getKey, entry -> new KafkaTopicDescription(entry.getValue()))));
     }
     long desc = System.currentTimeMillis();
-    logger.info(
-        String.format("%s:getTopicDescriptionFromKafka: ListTopics %d ms, DescribeTopics %d ms",
-            clusterId, list - start, desc - list));
+    logger.info(String.format(
+            "[KafkaCluster.getTopicDescriptionsFromTopicSet] ClusterId: %s; DescribeTopics %d ms", clusterId, desc - start));
     return ret;
   }
 
