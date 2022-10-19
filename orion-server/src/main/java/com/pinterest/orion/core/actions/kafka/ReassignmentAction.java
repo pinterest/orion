@@ -50,7 +50,7 @@ public class ReassignmentAction extends AbstractKafkaAction {
     long metadataFetchTimeoutMs = KafkaCluster.DEFAULT_METADATA_TIMEOUT_MS; // default
     Attribute attribute = getAttribute(ATTR_REASSIGNMENT_KEY);
     Attribute metadataFetchTimeoutMsAttr = getAttribute(KafkaIdealBalanceAction.CONF_METADATA_FETCH_TIMEOUT_MS_KEY);
-    KafkaCluster kakfaCluster = (KafkaCluster) getEngine().getCluster();
+    KafkaCluster kafkaCluster = (KafkaCluster) getEngine().getCluster();
     if (metadataFetchTimeoutMsAttr != null) {
       metadataFetchTimeoutMs = metadataFetchTimeoutMsAttr.getValue();
     }
@@ -78,8 +78,8 @@ public class ReassignmentAction extends AbstractKafkaAction {
         }
 
         zkClient.create().forPath(REASSIGNMENT_PATH, assignmentJson.getBytes());
-        waitForISRsToMatchAssignments(kakfaCluster, assignmentMap, 15_000, metadataFetchTimeoutMs);
-        waitForURPsToBeResolved(kakfaCluster, 15_000);
+        waitForISRsToMatchAssignments(kafkaCluster, assignmentMap, 15_000, metadataFetchTimeoutMs);
+        waitForURPsToBeResolved(kafkaCluster, 15_000);
         CuratorClient.waitForZnodeToBeDeleted(zkClient, REASSIGNMENT_PATH);
         markSucceeded();
       } catch (Exception e) {
