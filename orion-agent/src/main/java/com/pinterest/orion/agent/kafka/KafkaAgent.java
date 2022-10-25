@@ -196,8 +196,11 @@ public class KafkaAgent extends BaseAgent {
       props.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, localBootstrapServerAddress);
       heartbeatAdminClient = AdminClient.create(props);
       Future<Long> kafkaUptimeFuture = getKafkaUptime();
-      DescribeClusterResult result = heartbeatAdminClient.describeCluster();
-      result.clusterId().get(KAFKA_CLIENT_TIMEOUT_SEC, TimeUnit.SECONDS);
+      int describeClusterTimeoutMs = config.getDescribeClusterTimeoutMs();
+      DescribeClusterResult result = heartbeatAdminClient.describeCluster(
+              new DescribeClusterOptions().timeoutMs(describeClusterTimeoutMs)
+      );
+      result.clusterId().get(describeClusterTimeoutMs, TimeUnit.MILLISECONDS);
       status.setUptime(kafkaUptimeFuture.get(3, TimeUnit.SECONDS));
       logger.info("Kafka uptime: " + kafkaUptimeFuture.get());
       status.setStatusType(StatusType.OK);
