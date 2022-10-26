@@ -217,6 +217,11 @@ public class KafkaCluster extends Cluster {
                                                                   cachedTopicMap,
                                                                   clusterId,
                                                                   metadataFetchTimeoutMs);
+    // Set the topic cache if the cache has not been created by KafkaTopicSensor.
+    // It will be refreshed by KafkaTopicSensor.
+    if (!containsAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY) && ret != null) {
+      setAttribute(KafkaTopicSensor.ATTR_TOPICINFO_MAP_KEY, ret);
+    }
     return ret;
   }
 
