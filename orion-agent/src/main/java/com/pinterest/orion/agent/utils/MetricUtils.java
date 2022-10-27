@@ -118,7 +118,7 @@ public class MetricUtils {
       MetricName name = gaugeEntry.getKey();
       Gauge entryValue = gaugeEntry.getValue();
       Metric converted = new Metric();
-      Value val = new Value(MetricType.GAUGE, name.getKey(), (new Double((double) entryValue.getValue())).longValue());
+      Value val = new Value(MetricType.GAUGE, name.getKey(), (long) entryValue.getValue());
       converted.setValues(Collections.singletonList(val));
       converted.setTags(name.getTags());
       converted.setSeries(name.getKey());
