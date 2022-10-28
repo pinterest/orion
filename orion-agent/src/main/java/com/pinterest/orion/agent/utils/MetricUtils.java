@@ -118,12 +118,38 @@ public class MetricUtils {
       MetricName name = gaugeEntry.getKey();
       Gauge entryValue = gaugeEntry.getValue();
       Metric converted = new Metric();
-      Value val = new Value(MetricType.GAUGE, name.getKey(), (long) entryValue.getValue());
+      Value val;
+      try {
+        val = new Value(MetricType.GAUGE, name.getKey(), getGaugesEntryValueNumber(entryValue.getValue()));
+      } catch (NumberFormatException|NullPointerException e) {
+        // Skip if the conversion fails.
+        logger.log(Level.WARNING,"MetricUtils convertGauges fails: ", e);
+        continue;
+      }
       converted.setValues(Collections.singletonList(val));
       converted.setTags(name.getTags());
       converted.setSeries(name.getKey());
       converted.setTimestamp(timestamp);
       toConvert.addToMetrics(converted);
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static double getGaugesEntryValueNumber(Object entryValueNumberObject)
+          throws NumberFormatException, NullPointerException {
+    // Convert all types of entryValueNumberObject into double to avoid ClassCastException from conversion
+    if (entryValueNumberObject == null) {
+      throw new NullPointerException("Gauge entryValue has empty value");
+    } else if (entryValueNumberObject instanceof Double) {
+      return ((Double) entryValueNumberObject).doubleValue();
+    } else if (entryValueNumberObject instanceof Long) {
+      return ((Long) entryValueNumberObject).doubleValue();
+    } else if (entryValueNumberObject instanceof Integer) {
+      return ((Integer) entryValueNumberObject).doubleValue();
+    } else {
+      // Handle String object or all other cases.
+      // NumberFormatException will be thrown if parsing fails.
+      return Double.parseDouble(entryValueNumberObject.toString());
     }
   }
 
