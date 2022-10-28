@@ -31,7 +31,6 @@ import com.pinterest.orion.agent.BaseAgent;
 import com.pinterest.orion.agent.metrics.JMXMetricRetreiverTask;
 import com.pinterest.orion.agent.metrics.MetricDefinition;
 import com.pinterest.orion.agent.metrics.MetricRetrieverTask;
-import com.sun.tools.javac.main.Option;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.TopicDescription;
