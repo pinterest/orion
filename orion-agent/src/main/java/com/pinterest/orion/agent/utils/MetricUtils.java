@@ -158,7 +158,13 @@ public class MetricUtils {
       MetricName name = counterEntry.getKey();
       Counter entryValue = counterEntry.getValue();
       Metric converted = new Metric();
-      Value val = new Value(MetricType.COUNTER, name.getKey(), entryValue.getCount());
+      Value val;
+      try {
+        val = new Value(MetricType.COUNTER, name.getKey(), getGaugesEntryValueNumber(entryValue.getCount()));
+      } catch (NumberFormatException|NullPointerException e) {
+        logger.log(Level.WARNING,"MetricUtils convertCounters fails: ", e);
+        continue;
+      }
       converted.setValues(Collections.singletonList(val));
       converted.setTags(name.getTags());
       converted.setSeries(name.getKey());
