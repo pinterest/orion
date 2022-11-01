@@ -83,10 +83,8 @@ public class HeartbeatService implements Runnable {
               heartbeat.setMetrics(MetricUtils.convertRegistryToMetrics(OrionAgent.HEARTBEAT_METRICS));
             } catch (Exception e) {
               OrionAgent.TSDB_METRICS.counter("metrics.failed").inc();
-              if (e instanceof NumberFormatException) {
-                logger.log(Level.WARNING,"Failed to fetch metrics due to string entryValue parsing failure: ", e);
-              } else if (e instanceof NullPointerException) {
-                logger.log(Level.WARNING,"Failed to fetch metrics due to null entryValue: ", e);
+              if (e instanceof ClassCastException) {
+                logger.log(Level.WARNING, "Failed to fetch metrics due to invalid entry value: ", e);
               } else {
                 logger.log(Level.SEVERE, "Failed to fetch metrics: ", e);
               }

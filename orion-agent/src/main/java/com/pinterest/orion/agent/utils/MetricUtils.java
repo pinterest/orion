@@ -112,14 +112,13 @@ public class MetricUtils {
     }
   }
 
-  @SuppressWarnings("rawtypes") 
-  private static void convertGauges(Metrics toConvert, SortedMap<MetricName, Gauge> gauges, long timestamp)
-          throws NumberFormatException, NullPointerException {
+  @SuppressWarnings("rawtypes")
+  private static void convertGauges(Metrics toConvert, SortedMap<MetricName, Gauge> gauges, long timestamp) {
     for (Map.Entry<MetricName, Gauge> gaugeEntry: gauges.entrySet()) {
       MetricName name = gaugeEntry.getKey();
       Gauge entryValue = gaugeEntry.getValue();
       Metric converted = new Metric();
-      Value val = new Value(MetricType.GAUGE, name.getKey(), getGaugesEntryValueNumber(entryValue.getValue()));
+      Value val = new Value(MetricType.GAUGE, name.getKey(), (long) entryValue.getValue());
       converted.setValues(Collections.singletonList(val));
       converted.setTags(name.getTags());
       converted.setSeries(name.getKey());
@@ -128,33 +127,12 @@ public class MetricUtils {
     }
   }
 
-  @SuppressWarnings("rawtypes")
-  private static double getGaugesEntryValueNumber(Object entryValueNumberObject)
-          throws NumberFormatException, NullPointerException {
-    // Convert all types of entryValueNumberObject into double to avoid ClassCastException from conversion
-    if (entryValueNumberObject == null) {
-      logger.log(Level.WARNING,"[MetricUtils] entryValueNumberObject is null");
-      throw new NullPointerException("Gauge entryValue has empty value");
-    } else if (entryValueNumberObject instanceof Double) {
-      return ((Double) entryValueNumberObject).doubleValue();
-    } else if (entryValueNumberObject instanceof Long) {
-      return ((Long) entryValueNumberObject).doubleValue();
-    } else if (entryValueNumberObject instanceof Integer) {
-      return ((Integer) entryValueNumberObject).doubleValue();
-    } else {
-      // Handle String object or all other cases.
-      // NumberFormatException will be thrown if parsing fails.
-      return Double.parseDouble(entryValueNumberObject.toString());
-    }
-  }
-
-  private static void convertCounters(Metrics toConvert, SortedMap<MetricName, Counter> counters, long timestamp)
-          throws NumberFormatException, NullPointerException {
+  private static void convertCounters(Metrics toConvert, SortedMap<MetricName, Counter> counters, long timestamp) {
     for (Map.Entry<MetricName, Counter> counterEntry: counters.entrySet()) {
       MetricName name = counterEntry.getKey();
       Counter entryValue = counterEntry.getValue();
       Metric converted = new Metric();
-      Value val = new Value(MetricType.COUNTER, name.getKey(), getGaugesEntryValueNumber(entryValue.getCount()));
+      Value val = new Value(MetricType.COUNTER, name.getKey(), entryValue.getCount());
       converted.setValues(Collections.singletonList(val));
       converted.setTags(name.getTags());
       converted.setSeries(name.getKey());
@@ -163,8 +141,7 @@ public class MetricUtils {
     }
   }
 
-  public static Metrics convertRegistryToMetrics(MetricRegistry registry)
-          throws NumberFormatException, NullPointerException {
+  public static Metrics convertRegistryToMetrics(MetricRegistry registry) {
     Metrics converted = new Metrics();
     long timestamp = System.currentTimeMillis();
     SortedMap<MetricName, Gauge> gauges = registry.getGauges();
@@ -174,5 +151,4 @@ public class MetricUtils {
     convertCounters(converted, counters, timestamp);
     return converted;
   }
-
 }
