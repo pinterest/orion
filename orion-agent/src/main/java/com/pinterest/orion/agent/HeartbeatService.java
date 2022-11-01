@@ -90,8 +90,6 @@ public class HeartbeatService implements Runnable {
               } else {
                 logger.log(Level.SEVERE, "Failed to fetch metrics: ", e);
               }
-              heartbeat.setMetrics(new Metrics());
-              heartbeat.setContainsMetrics(true);
             }
             lastServiceMetricPollTime = now;
           }
