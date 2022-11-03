@@ -499,6 +499,9 @@ public class ReplaceEC2InstanceAction extends NodeAction {
               .addOption("c6id.4xlarge", "c6id.4xlarge")
               .addOption("c6id.8xlarge", "c6id.8xlarge")
               .addOption("c6id.12xlarge", "c6id.12xlarge")
+              .addOption("i3.2xlarge", "i3.2xlarge")
+              .addOption("i3.4xlarge", "i3.4xlarge")
+              .addOption("i3.8xlarge", "i3.8xlarge")
         )
         .addValue(new TextValue(ATTR_AMI_KEY, "AMI id (optional, will inherit current AMI if not provided)", false))
         .addSchema(super.generateSchema(config));
