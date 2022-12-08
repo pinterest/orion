@@ -20,8 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pinterest.orion.core.PluginConfigurationException;
 
-import io.dropwizard.metrics5.MetricRegistry;
-import io.dropwizard.metrics5.SharedMetricRegistries;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 
 import java.util.HashMap;
@@ -38,7 +36,7 @@ import javax.ws.rs.core.Response;
 public class PagerDutyAlert extends Alert {
   private static ObjectMapper mapper = new ObjectMapper();
   private static final Logger logger = Logger.getLogger(PagerDutyAlert.class.getCanonicalName());
-  private static MetricRegistry PAGERDUTY_METRICS = SharedMetricRegistries.setDefault("tsdb");
+
   private WebTarget webTarget;
 
   private static final String CONF_PAGERDUTY_SERVICE_TOKEN_KEY = "pagerduty_service_token";
@@ -60,15 +58,6 @@ public class PagerDutyAlert extends Alert {
   @Override
   public void alert(AlertMessage message) {
     sendPager(message);
-    sendMetrics();
-  }
-
-  private void sendMetrics() {
-    try {
-      PAGERDUTY_METRICS.counter("pagerduty.alert").inc();
-    } catch (Exception e) {
-      logger.log(Level.WARNING, "Failed to publish tsdb metrics ", e);
-    }
   }
 
   private void sendPager(AlertMessage message) {
