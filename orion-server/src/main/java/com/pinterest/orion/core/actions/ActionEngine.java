@@ -146,13 +146,16 @@ public class ActionEngine implements ActionDispatcher, Runnable {
 
   public void counter(String alertClass, String alertType, Map<String, String> tagMap) {
     if (tagMap == null) {
-      tagMap = new HashMap<>(); // MetricName needs to take non-null value.
+      tagMap = new HashMap<>(); // MetricName needs to be initialized with non-null value.
     }
     try {
-      MetricName metricName = new MetricName(String.format("orion.%s.%s", alertClass, alertType), tagMap);
+      MetricName metricName = new MetricName(
+              String.format("orion.%s.%s", alertClass, alertType),
+              tagMap
+      );
       TSDB_METRICS.counter(metricName).inc();
     } catch (Exception e) {
-      LOG.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc()", e);
+      LOG.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc(). Error: ", e);
     }
   }
 
