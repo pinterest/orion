@@ -16,6 +16,7 @@
 package com.pinterest.orion.core.actions.aws;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -95,6 +96,13 @@ public class RebootEC2InstanceAction extends NodeAction {
           getEngine().alert(AlertLevel.HIGH,
               new AlertMessage("Replacement error on " + hostname,
                   "Post reboot of " + hostname + " health check timed out", getOwner(), hostname));
+          getEngine().counter(
+                  "ec2Reboot",
+                  "error",
+                  new HashMap<String, String>() {{
+                    put("hostname", hostname);
+                  }}
+          );
           return;
         }
       }

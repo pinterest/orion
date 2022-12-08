@@ -17,6 +17,7 @@ package com.pinterest.orion.core.actions;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +48,13 @@ import com.pinterest.orion.core.actions.alert.AlertMessage;
 import com.pinterest.orion.core.actions.audit.ActionAuditor;
 import com.pinterest.orion.core.actions.schema.ActionSchema;
 import com.pinterest.orion.core.utils.OrionUUID;
+import io.dropwizard.metrics5.MetricName;
+import io.dropwizard.metrics5.MetricRegistry;
+import io.dropwizard.metrics5.SharedMetricRegistries;
 
 public class ActionEngine implements ActionDispatcher, Runnable {
   private static final int TASK_EXPIRE = 86400_000;
+  private static MetricRegistry TSDB_METRICS = SharedMetricRegistries.setDefault("tsdb");
 
   private static final Logger LOG = Logger.getLogger(ActionEngine.class.getCanonicalName());
   @JsonIgnore
@@ -137,6 +142,18 @@ public class ActionEngine implements ActionDispatcher, Runnable {
     child.setParent(false);
     Future<?> future = childActionExecutors.submit(child);
     child.setInternalFuture(future);
+  }
+
+  public void counter(String alertClass, String alertType, Map<String, String> tagMap) {
+    if (tagMap == null) {
+      tagMap = new HashMap<>(); // MetricName needs to take non-null value.
+    }
+    try {
+      MetricName metricName = new MetricName(String.format("orion.%s.%s", alertClass, alertType), tagMap);
+      TSDB_METRICS.counter(metricName).inc();
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc()", e);
+    }
   }
 
   public void alert(Alert alert, AlertMessage message) {

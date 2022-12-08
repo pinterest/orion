@@ -160,6 +160,13 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyAgentBrokersWithoutURPs,
           "orion"
       ));
+      cluster.getActionEngine().counter(
+              "BrokerHealing.OrionAgent",
+              "unhealthy",
+              new HashMap<String, String>() {{
+                put("clusterId", cluster.getClusterId());
+              }}
+      );
     }
     
     // alert on brokers where broker service is unhealthy but there are no URPs if they show up for 3 consecutive times
@@ -181,6 +188,13 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyBrokersWithoutURPs,
           "orion"
       ));
+      cluster.getActionEngine().counter(
+              "BrokerHealing.KafkaServer",
+              "unhealthy",
+              new HashMap<String, String>() {{
+                put("clusterId", cluster.getClusterId());
+              }}
+      );
     }
 
     setMessage("offline brokers: " + unhealthyKafkaBrokers + "\nunhealthy agent orion nodes: " + unhealthyAgentNodes +
@@ -226,6 +240,13 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Brokers " + candidates + " are unhealthy",
           "orion"
       ));
+      cluster.getActionEngine().counter(
+              "BrokerHealing.MoreThanOneBroker",
+              "unhealthy",
+              new HashMap<String, String>() {{
+                put("clusterId", cluster.getClusterId());
+              }}
+      );
       // more than 1 brokers are dead... better alert and have human intervention
       logger.severe("More than one broker is in bad state - dead: " + deadBrokers + " service down: " + maybeDeadBrokers);
       return;

@@ -30,6 +30,7 @@ import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.TerminateInstancesResponse;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +74,13 @@ public class TerminateEC2InstanceAction extends NodeAction {
         );
         getEngine().alert(AlertLevel.MEDIUM, msg);
         getEngine().alert(AlertLevel.HIGH, msg);
+        getEngine().counter(
+                "ec2TerminationGetState",
+                "failure",
+                new HashMap<String, String>() {{
+                  put("hostname", hostname);
+                }}
+        );
         markFailed(e);
         return;
       }

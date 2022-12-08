@@ -152,6 +152,13 @@ public class ReplaceEC2InstanceAction extends NodeAction {
           );
           getEngine().alert(AlertLevel.MEDIUM, msg);
           getEngine().alert(AlertLevel.HIGH, msg);
+          getEngine().counter(
+                  "ec2ReplacementGetState",
+                  "failure",
+                  new HashMap<String, String>() {{
+                    put("hostname", hostname);
+                  }}
+          );
           markFailed(e);
           return;
         }
@@ -201,6 +208,13 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         getEngine().alert(AlertLevel.HIGH,
             new AlertMessage("Replacement error on " + hostname,
                 "Post replacement of " + hostname + " health check timed out", getOwner(), hostname));
+        getEngine().counter(
+                "ec2ReplacementPostReplacementCheck",
+                "timeout",
+                new HashMap<String, String>() {{
+                  put("hostname", hostname);
+                }}
+        );
         return;
       }
       if (nodeExists) {
