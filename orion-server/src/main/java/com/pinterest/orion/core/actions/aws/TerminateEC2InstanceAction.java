@@ -19,6 +19,7 @@ import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
 import com.pinterest.orion.core.actions.alert.AlertMessage;
 import com.pinterest.orion.core.actions.generic.NodeAction;
+import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 
 import software.amazon.awssdk.services.ec2.Ec2Client;
@@ -74,7 +75,7 @@ public class TerminateEC2InstanceAction extends NodeAction {
         );
         getEngine().alert(AlertLevel.MEDIUM, msg);
         getEngine().alert(AlertLevel.HIGH, msg);
-        getEngine().counter(
+        OrionServer.metricsCounterInc(
                 "ec2TerminationGetState",
                 "failure",
                 new HashMap<String, String>() {{

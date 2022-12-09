@@ -27,6 +27,7 @@ import com.pinterest.orion.core.actions.alert.AlertMessage;
 import com.pinterest.orion.core.actions.generic.GenericActions;
 import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.generic.GenericActions.ServiceStopAction;
+import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 
 import software.amazon.awssdk.services.ec2.Ec2Client;
@@ -96,7 +97,7 @@ public class RebootEC2InstanceAction extends NodeAction {
           getEngine().alert(AlertLevel.HIGH,
               new AlertMessage("Replacement error on " + hostname,
                   "Post reboot of " + hostname + " health check timed out", getOwner(), hostname));
-          getEngine().counter(
+          OrionServer.metricsCounterInc(
                   "ec2Reboot",
                   "error",
                   new HashMap<String, String>() {{

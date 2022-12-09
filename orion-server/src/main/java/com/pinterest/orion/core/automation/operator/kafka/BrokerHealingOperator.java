@@ -25,6 +25,7 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.pinterest.orion.server.OrionServer;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.Sets;
@@ -160,7 +161,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyAgentBrokersWithoutURPs,
           "orion"
       ));
-      cluster.getActionEngine().counter(
+      OrionServer.metricsCounterInc(
               "BrokerHealing.OrionAgent",
               "unhealthy",
               new HashMap<String, String>() {{
@@ -188,7 +189,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyBrokersWithoutURPs,
           "orion"
       ));
-      cluster.getActionEngine().counter(
+      OrionServer.metricsCounterInc(
               "BrokerHealing.KafkaServer",
               "unhealthy",
               new HashMap<String, String>() {{
@@ -240,7 +241,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Brokers " + candidates + " are unhealthy",
           "orion"
       ));
-      cluster.getActionEngine().counter(
+      OrionServer.metricsCounterInc(
               "BrokerHealing.MoreThanOneBroker",
               "unhealthy",
               new HashMap<String, String>() {{
