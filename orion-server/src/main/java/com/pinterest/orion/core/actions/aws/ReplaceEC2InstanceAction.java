@@ -153,9 +153,9 @@ public class ReplaceEC2InstanceAction extends NodeAction {
           getEngine().alert(AlertLevel.MEDIUM, msg);
           getEngine().alert(AlertLevel.HIGH, msg);
           OrionServer.metricsCounterInc(
-                  "ReplaceBroker",
-                  "OldBrokerGetState",
-                  "Error",
+                  "brokerWaitingReplacement",
+                  "getState",
+                  "error",
                   new HashMap<String, String>() {{
                     put("hostname", hostname);
                   }}
@@ -210,9 +210,9 @@ public class ReplaceEC2InstanceAction extends NodeAction {
             new AlertMessage("Replacement error on " + hostname,
                 "Post replacement of " + hostname + " health check timed out", getOwner(), hostname));
         OrionServer.metricsCounterInc(
-                "ReplaceBroker",
-                "NewBrokerHealthCheck",
-                "Timeout",
+                "replacedBroker",
+                "healthCheck",
+                "timeout",
                 new HashMap<String, String>() {{
                   put("hostname", hostname);
                 }}
