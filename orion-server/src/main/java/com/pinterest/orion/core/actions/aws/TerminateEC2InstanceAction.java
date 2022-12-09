@@ -76,8 +76,9 @@ public class TerminateEC2InstanceAction extends NodeAction {
         getEngine().alert(AlertLevel.MEDIUM, msg);
         getEngine().alert(AlertLevel.HIGH, msg);
         OrionServer.metricsCounterInc(
-                "ec2TerminationGetState",
-                "failure",
+                "TerminateBroker",
+                "GetState",
+                "Error",
                 new HashMap<String, String>() {{
                   put("hostname", hostname);
                 }}

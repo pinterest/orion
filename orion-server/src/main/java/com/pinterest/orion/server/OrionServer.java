@@ -300,16 +300,17 @@ public class OrionServer extends Application<OrionConf> {
     new OrionServer().run(args);
   }
 
-  public static void metricsCounterInc(String alertClass, String alertType, Map<String, String> tagMap) {
+  public static void metricsCounterInc(String subject, String action, String outcome, Map<String, String> tagMap) {
     /*
-    Static helper class doing counter.inc() for Orion Server metrics
+    Static helper class doing counter.inc() for Orion Server metrics.
+    It takes 3 string to form the metrics path.
      */
     if (tagMap == null) {
       tagMap = new HashMap<>(); // MetricName needs to be initialized with non-null value.
     }
     try {
       MetricName metricName = new MetricName(
-              String.format("orion.%s.%s", alertClass, alertType),
+              String.format("orion.%s.%s.%s", subject, action, outcome),
               tagMap
       );
       METRICS.counter(metricName).inc();
