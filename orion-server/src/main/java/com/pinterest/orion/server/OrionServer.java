@@ -16,6 +16,7 @@
 package com.pinterest.orion.server;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,6 +24,7 @@ import java.util.logging.Logger;
 
 import javax.servlet.FilterRegistration;
 
+import io.dropwizard.metrics5.MetricName;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.tuckey.web.filters.urlrewrite.UrlRewriteFilter;
@@ -296,5 +298,24 @@ public class OrionServer extends Application<OrionConf> {
 
   public static void main(String[] args) throws Exception {
     new OrionServer().run(args);
+  }
+
+  public static void metricsCounterInc(String subject, String action, String outcome, Map<String, String> tagMap) {
+    /*
+    Static helper class doing counter.inc() for Orion Server metrics.
+    It takes 3 string to form the metrics path.
+     */
+    if (tagMap == null) {
+      tagMap = new HashMap<>(); // MetricName needs to be initialized with non-null value.
+    }
+    try {
+      MetricName metricName = new MetricName(
+              String.format("orion.%s.%s.%s", subject, action, outcome),
+              tagMap
+      );
+      METRICS.counter(metricName).inc();
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc(). Error: ", e);
+    }
   }
 }
