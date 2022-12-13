@@ -37,8 +37,8 @@ public class KafkaDNSUpsertAction extends Action {
             throw new PluginConfigurationException(
                     "Cannot find key " + Ec2Utils.CONF_ROUTE53_ZONE_NAME + " in config " + getName());
         }
-        zoneName = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
-        zoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
+        zoneName = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
+        zoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
         ArrayList<String> errors = new ArrayList<>();
         Map<String, Attribute> attributes = getAttributes();
         if(!attributes.containsKey(NODE_NAME)) {
@@ -51,7 +51,7 @@ public class KafkaDNSUpsertAction extends Action {
         } else {
             ipAddr = attributes.get(IP_ADDR).getValue();
         }
-        if (!errors.equals("")) {
+        if (!errors.isEmpty()) {
             throw new ExceptionInInitializerError(
                     "The creation of KafkaDNSUpsertAction was missing attributes: " + errors);
         }
