@@ -1,5 +1,6 @@
 package com.pinterest.orion.core.actions.kafka;
 
+import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.Action;
 import com.pinterest.orion.core.actions.aws.Ec2Utils;
@@ -39,14 +40,15 @@ public class KafkaDNSUpsertAction extends Action {
         zoneName = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
         zoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
         ArrayList<String> errors = new ArrayList<>();
-        if(!config.containsKey(NODE_NAME)) {
+        Map<String, Attribute> attributes = getAttributes();
+        if(!attributes.containsKey(NODE_NAME)) {
             errors.add(NODE_NAME);
         }
-        nodeName = config.get(NODE_NAME).toString();
-        if(!config.containsKey(IP_ADDR)) {
+        nodeName = attributes.get(NODE_NAME).getValue();
+        if(!attributes.containsKey(IP_ADDR)) {
             errors.add(IP_ADDR);
         }
-        ipAddr = config.get(IP_ADDR).toString();
+        ipAddr = attributes.get(IP_ADDR).getValue();
         if (!errors.equals("")) {
             logger.severe("The creation of KafkaDNSUpsertAction was missing configs: " + errors);
         }
