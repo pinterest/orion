@@ -43,14 +43,17 @@ public class KafkaDNSUpsertAction extends Action {
         Map<String, Attribute> attributes = getAttributes();
         if(!attributes.containsKey(NODE_NAME)) {
             errors.add(NODE_NAME);
+        } else {
+            nodeName = attributes.get(NODE_NAME).getValue();
         }
-        nodeName = attributes.get(NODE_NAME).getValue();
         if(!attributes.containsKey(IP_ADDR)) {
             errors.add(IP_ADDR);
+        } else {
+            ipAddr = attributes.get(IP_ADDR).getValue();
         }
-        ipAddr = attributes.get(IP_ADDR).getValue();
         if (!errors.equals("")) {
-            logger.severe("The creation of KafkaDNSUpsertAction was missing configs: " + errors);
+            throw new ExceptionInInitializerError(
+                    "The creation of KafkaDNSUpsertAction was missing attributes: " + errors);
         }
     }
 
