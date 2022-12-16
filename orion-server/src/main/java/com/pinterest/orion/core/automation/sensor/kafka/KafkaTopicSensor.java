@@ -148,16 +148,17 @@ public class KafkaTopicSensor extends KafkaSensor {
     // Publish kafka topic metrics including topic size in byte, number of partitions and retention period in ms.
     for (Map.Entry<String, KafkaTopicDescription> entry : topicDescriptionMap.entrySet()) {
       KafkaTopicDescription topicDescription = entry.getValue();
-      String topicName = topicDescription.getName();
+      Map<String, String> metricsTags = new HashMap<String, String>() {{
+        put("topicName", topicDescription.getName());
+        put("isInternal", String.valueOf(topicDescription.isInternal()));
+      }};
       // Topic size
       double topicSize = getTopicSizeByteFromTopicDescription(topicDescription);
       OrionServer.metricsGaugeNum(
               "kafkaTopic",
               "size",
               "byte",
-              new HashMap<String, String>() {{
-                put("topicName", topicName);
-              }},
+              metricsTags,
               topicSize
       );
       // Number of partitions
@@ -166,9 +167,7 @@ public class KafkaTopicSensor extends KafkaSensor {
               "kafkaTopic",
               "partition",
               "num",
-              new HashMap<String, String>() {{
-                put("topicName", topicName);
-              }},
+              metricsTags,
               numPartition
       );
       // Retention
@@ -178,9 +177,7 @@ public class KafkaTopicSensor extends KafkaSensor {
               "kafkaTopic",
               "retention",
               "millisecond",
-              new HashMap<String, String>() {{
-                put("topicName", topicName);
-              }},
+              metricsTags,
               retentionMs
       );
     }
