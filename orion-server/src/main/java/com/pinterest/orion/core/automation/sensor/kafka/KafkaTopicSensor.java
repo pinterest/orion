@@ -146,8 +146,7 @@ public class KafkaTopicSensor extends KafkaSensor {
 
   public void populateTopicMetrics(Map<String, KafkaTopicDescription> topicDescriptionMap) {
     // Publish kafka topic metrics including topic size in byte, number of partitions and retention period in ms.
-    for (Map.Entry<String, KafkaTopicDescription> entry : topicDescriptionMap.entrySet()) {
-      KafkaTopicDescription topicDescription = entry.getValue();
+    for (KafkaTopicDescription topicDescription : topicDescriptionMap.values()) {
       Map<String, String> metricsTags = new HashMap<String, String>() {{
         put("topicName", topicDescription.getName());
         put("isInternal", String.valueOf(topicDescription.isInternal()));
