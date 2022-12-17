@@ -67,7 +67,7 @@ public class KafkaTopicSensor extends KafkaSensor {
       populateTopicBrokersetInfo(assignments, topicDescriptionMap);
       populateTopicLogDirectoryInfo(cluster, topicDescriptionMap);
       populateTopicConfigInfo(adminClient, topicDescriptionMap);
-      populateTopicMetrics(topicDescriptionMap);
+      populateTopicMetrics(cluster, topicDescriptionMap);
 
       setAttribute(cluster, ATTR_TOPICINFO_MAP_KEY, topicDescriptionMap);
 
@@ -144,12 +144,14 @@ public class KafkaTopicSensor extends KafkaSensor {
     return cluster.getTopicDescriptionFromKafka();
   }
 
-  public void populateTopicMetrics(Map<String, KafkaTopicDescription> topicDescriptionMap) {
+  public void populateTopicMetrics(KafkaCluster cluster, Map<String, KafkaTopicDescription> topicDescriptionMap) {
     // Publish kafka topic metrics including topic size in byte, number of partitions and retention period in ms.
     for (KafkaTopicDescription topicDescription : topicDescriptionMap.values()) {
       Map<String, String> metricsTags = new HashMap<String, String>() {{
         put("topicName", topicDescription.getName());
         put("isInternal", String.valueOf(topicDescription.isInternal()));
+        put("clusterName", cluster.getName());
+        put("clusterId", cluster.getClusterId());
       }};
       // Topic size
       double topicSize = getTopicSizeByteFromTopicDescription(topicDescription);
