@@ -149,8 +149,6 @@ public class KafkaTopicSensor extends KafkaSensor {
     for (KafkaTopicDescription topicDescription : topicDescriptionMap.values()) {
       Map<String, String> metricsTags = new HashMap<String, String>() {{
         put("topicName", topicDescription.getName());
-        put("isInternal", String.valueOf(topicDescription.isInternal()));
-        put("clusterName", cluster.getName());
         put("clusterId", cluster.getClusterId());
       }};
       // Topic size
