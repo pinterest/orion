@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import com.pinterest.orion.server.OrionServer;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
@@ -66,6 +67,7 @@ public class KafkaTopicSensor extends KafkaSensor {
       populateTopicBrokersetInfo(assignments, topicDescriptionMap);
       populateTopicLogDirectoryInfo(cluster, topicDescriptionMap);
       populateTopicConfigInfo(adminClient, topicDescriptionMap);
+      populateTopicMetrics(cluster, topicDescriptionMap);
 
       setAttribute(cluster, ATTR_TOPICINFO_MAP_KEY, topicDescriptionMap);
 
@@ -142,4 +144,52 @@ public class KafkaTopicSensor extends KafkaSensor {
     return cluster.getTopicDescriptionFromKafka();
   }
 
+  public void populateTopicMetrics(KafkaCluster cluster, Map<String, KafkaTopicDescription> topicDescriptionMap) {
+    // Publish kafka topic metrics including topic size in byte, number of partitions and retention period in ms.
+    for (KafkaTopicDescription topicDescription : topicDescriptionMap.values()) {
+      Map<String, String> metricsTags = new HashMap<String, String>() {{
+        put("topicName", topicDescription.getName());
+        put("clusterId", cluster.getClusterId());
+      }};
+      // Topic size
+      double topicSize = getTopicSizeByteFromTopicDescription(topicDescription);
+      OrionServer.metricsGaugeNum(
+              "kafkaTopic",
+              "size",
+              "byte",
+              metricsTags,
+              topicSize
+      );
+      // Number of partitions
+      double numPartition = (double) topicDescription.getPartitions().size();
+      OrionServer.metricsGaugeNum(
+              "kafkaTopic",
+              "partition",
+              "num",
+              metricsTags,
+              numPartition
+      );
+      // Retention
+      double retentionMs= Double.parseDouble(
+              topicDescription.getTopicConfigs().getOrDefault("retention.ms", "0.0"));
+      OrionServer.metricsGaugeNum(
+              "kafkaTopic",
+              "retention",
+              "millisecond",
+              metricsTags,
+              retentionMs
+      );
+    }
+  }
+
+  public double getTopicSizeByteFromTopicDescription(KafkaTopicDescription topicDescription) {
+    // Calculate topic size by looping through all topic partitions and sum up the size of all replicas
+    double topicSize = 0;
+    for (KafkaTopicPartitionInfo partition : topicDescription.getPartitions()) {
+      for (ReplicaInfo replicaInfo : partition.getReplicaInfo().values()) {
+        topicSize += (double) replicaInfo.size; // Shouldn't reach Double.MAX_VALUE and value overflow is OK.
+      }
+    }
+    return topicSize;
+  }
 }
