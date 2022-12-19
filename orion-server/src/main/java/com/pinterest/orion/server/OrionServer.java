@@ -306,7 +306,7 @@ public class OrionServer extends Application<OrionConf> {
       tagMap = new HashMap<>(); // MetricName needs to be initialized with non-null value.
     }
     return new MetricName(
-            String.format("orion.%s.%s.%s", subject, action, outcome),
+            String.format("%s.%s.%s", subject, action, outcome), // orion.server prefix will be added automatically.
             tagMap
     );
   }
