@@ -107,7 +107,7 @@ public class KafkaIdealBalanceAction extends Action {
           List<Integer> actualPartitionAssignment = actualAssignments.get(partition);
           List<Integer> idealPartitionAssignment = idealAssignments.get(partition);
           boolean disableShrink = false;
-          if (actualPartitionAssignment.size() < idealReplicationFactor) {
+          if (actualPartitionAssignment.size() < 2 || actualPartitionAssignment.size() < idealReplicationFactor) {
             // if replica is missing (# of replicas in assignment < replication factor)
             // we don't want the shrink phase to happen because we don't want to drop partitions
             disableShrink = true;
