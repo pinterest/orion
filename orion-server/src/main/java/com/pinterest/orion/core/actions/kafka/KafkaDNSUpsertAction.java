@@ -59,6 +59,11 @@ public class KafkaDNSUpsertAction extends Action {
 
     @Override
     public void runAction() throws Exception {
-        Ec2Utils.upsertR53Record(nodeName, ipAddr, zoneName, zoneId, logger);
+        try {
+            Ec2Utils.upsertR53Record(nodeName, ipAddr, zoneName, zoneId, logger);
+            markSucceeded();
+        } catch (Exception e) {
+            markFailed(e);
+        }
     }
 }
