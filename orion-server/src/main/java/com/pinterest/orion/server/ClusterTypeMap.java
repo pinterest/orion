@@ -53,12 +53,14 @@ public class ClusterTypeMap {
     }
   }
 
-  private static void registerHandlerClassWithAlias(Class<? extends Cluster> annotatedClass, ClusterType plugin) {
+  private static void registerHandlerClassWithAlias(Class<? extends Cluster> annotatedClass,
+                                                    ClusterType plugin) {
     Integer integer = classPriorityMap.get(plugin.name());
-    if (integer != null && integer < plugin.priority()) {
-      classPriorityMap.put(plugin.name(), plugin.priority());
-      clusterTypeMap.put(plugin.name(), annotatedClass);
+    if (integer != null && integer > plugin.priority()) {
+      return;
     }
+    classPriorityMap.put(plugin.name(), plugin.priority());
+    clusterTypeMap.put(plugin.name(), annotatedClass);
   }
 
   public static Cluster getClusterInstance(String clusterType,
