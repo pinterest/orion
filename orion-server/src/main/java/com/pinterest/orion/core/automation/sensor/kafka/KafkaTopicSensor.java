@@ -152,13 +152,13 @@ public class KafkaTopicSensor extends KafkaSensor {
         put("clusterId", cluster.getClusterId());
       }};
       // Topic size
-      double topicSize = getTopicSizeByteFromTopicDescription(topicDescription);
+      double topicSizeMb = (double) getTopicSizeMbFromTopicDescription(topicDescription);
       OrionServer.metricsGaugeNum(
               "kafkaTopic",
               "size",
-              "byte",
+              "mb",
               metricsTags,
-              topicSize
+              topicSizeMb
       );
       // Number of partitions
       double numPartition = (double) topicDescription.getPartitions().size();
@@ -170,26 +170,26 @@ public class KafkaTopicSensor extends KafkaSensor {
               numPartition
       );
       // Retention
-      double retentionMs= Double.parseDouble(
-              topicDescription.getTopicConfigs().getOrDefault("retention.ms", "0.0"));
+      double retentionMinute= Double.parseDouble(
+              topicDescription.getTopicConfigs().getOrDefault("retention.ms", "0.0")) / 60000.0;
       OrionServer.metricsGaugeNum(
               "kafkaTopic",
               "retention",
-              "millisecond",
+              "minute",
               metricsTags,
-              retentionMs
+              retentionMinute
       );
     }
   }
 
-  public double getTopicSizeByteFromTopicDescription(KafkaTopicDescription topicDescription) {
+  public long getTopicSizeMbFromTopicDescription(KafkaTopicDescription topicDescription) {
     // Calculate topic size by looping through all topic partitions and sum up the size of all replicas
-    double topicSize = 0;
+    long topicSizeByte = 0;
     for (KafkaTopicPartitionInfo partition : topicDescription.getPartitions()) {
       for (ReplicaInfo replicaInfo : partition.getReplicaInfo().values()) {
-        topicSize += (double) replicaInfo.size; // Shouldn't reach Double.MAX_VALUE and value overflow is OK.
+        topicSizeByte += replicaInfo.size;
       }
     }
-    return topicSize;
+    return topicSizeByte / 1048576;
   }
 }
