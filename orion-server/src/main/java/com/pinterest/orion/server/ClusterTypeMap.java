@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.pinterest.orion.core.ldap.LDAPCluster;
 import org.reflections.Reflections;
 
 import com.pinterest.orion.core.Cluster;
@@ -25,6 +24,7 @@ import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.hbase.HBaseCluster;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.core.memq.MemqCluster;
+import com.pinterest.orion.core.ldap.LDAPCluster;
 
 public class ClusterTypeMap {
 
