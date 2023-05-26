@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.pinterest.orion.core.ldap.LDAPCluster;
 import org.reflections.Reflections;
 
 import com.pinterest.orion.core.Cluster;
@@ -36,6 +37,7 @@ public class ClusterTypeMap {
     clusterTypeMap.put("kafka", KafkaCluster.class);
     clusterTypeMap.put("memq", MemqCluster.class);
     clusterTypeMap.put("hbase", HBaseCluster.class);
+    clusterTypeMap.put("ldap", LDAPCluster.class);
 
     try {
       Reflections reflections = new Reflections("com.pinterest.orion.core");
