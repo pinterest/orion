@@ -29,19 +29,12 @@ import PropsTable from "../Commons/PropsTable";
 
 const routes = [
   {
-    subpath: "brokerprops",
+    subpath: "topicpartitions",
     component: PropsTable,
-    label: "Broker Properties",
-    getData: getServiceConfigsData,
-    getColumns: getServiceConfigsColumns,
-  },
-  {
-    subpath: "brokerenv",
-    component: PropsTable,
-    label: "Broker Environment",
-    getData: getBrokerEnvironmentData,
-    getColumns: getBrokerEnvironmentColumns,
-  },
+    label: "Topics",
+    getData: getTopicPartitionsData,
+    getColumns: getTopicPartitionsColumns,
+  }
 ];
 
 export default function MemqNode({ node, clusterId, cluster }) {
@@ -59,7 +52,7 @@ export default function MemqNode({ node, clusterId, cluster }) {
             <Redirect
               exact
               from="/clusters/:clusterId/nodes/:nodeId"
-              to="/clusters/:clusterId/nodes/:nodeId/brokerprops"
+              to="/clusters/:clusterId/nodes/:nodeId/topicpartitions"
             ></Redirect>
             <Route
               path="/clusters/:clusterId/nodes/:nodeId/:tab"
@@ -219,4 +212,27 @@ function NodeNavTabs(props) {
       ))}
     </Tabs>
   );
+}
+
+function getTopicPartitionsData(cluster, node) {
+  let rows = [];
+  console.log(node);
+  if (node) {
+    rows = node.topicPartitionsForNode;
+  }
+  console.log(rows);
+  let data = [];
+  rows.map(entry => {
+    console.log(entry);
+    data.push({
+      topic: entry.topic
+    });
+  });
+  return data;
+}
+
+function getTopicPartitionsColumns() {
+  return ([
+    { title: "Topic", field: "topic" }
+  ]);
 }

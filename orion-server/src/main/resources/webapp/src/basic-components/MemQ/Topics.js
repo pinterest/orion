@@ -59,23 +59,14 @@ export default function Topics(props) {
     topicToRowValuesMap[topicInfoRow.config.topic] = {
       topic: topicInfoRow.config.topic,
       clusterId: clusterId,
-      readpartition: topicInfoRow.readAssignments
-        ? topicInfoRow.readAssignments.partitions.length
-        : 0,
-      writepartition: topicInfoRow.writeAssignments
+      brokerCount: topicInfoRow.writeAssignments
         ? topicInfoRow.writeAssignments.length
         : 0,
-      storageHandler: topicInfoRow.config.outputHandler,
-      retentionHrs:
-        topicInfoRow.readAssignments.configs["retention.ms"] < 0
-          ? -1
-          : (
-              topicInfoRow.readAssignments.configs["retention.ms"] /
-              1000 /
-              3600
-            ).toFixed(2),
-      size: topicInfoRow.config.size,
       traffic: topicInfoRow.config.inputTrafficMB,
+      topicOrder: topicInfoRow.config.topicOrder,
+      bufferSize: topicInfoRow.config.bufferSize,
+      batchMilliSeconds: topicInfoRow.config.batchMilliSeconds,
+      batchSizeMB: topicInfoRow.config.batchSizeMB,
       configs: topicInfoRow.configs,
       storageConfigs: topicInfoRow.config.outputHandlerConfig,
       raw: topicInfoRow,
@@ -122,14 +113,12 @@ export default function Topics(props) {
   let data = Object.values(topicToRowValuesMap);
   let columns = [
     { title: "Topic", field: "topic" },
-    { title: "Write Partitions", field: "writepartition" },
-    { title: "Read Partitions", field: "readpartition" },
-    // { title: "MB-In/s", field: "mbin", type: "numeric" },
-    // { title: "MB-Out/s", field: "mbout", type: "numeric" },
-    { title: "Retention (Hrs)", field: "retentionHrs", type: "numeric" },
-    { title: "Size (TB)", field: "size", type: "numeric" },
-    { title: "Traffic (MB/s)", field: "traffic", type: "numeric" },
-    { title: "Project", field: "project" },
+    { title: "BrokerCount", field: "brokerCount" },
+    { title: "InputTrafficMB", field: "traffic", type: "numeric" },
+    { title: "TopicOrder", field: "topicOrder", type: "numeric" },
+    { title: "BufferSize", field: "bufferSize" },
+    { title: "BatchMilliseconds", field: "batchMilliSeconds" },
+    { title: "BatchSizeMB", field: "batchSizeMB" },
   ];
 
   const exportAsJson = async () => {

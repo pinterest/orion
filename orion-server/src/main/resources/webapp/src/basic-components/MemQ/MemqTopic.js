@@ -31,21 +31,14 @@ const routes = [
   {
     subpath: "topicwritepartitions",
     component: PropsTable,
-    label: "Write Partitions",
+    label: "Partitions",
     getData: getTopicWritePartitionsData,
     getColumns: getTopicWritePartitionsColumns,
   },
   {
-    subpath: "topicreadpartitions",
-    component: PropsTable,
-    label: "Read Partitions",
-    getData: getTopicReadPartitionsData,
-    getColumns: getTopicReadPartitionsColumns,
-  },
-  {
     subpath: "topicconfigs",
     component: PropsTable,
-    label: "Topic Configurations",
+    label: "Configurations",
     getData: getTopicConfigData,
     getColumns: getTopicConfigColumns,
   },
@@ -123,25 +116,7 @@ function getTopicInfoHeader(rowData, clusterId) {
             variant="outlined"
             color="primary"
             size="small"
-            label={rowData.retentionHrs + " Hrs"}
-          />
-        </Grid>
-        <Grid item>
-          <Chip
-            variant="outlined"
-            color="primary"
-            size="small"
-            label={rowData.raw.writeAssignments.length + " Write Partitions"}
-          />
-        </Grid>
-        <Grid item>
-          <Chip
-            variant="outlined"
-            color="primary"
-            size="small"
-            label={
-              rowData.raw.readAssignments.partitions.length + " Read Partitions"
-            }
+            label={rowData.raw.writeAssignments.length + " Partitions"}
           />
         </Grid>
       </Grid>
@@ -223,8 +198,6 @@ function getTopicConfigData(rowData) {
         topicConfigData.push({
           key: key,
           value: JSON.stringify(value),
-          overridden:
-            overrideConfigs && overrideConfigs.includes(key) ? "true" : "false",
         });
       }
     }
@@ -236,7 +209,6 @@ function getTopicConfigColumns() {
   return [
     { title: "Config Name", field: "key" },
     { title: "Value", field: "value" },
-    { title: "Overridden", field: "overridden" },
   ];
 }
 

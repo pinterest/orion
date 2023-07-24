@@ -18,8 +18,6 @@ import { Tab, Tabs, Grid } from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import Topics from "./Topics";
-import Brokersets from "../Kafka/Brokersets";
-import ConsumerGroups from "../Kafka/ConsumerGroups";
 
 const useStyles = makeStyles({
   table: {
@@ -32,17 +30,7 @@ const routes = [
     subpath: "topics",
     component: Topics,
     label: "Topics",
-  },
-  {
-    subpath: "brokersets",
-    component: Brokersets,
-    label: "Brokersets",
-  },
-  // {
-  //   subpath: "consumergroups",
-  //   component: ConsumerGroups,
-  //   label: "Consumer Groups"
-  // }
+  }
 ];
 
 export default function MemqService(props) {

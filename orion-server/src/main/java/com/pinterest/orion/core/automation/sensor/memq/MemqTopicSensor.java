@@ -14,8 +14,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.PluginConfigurationException;
-import com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicSensor;
-import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.core.kafka.KafkaTopicDescription;
 import com.pinterest.orion.core.memq.MemqCluster;
 
@@ -47,28 +45,10 @@ public class MemqTopicSensor extends MemqSensor {
     for (Entry<String, TopicConfig> entry : topicConfigs.entrySet()) {
       TopicConfig topicConfig = entry.getValue();
       String topic = topicConfig.getTopic();
-      Properties outputHandlerConfig = topicConfig.getOutputHandlerConfig();
-      String serversetFile = outputHandlerConfig.getProperty(NOTIFICATION_SERVERSET);
-      Map<String, KafkaTopicDescription> topicDescriptionMap = topicDescMap.get(serversetFile);
-      if (topicDescriptionMap == null) {
-        topicDescriptionMap = new HashMap<>();
-        topicDescMap.put(serversetFile, topicDescriptionMap);
-        AdminClient adminClient = readClusterClientMap.get(serversetFile);
-        if (adminClient == null) {
-          adminClient = initializeAdminClient(serversetFile);
-          readClusterClientMap.put(serversetFile, adminClient);
-        }
-        topicDescriptionMap.putAll(KafkaCluster.getTopicDescriptions(adminClient, logger,
-            topicDescriptionMap, cluster.getClusterId(), KafkaCluster.DEFAULT_METADATA_TIMEOUT_MS));
-        KafkaTopicSensor.populateTopicConfigInfo(adminClient, topicDescriptionMap);
-      }
       MemqTopicDescription desc = new MemqTopicDescription();
       desc.setConfig(topicConfig);
       topicInfo.put(topic, desc);
-      String notificationTopic = outputHandlerConfig.getProperty(NOTIFICATION_TOPIC);
-      KafkaTopicDescription kafkaTopicDescription = topicDescriptionMap.get(notificationTopic);
-      desc.setReadAssignments(kafkaTopicDescription);
-      topicInfo.put(topic, desc);
+      // TODO: Load notification topic data from downloaded topic config files, and put into topic info map
     }
 
     attribute = cluster.getAttribute(MemqClusterSensor.WRITE_ASSIGNMENTS);
