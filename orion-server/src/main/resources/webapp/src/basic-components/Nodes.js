@@ -233,8 +233,7 @@ function Nodes({ cluster, isAdmin }) {
           searchOpen: true,
           selectableRowsHeader: isAdmin,
           selectableRows: isAdmin ? "multiple" : "none",
-          isRowSelectable: (dataIndex, expandedRows) =>
-            rows[dataIndex].agentPresent,
+          isRowSelectable: (dataIndex, expandedRows) => true,
           onRowClick: (rowData, rowMeta) => {
             history.push(
               "/clusters/" + cluster.clusterId + "/nodes/" + rowData[0]
