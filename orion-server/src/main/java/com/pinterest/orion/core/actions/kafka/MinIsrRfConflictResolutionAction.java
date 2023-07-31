@@ -69,10 +69,11 @@ public class MinIsrRfConflictResolutionAction extends AbstractKafkaAction {
             getEngine().alert(AlertLevel.HIGH, alertMessage);
             OrionServer.metricsCounterInc(
                     "replicationFactor",
-                    "configCheck",
-                    "error",
+                    "minisr",
+                    "conflict",
                     new HashMap<String, String>() {{
                         put("cluster", getEngine().getCluster().getClusterId());
+                        put("topic", topicName);
                     }}
             );
             markSucceeded();
