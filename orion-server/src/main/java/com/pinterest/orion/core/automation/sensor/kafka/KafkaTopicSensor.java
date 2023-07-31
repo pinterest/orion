@@ -154,14 +154,14 @@ public class KafkaTopicSensor extends KafkaSensor {
       // Topic size
       double topicSize = getTopicSizeByteFromTopicDescription(topicDescription);
       OrionServer.metricsGaugeNum(
-              "kafkatopic.size.byte",
+              "kafka.topic.size.bytes",
               topicSize,
               metricsTags
       );
       // Number of partitions
       double numPartition = (double) topicDescription.getPartitions().size();
       OrionServer.metricsGaugeNum(
-              "kafkatopic.partition.num",
+              "kafka.topic.partition.count",
               numPartition,
               metricsTags
       );
@@ -169,7 +169,7 @@ public class KafkaTopicSensor extends KafkaSensor {
       double retentionMs= Double.parseDouble(
               topicDescription.getTopicConfigs().getOrDefault("retention.ms", "0.0"));
       OrionServer.metricsGaugeNum(
-              "kafkatopic.retention.millisecond",
+              "kafka.topic.retention.ms",
               retentionMs,
               metricsTags
       );
