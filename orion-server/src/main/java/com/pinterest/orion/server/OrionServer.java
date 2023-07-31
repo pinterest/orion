@@ -302,11 +302,15 @@ public class OrionServer extends Application<OrionConf> {
   }
 
   private static MetricName constructMetricsName(String subject, String action, String outcome, Map<String, String> tagMap) {
+    /*
+    Construction MetricName class for MetricRegistry remote call.
+    The name of the metrics will be "orion.server.{subject}.{action}.{outcome}".
+     */
     if (tagMap == null) {
       tagMap = new HashMap<>(); // MetricName needs to be initialized with non-null value.
     }
     return new MetricName(
-            String.format("orion.%s.%s.%s", subject, action, outcome),
+            String.format("%s.%s.%s", subject, action, outcome),
             tagMap
     );
   }
