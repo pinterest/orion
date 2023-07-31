@@ -98,9 +98,7 @@ public class RebootEC2InstanceAction extends NodeAction {
               new AlertMessage("Replacement error on " + hostname,
                   "Post reboot of " + hostname + " health check timed out", getOwner(), hostname));
           OrionServer.metricsCounterInc(
-                  "rebootedBroker",
-                  "healthCheck",
-                  "error",
+                  "rebootedbroker.healthcheck.error",
                   new HashMap<String, String>() {{
                     put("hostname", hostname);
                   }}

@@ -162,9 +162,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "orion"
       ));
       OrionServer.metricsCounterInc(
-              "broker",
-              "healing",
-              "agentUnhealthy",
+              "broker.healing.agentunhealthy",
               new HashMap<String, String>() {{
                 put("clusterId", cluster.getClusterId());
               }}
@@ -191,9 +189,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "orion"
       ));
       OrionServer.metricsCounterInc(
-              "broker",
-              "healing",
-              "serverUnhealthy",
+              "broker.healing.serverunhealthy",
               new HashMap<String, String>() {{
                 put("clusterId", cluster.getClusterId());
               }}
@@ -244,9 +240,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "orion"
       ));
       OrionServer.metricsCounterInc(
-              "broker",
-              "healing",
-              "moreThanOneBrokerUnhealthy",
+              "broker.healing.morethanonebrokerunhealthy",
               new HashMap<String, String>() {{
                 put("clusterId", cluster.getClusterId());
               }}
