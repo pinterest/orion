@@ -153,11 +153,12 @@ public class ReplaceEC2InstanceAction extends NodeAction {
           getEngine().alert(AlertLevel.MEDIUM, msg);
           getEngine().alert(AlertLevel.HIGH, msg);
           OrionServer.metricsCounterInc(
-                  "brokerWaitingReplacement",
-                  "getState",
-                  "error",
+                  "broker.replacement.state.missing",
                   new HashMap<String, String>() {{
                     put("hostname", hostname);
+                    put("instanceId", instanceId);
+                    put("confRoute53ZoneId", confRoute53ZoneId);
+                    put("confRoute53Name", confRoute53Name);
                   }}
           );
           markFailed(e);
@@ -210,11 +211,12 @@ public class ReplaceEC2InstanceAction extends NodeAction {
             new AlertMessage("Replacement error on " + hostname,
                 "Post replacement of " + hostname + " health check timed out", getOwner(), hostname));
         OrionServer.metricsCounterInc(
-                "replacedBroker",
-                "healthCheck",
-                "timeout",
+                "broker.replacement.healthcheck.timeout",
                 new HashMap<String, String>() {{
                   put("hostname", hostname);
+                  put("instanceId", instanceId);
+                  put("confRoute53ZoneId", confRoute53ZoneId);
+                  put("confRoute53Name", confRoute53Name);
                 }}
         );
         return;

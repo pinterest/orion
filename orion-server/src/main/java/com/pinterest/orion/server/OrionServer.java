@@ -301,39 +301,23 @@ public class OrionServer extends Application<OrionConf> {
     new OrionServer().run(args);
   }
 
-  private static MetricName constructMetricsName(String subject, String action, String outcome, Map<String, String> tagMap) {
-    if (tagMap == null) {
-      tagMap = new HashMap<>(); // MetricName needs to be initialized with non-null value.
-    }
-    return new MetricName(
-            String.format("orion.%s.%s.%s", subject, action, outcome),
-            tagMap
-    );
-  }
-
-  public static void metricsCounterInc(String subject, String action, String outcome, Map<String, String> tagMap) {
+  public static void metricsCounterInc(String name, Map<String, String> tagMap) {
     /*
     Static helper class doing counter.inc() for Orion Server metrics.
-    It takes 3 Strings to form the metrics path.
      */
     try {
-      METRICS.counter(constructMetricsName(subject, action, outcome, tagMap)).inc();
+      METRICS.counter(new MetricName(name, tagMap)).inc();
     } catch (Exception e) {
       logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc(). Error: ", e);
     }
   }
 
-  public static void metricsGaugeNum(String subject, String action, String outcome, Map<String, String> tagMap,
-                                     double value) {
+  public static void metricsGaugeNum(String name, double value, Map<String, String> tagMap) {
     /*
     Static helper class doing metrics.gauge for Orion Server metrics.
-    It takes 3 Strings to form the metrics path and a double value as the metrics value.
      */
     try {
-      METRICS.gauge(
-              constructMetricsName(subject, action, outcome, tagMap),
-              () -> (Gauge<Double>) () -> value
-      );
+      METRICS.gauge(new MetricName(name, tagMap), () -> (Gauge<Double>) () -> value);
     } catch (Exception e) {
       logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics gauge. Error: ", e);
     }

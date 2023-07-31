@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.pinterest.orion.core.actions.kafka;
 
+import com.pinterest.orion.server.OrionServer;
 import org.apache.kafka.clients.admin.AdminClient;
 
 import com.pinterest.orion.core.Attribute;
@@ -66,6 +67,13 @@ public class MinIsrRfConflictResolutionAction extends AbstractKafkaAction {
                     topicName + " on cluster " + getEngine().getCluster().getClusterId();
             AlertMessage alertMessage = new AlertMessage(title, message, "orion");
             getEngine().alert(AlertLevel.HIGH, alertMessage);
+            OrionServer.metricsCounterInc(
+                    "replicationfactor.minisr.conflict",
+                    new HashMap<String, String>() {{
+                        put("cluster", getEngine().getCluster().getClusterId());
+                        put("topic", topicName);
+                    }}
+            );
             markSucceeded();
             logger.info("Sent pager for minIsr-Rf conflict for topic " + topicName + " on cluster " +
                     getEngine().getCluster().getClusterId());
