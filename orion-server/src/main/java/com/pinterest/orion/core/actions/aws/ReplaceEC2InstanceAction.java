@@ -211,7 +211,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
             new AlertMessage("Replacement error on " + hostname,
                 "Post replacement of " + hostname + " health check timed out", getOwner(), hostname));
         OrionServer.metricsCounterInc(
-                "replacedbroker.healthcheck.timeout",
+                "broker.replacement.healthcheck.timeout",
                 new HashMap<String, String>() {{
                   put("hostname", hostname);
                   put("instanceId", instanceId);
