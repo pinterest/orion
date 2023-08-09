@@ -161,7 +161,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyAgentBrokersWithoutURPs,
           "orion"
       ));
-      OrionServer.metricsCounterInc(
+      OrionServer.metricsGaugeOne(
               "broker.agent.unhealthy",
               new HashMap<String, String>() {{
                 put("clusterId", cluster.getClusterId());
@@ -188,7 +188,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyBrokersWithoutURPs,
           "orion"
       ));
-      OrionServer.metricsCounterInc(
+      OrionServer.metricsGaugeOne(
               "broker.service.unhealthy",
               new HashMap<String, String>() {{
                 put("clusterId", cluster.getClusterId());
@@ -239,7 +239,7 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Brokers " + candidates + " are unhealthy",
           "orion"
       ));
-      OrionServer.metricsCounterInc(
+      OrionServer.metricsGaugeOne(
               "broker.services.unhealthy",
               new HashMap<String, String>() {{
                 put("clusterId", cluster.getClusterId());

@@ -301,14 +301,14 @@ public class OrionServer extends Application<OrionConf> {
     new OrionServer().run(args);
   }
 
-  public static void metricsCounterInc(String name, Map<String, String> tagMap) {
+  public static void metricsGaugeOne(String name, Map<String, String> tagMap) {
     /*
-    Static helper class doing counter.inc() for Orion Server metrics.
+    Static helper class doing metrics.gauge(1) for Orion Server metrics.
      */
     try {
-      METRICS.counter(new MetricName(name, tagMap)).inc();
+      METRICS.gauge(new MetricName(name, tagMap), () -> (Gauge<Double>) () -> 1.0);
     } catch (Exception e) {
-      logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc(). Error: ", e);
+      logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics gauge one. Error: ", e);
     }
   }
 
