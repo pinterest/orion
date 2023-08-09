@@ -301,6 +301,17 @@ public class OrionServer extends Application<OrionConf> {
     new OrionServer().run(args);
   }
 
+  public static void metricsCounterInc(String name, Map<String, String> tagMap) {
+    /*
+    Static helper class doing counter.inc() for Orion Server metrics.
+     */
+    try {
+      METRICS.counter(new MetricName(name, tagMap)).inc();
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics counter.inc(). Error: ", e);
+    }
+  }
+
   public static void metricsGaugeNum(String name, double value, Map<String, String> tagMap) {
     /*
     Static helper class doing metrics.gauge for Orion Server metrics.
