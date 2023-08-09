@@ -75,8 +75,8 @@ public class TerminateEC2InstanceAction extends NodeAction {
         );
         getEngine().alert(AlertLevel.MEDIUM, msg);
         getEngine().alert(AlertLevel.HIGH, msg);
-        OrionServer.metricsGaugeOne(
-                "broker.waitingtermination.getstate.error",
+        OrionServer.metricsGaugeNum(
+                "broker.waitingtermination.getstate.error", 1,
                 new HashMap<String, String>() {{
                   put("hostname", hostname);
                   put("instanceId", instanceId);
