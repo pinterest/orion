@@ -97,8 +97,8 @@ public class RebootEC2InstanceAction extends NodeAction {
           getEngine().alert(AlertLevel.HIGH,
               new AlertMessage("Replacement error on " + hostname,
                   "Post reboot of " + hostname + " health check timed out", getOwner(), hostname));
-          OrionServer.metricsGaugeNum(
-                  "broker.reboot.healthcheck.timeout", 1,
+          OrionServer.metricsCounterInc(
+                  "broker.reboot.healthcheck.timeout",
                   new HashMap<String, String>() {{
                     put("hostname", hostname);
                     put("instanceId", instanceId);
