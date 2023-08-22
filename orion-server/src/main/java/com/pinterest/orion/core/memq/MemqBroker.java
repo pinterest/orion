@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.pinterest.orion.core.memq;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
@@ -43,9 +43,10 @@ public class MemqBroker extends Node {
       Attribute attribute = cluster.getAttribute(MemqClusterSensor.RAW_BROKER_INFO);
       Map<String, Broker> rawBrokerMap = attribute.getValue();
       Broker broker = rawBrokerMap.get(currentNodeInfo.getNodeId());
-      return broker.getAssignedTopics();
-    } else {
-      return Arrays.asList();
+      if (broker != null) {
+        return broker.getAssignedTopics();
+      }
     }
+    return new HashSet<>();
   }
 }
