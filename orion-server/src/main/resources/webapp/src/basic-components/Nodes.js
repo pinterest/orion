@@ -170,6 +170,11 @@ function Nodes({ cluster, isAdmin }) {
   if (cluster.nodeMap) {
     rows = Object.values(cluster.nodeMap);
   }
+  for(let i=0; i<rows.length; i++) {
+    if (rows[i].decommissioned) {
+      rows.splice(i, 1)
+    }
+  }
   let ClusterNodeDetails = loadClusterNodeType(cluster);
 
   const data = rows.map((row) => dataFunction(row));

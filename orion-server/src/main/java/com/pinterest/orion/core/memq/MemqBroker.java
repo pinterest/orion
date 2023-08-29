@@ -44,7 +44,10 @@ public class MemqBroker extends Node {
       Map<String, Broker> rawBrokerMap = attribute.getValue();
       Broker broker = rawBrokerMap.get(currentNodeInfo.getNodeId());
       if (broker != null) {
+        setNodeStatus(NodeStatus.COMMISSIONED);
         return broker.getAssignedTopics();
+      } else {
+        setNodeStatus(NodeStatus.DECOMMISSIONED);
       }
     }
     return new HashSet<>();
