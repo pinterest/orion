@@ -216,4 +216,8 @@ public abstract class Node implements Serializable {
   public void setMaintenance(boolean maintenance) {
     this.maintenance = maintenance;
   }
+
+  public boolean isDecommissioned() {
+    return getNodeStatus().equals(NodeStatus.DECOMMISSIONED);
+  }
 }
