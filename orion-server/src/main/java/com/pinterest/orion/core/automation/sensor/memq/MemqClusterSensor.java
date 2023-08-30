@@ -86,12 +86,12 @@ public class MemqClusterSensor extends MemqSensor {
         rawBrokerMap.put(broker.getBrokerIP(), broker);
         for (TopicConfig topicConfig : broker.getAssignedTopics()) {
           String topic = topicConfig.getTopic();
-          List<String> brokerIds = writeBrokerAssignments.get(topic);
-          if (brokerIds == null) {
-            brokerIds = new ArrayList<>();
-            writeBrokerAssignments.put(topic, brokerIds);
+          List<String> hostnames = writeBrokerAssignments.get(topic);
+          if (hostnames == null) {
+            hostnames = new ArrayList<>();
+            writeBrokerAssignments.put(topic, hostnames);
           }
-          brokerIds.add(broker.getBrokerIP());
+          hostnames.add(hostname);
         }
       }
 
