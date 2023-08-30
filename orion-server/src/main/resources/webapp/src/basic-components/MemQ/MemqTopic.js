@@ -173,7 +173,7 @@ function getTopicWritePartitionsData(rowData) {
     rows.map((partition) => {
       data.push({
         partition: id++,
-        broker: partition,
+        brokerName: partition.split(".", 1)[0],
       });
     });
   }
@@ -183,7 +183,7 @@ function getTopicWritePartitionsData(rowData) {
 function getTopicWritePartitionsColumns() {
   return [
     { title: "Partition", field: "partition" },
-    { title: "Broker", field: "broker" },
+    { title: "Broker Name", field: "brokerName" },
   ];
 }
 
