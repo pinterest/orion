@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.pinterest.orion.core.Attribute;
-import com.pinterest.orion.core.actions.memq.MemqTopicCreationAction;
 import com.pinterest.orion.core.automation.sensor.memq.MemqClusterSensor;
 import com.pinterest.orion.core.automation.sensor.memq.MemqTopicRepoSensor;
 import com.pinterest.orion.core.automation.sensor.memq.TopicConfig;
@@ -51,13 +50,6 @@ public class MemqTopicOperator extends MemqOperator {
 
     if (!topics.isEmpty()) {
       logger.info("Found the following topics that need to be created:" + topics);
-    }
-    for (TopicConfig topicConfig : topics) {
-      MemqTopicCreationAction action = new MemqTopicCreationAction();
-      action.setAttribute(MemqTopicCreationAction.ATTR_TOPIC_CONFIG_KEY, topicConfig);
-      action.setAttribute(MemqTopicCreationAction.ATTR_TOPIC_NAME_KEY, topicConfig.getTopic());
-      dispatch(action);
-      return;
     }
   }
 
