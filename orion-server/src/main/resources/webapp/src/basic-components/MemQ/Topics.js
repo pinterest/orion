@@ -59,16 +59,20 @@ export default function Topics(props) {
     topicToRowValuesMap[topicInfoRow.config.topic] = {
       topic: topicInfoRow.config.topic,
       clusterId: clusterId,
+      project: topicInfoRow.config.project,
       brokerCount: topicInfoRow.writeAssignments
         ? topicInfoRow.writeAssignments.length
         : 0,
       traffic: topicInfoRow.config.inputTrafficMB,
+      notificationTopic: topicInfoRow.config.notificationTopic,
+      notificationBrokerset: topicInfoRow.config.notificationBrokerset,
+      bucket: topicInfoRow.config.bucket,
       topicOrder: topicInfoRow.config.topicOrder,
       bufferSize: topicInfoRow.config.bufferSize,
       batchMilliSeconds: topicInfoRow.config.batchMilliSeconds,
       batchSizeMB: topicInfoRow.config.batchSizeMB,
       configs: topicInfoRow.configs,
-      storageConfigs: topicInfoRow.config.outputHandlerConfig,
+      storageConfigs: topicInfoRow.config.storageHandlerConfig,
       raw: topicInfoRow,
     };
   });

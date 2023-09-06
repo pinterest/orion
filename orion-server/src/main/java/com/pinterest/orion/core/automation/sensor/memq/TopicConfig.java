@@ -4,6 +4,10 @@ import java.util.Properties;
 
 public class TopicConfig implements Comparable<TopicConfig> {
 
+  public static final String NOTIFICATION_TOPIC = "notificationTopic";
+  public static final String NOTIFICATION_BROKERSET = "notificationBrokerset";
+  public static final String BUCKET = "bucket";
+
   private long topicOrder;
 
   /**
@@ -23,7 +27,7 @@ public class TopicConfig implements Comparable<TopicConfig> {
 
   private String topic;
 
-  private Properties outputHandlerConfig = new Properties();
+  private Properties storageHandlerConfig = new Properties();
 
   private int tickFrequencyMillis = 1000;
 
@@ -32,9 +36,11 @@ public class TopicConfig implements Comparable<TopicConfig> {
   /**
    * file or s3
    */
-  private String outputHandler;
+  private String storageHandlerName;
 
-  private volatile double inputTrafficMB = 0.0;
+  private String project = "";
+
+  private double inputTrafficMB = 0.0;
 
   public TopicConfig() {
   }
@@ -42,13 +48,14 @@ public class TopicConfig implements Comparable<TopicConfig> {
   public TopicConfig(TopicConfig config) {
     this.topicOrder = config.topicOrder;
     this.topic = config.topic;
-    this.outputHandler = config.outputHandler;
+    this.project = config.project;
+    this.storageHandlerName = config.storageHandlerName;
+    this.storageHandlerConfig = config.storageHandlerConfig;
     this.bufferSize = config.bufferSize;
     this.outputParallelism = config.outputParallelism;
     this.maxDispatchCount = config.maxDispatchCount;
     this.tickFrequencyMillis = config.tickFrequencyMillis;
     this.batchMilliSeconds = config.batchMilliSeconds;
-    this.outputHandlerConfig = config.outputHandlerConfig;
     this.ringBufferSize = config.ringBufferSize;
     this.batchSizeMB = config.batchSizeMB;
     this.enableBucketing2Processor = config.enableBucketing2Processor;
@@ -69,9 +76,9 @@ public class TopicConfig implements Comparable<TopicConfig> {
     this.batchSizeMB = batchSizeMB;
   }
 
-  public TopicConfig(String topic, String outputHandler) {
+  public TopicConfig(String topic, String storageHandlerName) {
     this.topic = topic;
-    this.outputHandler = outputHandler;
+    this.storageHandlerName = storageHandlerName;
   }
 
   @Override
@@ -166,31 +173,31 @@ public class TopicConfig implements Comparable<TopicConfig> {
   }
 
   /**
-   * @return the outputHandler
+   * @return the storageHandlerName
    */
-  public String getOutputHandler() {
-    return outputHandler;
+  public String getStorageHandlerName() {
+    return storageHandlerName;
   }
 
   /**
-   * @param outputHandler the outputHandler to set
+   * @param storageHandlerName the storageHandlerName to set
    */
-  public void setOutputHandler(String outputHandler) {
-    this.outputHandler = outputHandler;
+  public void setStorageHandlerName(String storageHandlerName) {
+    this.storageHandlerName = storageHandlerName;
   }
 
   /**
-   * @return the outputHandlerConfig
+   * @return the storageHandlerConfig
    */
-  public Properties getOutputHandlerConfig() {
-    return outputHandlerConfig;
+  public Properties getStorageHandlerConfig() {
+    return storageHandlerConfig;
   }
 
   /**
-   * @param outputHandlerConfig the outputHandlerConfig to set
+   * @param storageHandlerConfig the storageHandlerConfig to set
    */
-  public void setOutputHandlerConfig(Properties outputHandlerConfig) {
-    this.outputHandlerConfig = outputHandlerConfig;
+  public void setStorageHandlerConfig(Properties storageHandlerConfig) {
+    this.storageHandlerConfig = storageHandlerConfig;
   }
 
   /**
@@ -225,6 +232,14 @@ public class TopicConfig implements Comparable<TopicConfig> {
     return tickFrequencyMillis;
   }
 
+  public void setProject(String project) {
+    this.project = project;
+  }
+
+  public String getProject() {
+    return project;
+  }
+
   public void setTickFrequencyMillis(int tickFrequencyMillis) {
     this.tickFrequencyMillis = tickFrequencyMillis;
   }
@@ -235,6 +250,18 @@ public class TopicConfig implements Comparable<TopicConfig> {
 
   public void setEnableBucketing2Processor(boolean enableBucketing2Processor) {
     this.enableBucketing2Processor = enableBucketing2Processor;
+  }
+
+  public String getNotificationTopic() {
+    return this.storageHandlerConfig.getProperty(NOTIFICATION_TOPIC);
+  }
+
+  public String getNotificationBrokerset() {
+    return this.storageHandlerConfig.getProperty(NOTIFICATION_BROKERSET);
+  }
+
+  public String getBucket() {
+    return this.storageHandlerConfig.getProperty(BUCKET);
   }
 
   @Override
@@ -259,8 +286,8 @@ public class TopicConfig implements Comparable<TopicConfig> {
   public String toString() {
     return "TopicConfig [bufferSize=" + bufferSize + ", ringBufferSize=" + ringBufferSize
         + ", batchMilliSeconds=" + batchMilliSeconds + ", batchSizeMB=" + batchSizeMB
-        + ", outputParallelism=" + outputParallelism + ", topic=" + topic + ", outputHandlerConfig="
-        + outputHandlerConfig + ", outputHandler=" + outputHandler + "]";
+        + ", outputParallelism=" + outputParallelism + ", topic=" + topic + ", storageHandlerConfig="
+        + storageHandlerConfig + ", storageHandlerName=" + storageHandlerName + ", inputTrafficMB=" + inputTrafficMB + "]";
   }
 
 }

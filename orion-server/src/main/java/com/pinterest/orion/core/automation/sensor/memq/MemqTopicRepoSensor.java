@@ -4,13 +4,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import com.google.gson.Gson;
 import com.pinterest.orion.core.Attribute;
-import com.pinterest.orion.core.automation.sensor.kafka.KafkaClusterInfoSensor;
-import com.pinterest.orion.core.kafka.Brokerset;
 import com.pinterest.orion.core.memq.MemqCluster;
 
 public class MemqTopicRepoSensor extends MemqSensor {
@@ -44,24 +41,5 @@ public class MemqTopicRepoSensor extends MemqSensor {
       targetConfig.put(config.getTopic(), config);
     }
     setAttribute(cluster, TARGET_TOPIC_CONFIGS, targetConfig);
-
-    attribute = cluster.getAttribute(MemqCluster.NOTIFICATION_CLUSTER_CONFIG);
-    Map<String, String> value = attribute.getValue();
-
-    Map<String, Map<String, Brokerset>> notificationClusterBrokersetMap = new HashMap<>();
-    for (Entry<String, String> entry : value.entrySet()) {
-      File file = new File(entry.getValue() + "/brokerset.json");
-      Brokerset[] brokersets = gson.fromJson(new String(Files.readAllBytes(file.toPath())),
-          Brokerset[].class);
-
-      Map<String, Brokerset> brokersetMap = new HashMap<>();
-      for (Brokerset brokerset : brokersets) {
-        brokersetMap.put(brokerset.getBrokersetAlias(), brokerset);
-      }
-      notificationClusterBrokersetMap.put(entry.getKey(), brokersetMap);
-    }
-    setAttribute(cluster, KafkaClusterInfoSensor.ATTR_BROKERSET_KEY,
-        notificationClusterBrokersetMap);
   }
-
 }
