@@ -64,12 +64,12 @@ public class MemqTopicCreationAction extends Action {
     Map<String, Map<String, Brokerset>> brokersetMap = brokersetMapAttr.getValue();
 
     // create
-    Properties outputHandlerConfig = config.getOutputHandlerConfig();
-    String notificationTopic = outputHandlerConfig.getProperty(MemqTopicSensor.NOTIFICATION_TOPIC);
-    String notificationServerset = outputHandlerConfig
+    Properties storageHandlerConfig = config.getStorageHandlerConfig();
+    String notificationTopic = storageHandlerConfig.getProperty(MemqTopicSensor.NOTIFICATION_TOPIC);
+    String notificationServerset = storageHandlerConfig
         .getProperty(MemqTopicSensor.NOTIFICATION_SERVERSET);
-    String notificationBrokerset = outputHandlerConfig.getProperty(MemqCluster.NOTIFICATION_BROKERSET);
-    int stride = Integer.parseInt(outputHandlerConfig.getProperty(MemqCluster.NOTIFICATION_STRIDE, "0"));
+    String notificationBrokerset = storageHandlerConfig.getProperty(MemqCluster.NOTIFICATION_BROKERSET);
+    int stride = Integer.parseInt(storageHandlerConfig.getProperty(MemqCluster.NOTIFICATION_STRIDE, "0"));
 
     TopicAssignment assignment = new TopicAssignment();
     assignment.setBrokerset(notificationBrokerset);
@@ -146,12 +146,12 @@ public class MemqTopicCreationAction extends Action {
     action.setAttribute(ATTR_TOPIC_NAME_KEY, "test");
     TopicConfig topicConfig = new TopicConfig();
     topicConfig.setTopic("test");
-    Properties outputHandlerConfig = new Properties();
-    outputHandlerConfig.setProperty(MemqCluster.NOTIFICATION_BROKERSET, "Static_B24_P24_0");
-    outputHandlerConfig.setProperty(MemqTopicSensor.NOTIFICATION_TOPIC, "memq_notification");
-    outputHandlerConfig.setProperty(MemqTopicSensor.NOTIFICATION_SERVERSET,
+    Properties storageHandlerConfig = new Properties();
+    storageHandlerConfig.setProperty(MemqCluster.NOTIFICATION_BROKERSET, "Static_B24_P24_0");
+    storageHandlerConfig.setProperty(MemqTopicSensor.NOTIFICATION_TOPIC, "memq_notification");
+    storageHandlerConfig.setProperty(MemqTopicSensor.NOTIFICATION_SERVERSET,
         "/var/serverset/discovery.testkafka.prod");
-    topicConfig.setOutputHandlerConfig(outputHandlerConfig);
+    topicConfig.setStorageHandlerConfig(storageHandlerConfig);
     action.setAttribute(ATTR_TOPIC_CONFIG_KEY, topicConfig);
 
     ActionFactory factory = new ActionFactory();
