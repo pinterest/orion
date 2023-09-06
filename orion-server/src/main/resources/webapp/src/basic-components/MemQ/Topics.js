@@ -65,7 +65,6 @@ export default function Topics(props) {
         : 0,
       traffic: topicInfoRow.config.inputTrafficMB,
       notificationTopic: topicInfoRow.config.notificationTopic,
-      notificationServerSet: topicInfoRow.config.notificationServerSet,
       notificationBrokerset: topicInfoRow.config.notificationBrokerset,
       bucket: topicInfoRow.config.bucket,
       topicOrder: topicInfoRow.config.topicOrder,

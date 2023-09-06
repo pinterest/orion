@@ -5,7 +5,6 @@ import java.util.Properties;
 public class TopicConfig implements Comparable<TopicConfig> {
 
   public static final String NOTIFICATION_TOPIC = "notificationTopic";
-  public static final String NOTIFICATION_SERVERSET = "notificationServerset";
   public static final String NOTIFICATION_BROKERSET = "notificationBrokerset";
   public static final String BUCKET = "bucket";
 
@@ -255,10 +254,6 @@ public class TopicConfig implements Comparable<TopicConfig> {
 
   public String getNotificationTopic() {
     return this.storageHandlerConfig.getProperty(NOTIFICATION_TOPIC);
-  }
-
-  public String getNotificationServerset() {
-      return this.storageHandlerConfig.getProperty(NOTIFICATION_SERVERSET);
   }
 
   public String getNotificationBrokerset() {
