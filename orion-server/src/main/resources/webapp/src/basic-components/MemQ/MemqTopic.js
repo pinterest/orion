@@ -42,6 +42,13 @@ const routes = [
     getData: getTopicConfigData,
     getColumns: getTopicConfigColumns,
   },
+  {
+    subpath: "links",
+    component: PropsTable,
+    label: "Links",
+    getData: getLinkData,
+    getColumns: getLinkColumns,
+  },
 ];
 
 export default function MemqTopic(props) {
@@ -209,6 +216,36 @@ function getTopicConfigColumns() {
   return [
     { title: "Config Name", field: "key" },
     { title: "Value", field: "value" },
+  ];
+}
+
+function getLinkData(rowData) {
+  let topicLinks = [];
+  if (rowData) {
+    let linkMap = rowData.raw.usefulLinks;
+    if (linkMap) {
+      let linkMapEntries = Object.entries(linkMap);
+      for (let [key, value] of linkMapEntries) {
+        topicLinks.push({
+          link: <Box>{makeHyperlink(key, value)}</Box>,
+        });
+      }
+    }
+  }
+  return topicLinks;
+}
+
+function makeHyperlink(key, value) {
+  return <a target='_blank'
+            rel='noopener noreferrer'
+            href={value}>
+    {key}
+  </a>;
+}
+
+function getLinkColumns() {
+  return [
+    { title: "Link", field: "link" },
   ];
 }
 

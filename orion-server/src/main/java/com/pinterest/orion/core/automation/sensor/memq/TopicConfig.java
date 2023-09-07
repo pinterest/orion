@@ -284,10 +284,15 @@ public class TopicConfig implements Comparable<TopicConfig> {
    */
   @Override
   public String toString() {
-    return "TopicConfig [bufferSize=" + bufferSize + ", ringBufferSize=" + ringBufferSize
-        + ", batchMilliSeconds=" + batchMilliSeconds + ", batchSizeMB=" + batchSizeMB
-        + ", outputParallelism=" + outputParallelism + ", topic=" + topic + ", storageHandlerConfig="
-        + storageHandlerConfig + ", storageHandlerName=" + storageHandlerName + ", inputTrafficMB=" + inputTrafficMB + "]";
+    return "TopicConfig [bufferSize=" + bufferSize
+            + ", ringBufferSize=" + ringBufferSize
+            + ", batchMilliSeconds=" + batchMilliSeconds
+            + ", batchSizeMB=" + batchSizeMB
+            + ", outputParallelism=" + outputParallelism
+            + ", topic=" + topic
+            + ", storageHandlerConfig=" + storageHandlerConfig
+            + ", storageHandlerName=" + storageHandlerName
+            + ", project=" + project
+            + ", inputTrafficMB=" + inputTrafficMB + "]";
   }
-
 }
