@@ -6,9 +6,19 @@ import java.util.Properties;
 import com.pinterest.orion.core.kafka.KafkaTopicDescription;
 
 public class MemqTopicDescription {
+
   private TopicConfig config;
+
   private List<String> writeAssignments;
+
+  /*
+  usefulLinks saves links shown in Links section of topic page in memq orion UI.
+  The links can be resource management tool website or project website.
+  Key of Properties is the name of the page; Value of Properties is the hyperlink.
+  The map can be updated in wrapper class.
+   */
   private Properties usefulLinks;
+
   private KafkaTopicDescription readAssignments;
 
   public List<String> getWriteAssignments() {
