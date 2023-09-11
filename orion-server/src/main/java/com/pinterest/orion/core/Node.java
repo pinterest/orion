@@ -218,6 +218,6 @@ public abstract class Node implements Serializable {
   }
 
   public boolean isDecommissioned() {
-    return getNodeStatus().equals(NodeStatus.DECOMMISSIONED);
+    return getNodeStatus() != null && getNodeStatus().equals(NodeStatus.DECOMMISSIONED);
   }
 }
