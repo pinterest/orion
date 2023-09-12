@@ -396,7 +396,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         String userdata = env.getOrDefault(OrionConstants.USERDATA, "");
         if (containsAttribute(ATTR_SPIFFE_ID_KEY)) {
           String spiffeId = getAttribute(ATTR_SPIFFE_ID_KEY).getValue().toString();
-          if (spiffeId != null && !spiffeId.isEmpty()) {
+          if (!spiffeId.isEmpty()) {
             userdata += "\nspiffe_id: " + spiffeId;
             logger().info(String.format(
                     "Attach spiffe id %s to userdata. New userdata: %s", spiffeId, userdata));
