@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 public class ReplaceEC2InstanceAction extends NodeAction {
   public static final String ATTR_CAUSE_KEY = "cause";
   public static final String ATTR_AMI_KEY = "ami";
+  public static final String ATTR_SPIFFE_ID_KEY = "spiffeId";
   public static final String ATTR_INSTANCE_TYPE_KEY = "instance_type";
   public static final String ATTR_SKIP_CLUSTER_HEALTH_CHECK_KEY = "skip_cluster_health_check";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
@@ -393,6 +394,14 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         String instanceId = env.get(OrionConstants.INSTANCE_ID);
         setInstanceId(instanceId);
         String userdata = env.getOrDefault(OrionConstants.USERDATA, "");
+        if (containsAttribute(ATTR_SPIFFE_ID_KEY)) {
+          String spiffeId = getAttribute(ATTR_SPIFFE_ID_KEY).getValue().toString();
+          if (spiffeId != null && !spiffeId.isEmpty()) {
+            userdata += "\nspiffe_id: " + spiffeId;
+            logger().info(String.format(
+                    "Attach spiffe id %s to userdata. New userdata: %s", spiffeId, userdata));
+          }
+        }
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim);
@@ -532,6 +541,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
                     .addOption("m6id.8xlarge", "m6id.8xlarge")
         )
         .addValue(new TextValue(ATTR_AMI_KEY, "AMI id (optional, will inherit current AMI if not provided)", false))
+        .addValue(new TextValue(ATTR_SPIFFE_ID_KEY, "Spiffe id (optional, will inherit current SPIFFE id if not provided)", false))
         .addSchema(super.generateSchema(config));
   }
 }
