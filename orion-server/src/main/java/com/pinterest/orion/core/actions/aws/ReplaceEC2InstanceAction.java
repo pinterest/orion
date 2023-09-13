@@ -372,6 +372,10 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     return "ReplaceEC2Node " + getHostname() + " (" + getInstanceId() + ")";
   }
 
+  protected String getUserdata(Map<String, String> env) {
+    return env.getOrDefault(OrionConstants.USERDATA, "");
+  }
+
   protected InstanceStateAndRequest getInstanceStateAndRequest(Ec2Client ec2Client, boolean nodeExists) throws Exception {
     // fetch instance info from EC2
     if(nodeExists) {
@@ -392,7 +396,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
       } else {
         String instanceId = env.get(OrionConstants.INSTANCE_ID);
         setInstanceId(instanceId);
-        String userdata = env.getOrDefault(OrionConstants.USERDATA, "");
+        String userdata = getUserdata(env);
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim);
