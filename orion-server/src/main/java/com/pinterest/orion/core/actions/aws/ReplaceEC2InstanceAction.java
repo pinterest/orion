@@ -62,6 +62,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   private String confRoute53Name;
   private String hostname;
   private String instanceId;
+  private String spiffeId;
   private Map<String, List<String>> fallbacksMap = new HashMap<>();
   private ActionNotificationHelper notificationHelper;
   protected boolean skipClusterHealthCheck = false;
@@ -83,6 +84,9 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     notificationHelper = new ActionNotificationHelper(this, config);
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
+    if (config.containsKey(Ec2Utils.CONF_SPIFFE_ID)) {
+      spiffeId = config.get(Ec2Utils.CONF_SPIFFE_ID).toString();
+    }
     setAttribute(RECOVERY_TIMEOUT, 3600_000);
   }
 
@@ -393,6 +397,15 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         String instanceId = env.get(OrionConstants.INSTANCE_ID);
         setInstanceId(instanceId);
         String userdata = env.getOrDefault(OrionConstants.USERDATA, "");
+        if (spiffeId != null && !spiffeId.isEmpty()) {
+          if (userdata.contains("spiffe_id")) {
+            logger().info("Spiffe id exists. Skip userdata update. Existing userdata: " + userdata);
+          } else {
+            userdata += "\nspiffe_id: " + spiffeId;
+            logger().info(String.format(
+                    "Attach spiffe id %s to userdata. New userdata: %s", spiffeId, userdata));
+          }
+        }
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim);

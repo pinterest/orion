@@ -37,6 +37,7 @@ public class Ec2Utils {
           .singleton(InstanceStateName.RUNNING);
   public static String CONF_ROUTE53_ZONE_ID = "zoneId";
   public static String CONF_ROUTE53_ZONE_NAME = "zoneName";
+  public static String CONF_SPIFFE_ID = "spiffeId";
 
   public static void waitForInstanceStateChange(Ec2Client client,
                                                 String instanceId,
