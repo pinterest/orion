@@ -36,7 +36,7 @@ import software.amazon.awssdk.services.ec2.model.RebootInstancesRequest;
 
 public class RebootEC2InstanceAction extends NodeAction {
 
-  private static Set<InstanceStateName> RUNNING_STATE = Collections
+  protected static Set<InstanceStateName> RUNNING_STATE = Collections
       .singleton(InstanceStateName.RUNNING);
   private String hostname;
   private String instanceId;
@@ -122,9 +122,9 @@ public class RebootEC2InstanceAction extends NodeAction {
     return hostname;
   }
 
-  private void rebootInstance(Ec2Client ec2Client) {
-    RebootInstancesRequest request = RebootInstancesRequest.builder().instanceIds(instanceId)
-        .build();
+  protected void rebootInstance(Ec2Client ec2Client) {
+    RebootInstancesRequest request = RebootInstancesRequest.builder()
+            .instanceIds(getInstanceId()).build();
     ec2Client.rebootInstances(request);
   }
 
@@ -141,4 +141,11 @@ public class RebootEC2InstanceAction extends NodeAction {
     return hostname;
   }
 
+  public void setHostname(String hostname) {
+    this.hostname = hostname;
+  }
+
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
+  }
 }

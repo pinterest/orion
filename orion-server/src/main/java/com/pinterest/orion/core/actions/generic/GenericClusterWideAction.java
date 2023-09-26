@@ -527,4 +527,25 @@ public class GenericClusterWideAction {
       return true;
     }
   }
+
+  public static class ParallelRebootNodeAction extends ParallelAction {
+    public ParallelRebootNodeAction() {
+      super("Reboot");
+    }
+
+    @Override
+    public Action getChildAction() {
+      return new RebootEC2InstanceAction();
+    }
+
+    @Override
+    public boolean isCancelAllIfFailed() {
+      return true;
+    }
+
+    @Override
+    public boolean failIfNoNodeIds() {
+      return true;
+    }
+  }
 }
