@@ -44,6 +44,8 @@ public class MemqCluster extends Cluster {
   public static final String CLUSTER_INFO_DIR = "clusterInfoDir";
   public static final String SERVERSET_PATH = "serversetPath";
   public static final String ZK_CONNECTION_STRING = "zkConnectionString";
+  public static final String CLUSTER_REGION = "region";
+  public static final String DEFAULT_REGION = "us-east-1";
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(MemqCluster.class.getName());
   private Map<String, Object> config;
@@ -75,6 +77,7 @@ public class MemqCluster extends Cluster {
     setAttribute(ZK_CONNECTION_STRING, config.get(ZK_CONNECTION_STRING));
     setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
     setAttribute(CLUSTER_INFO_DIR, config.get(CLUSTER_INFO_DIR));
+    setAttribute(CLUSTER_REGION, config.getOrDefault(CLUSTER_REGION, DEFAULT_REGION));
     Map<String, String> notificationClusterConfig = (Map<String, String>) config
         .get(MemqCluster.NOTIFICATION_CLUSTER_CONFIG);
     setAttribute(NOTIFICATION_CLUSTER_CONFIG, notificationClusterConfig);
