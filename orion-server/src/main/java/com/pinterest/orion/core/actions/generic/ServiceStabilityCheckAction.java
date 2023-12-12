@@ -49,8 +49,8 @@ public class ServiceStabilityCheckAction extends NodeAction {
       }
 
       getResult().appendOut(
-          "Node is currently stable after " + (time - now) + " seconds. Still waiting for " + (
-              duration - (time - now)) + " seconds.");
+          "Node is currently stable after " + (time - now) + " ms. Still waiting for " + (
+              duration - (time - now)) + " ms.");
       Thread.sleep(30_000); // might want to make it configurable
     }
     markSucceeded();

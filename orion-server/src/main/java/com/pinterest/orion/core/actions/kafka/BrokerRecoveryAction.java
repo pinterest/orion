@@ -46,7 +46,7 @@ public class BrokerRecoveryAction extends NodeAction {
   public static final String ATTR_NONEXISTENT_HOST_KEY = "nonexistent_host";
   public static final String CONF_DRY_RUN_REPLACEMENT_KEY = "dry_run";
   public static final String CONF_OVERRIDE_IMAGE_KEY = "override_image";
-  private boolean isDryRun = false;
+  private boolean isDryRun = false;  // Enable dryrun to prevent EC2 actions being triggered. Useful for testing.
   private String amiOverride = null;
 
   @Override
@@ -209,14 +209,14 @@ public class BrokerRecoveryAction extends NodeAction {
   @Override
   public String getName() {
     // Different action names are required for BrokerRecoveryAction to be dispatched from same ClusterRecoveryAction.
-    String nodeId = "Unknown Node";
+    String name = "BrokerRecoveryAction - " + this.getUuid().toString(); // default to action uuid if nodeId is not set.
     if (containsAttribute(OrionConstants.NODE_ID)) {
-      nodeId = getAttribute(OrionConstants.NODE_ID).getValue();
+      name = String.format(
+              "BrokerRecoveryAction for broker %s",
+              getAttribute(OrionConstants.NODE_ID).getValue().toString());
     }
-    return String.format(
-            "BrokerRecoveryAction for %s %s",
-           nodeId,
-            (isDryRun ? " - Dry Run" : ""));
+    name = name + (isDryRun ? " - Dry Run" : "");
+    return name;
   }
 
   private boolean isHostReachable(String hostname, int port) {
