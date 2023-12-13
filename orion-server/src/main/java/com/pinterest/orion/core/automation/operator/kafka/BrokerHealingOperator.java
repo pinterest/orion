@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.pinterest.orion.core.automation.operator.kafka;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,23 +24,22 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.pinterest.orion.core.actions.kafka.ClusterRecoveryAction;
 import com.pinterest.orion.server.OrionServer;
-import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.Sets;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.PluginConfigurationException;
-import com.pinterest.orion.core.actions.Action;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
 import com.pinterest.orion.core.actions.alert.AlertMessage;
-import com.pinterest.orion.core.actions.kafka.BrokerRecoveryAction;
 import com.pinterest.orion.core.automation.sensor.kafka.KafkaTopicSensor;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.core.kafka.KafkaTopicDescription;
 import com.pinterest.orion.core.kafka.KafkaTopicPartitionInfo;
-import com.pinterest.orion.utils.OrionConstants;
+
+import static com.pinterest.orion.core.actions.kafka.ClusterRecoveryAction.removeRecoveringNodesFromCandidates;
 
 public class BrokerHealingOperator extends KafkaOperator {
   private static final Logger logger = Logger.getLogger(BrokerHealingOperator.class.getCanonicalName());
@@ -54,7 +52,7 @@ public class BrokerHealingOperator extends KafkaOperator {
   private long maxNumStaleIntervals = 2; // default 2 times
   private double unhealthyBrokerURPRatioThreshold = 0; // default no URPs allowed
   private int unhealthyAlertFailThreshold = 3;
-  private static final long cooldownMilliseconds = 43200_000L;
+
 
   private Map<String, Integer> unhealthyAgentBrokersWithoutURPs = new HashMap<>();
   private Map<String, Integer> unhealthyBrokersWithoutURPs = new HashMap<>();
@@ -198,58 +196,22 @@ public class BrokerHealingOperator extends KafkaOperator {
 
     setMessage("offline brokers: " + unhealthyKafkaBrokers + "\nunhealthy agent orion nodes: " + unhealthyAgentNodes +
         "\nunhealthy service orion nodes: " + maybeDeadBrokers + "\nnon-existent Brokers: "+ nonExistentBrokers);
-    Set<String> candidates = Sets.union(deadBrokers, maybeDeadBrokers);
-    if (candidates.size() == 1) {
-      // Check if the cluster has other brokers replaced within cooldownMilliseconds and resume if not
-      if (cluster.containsAttribute(BrokerRecoveryAction.ATTR_LAST_REPLACED_NODE_ID_KEY)) {
-        Attribute lastReplacedAttr = cluster.getAttribute(BrokerRecoveryAction.ATTR_LAST_REPLACED_NODE_ID_KEY);
-        if (System.currentTimeMillis() - lastReplacedAttr.getUpdateTimestamp() < cooldownMilliseconds) {
-          logger.warning("In cooldown phase: Last replacement was at " + new Date(lastReplacedAttr.getUpdateTimestamp()) + " on the node " + lastReplacedAttr.getValue());
-          return;
-        }
-      }
-
-      String deadBrokerId = candidates.iterator().next();
-      // This will trigger an action that will attempt to replace the broker ( and first try to restart if agent is still online but Kafka process is down)
-      Action brokerRecoveryAction = newBrokerRecoveryAction();
-      brokerRecoveryAction.setAttribute(OrionConstants.NODE_ID, deadBrokerId, sensorSet);
-
-      if (nonExistentBrokers.size() == 1) {
-        Node existingNode = cluster.getNodeMap().values().iterator().next();
-        String extractedName = deriveNonexistentHostname(
-            existingNode.getCurrentNodeInfo().getHostname(),
-            existingNode.getCurrentNodeInfo().getNodeId(),
-            deadBrokerId
-        );
-        // setting these attributes to indicate that the node doesn't exist in cluster map, and should skip any node-related checks
-        brokerRecoveryAction.setAttribute(BrokerRecoveryAction.ATTR_NODE_EXISTS_KEY, false);
-        brokerRecoveryAction.setAttribute(BrokerRecoveryAction.ATTR_NONEXISTENT_HOST_KEY, extractedName);
-      }
-
-      if (maybeDeadBrokers.size() == 1) {
-        // Setting this flag in the action will restart the broker before replacing the broker
-        brokerRecoveryAction.setAttribute(BrokerRecoveryAction.ATTR_TRY_TO_RESTART_KEY, true);
-        logger.info("Will try to restart node " + deadBrokerId + " before replacing");
-      }
-      logger.info( "Dispatching BrokerRecoveryAction on " + cluster.getClusterId() + " for node: " +  deadBrokerId);
-      dispatch(brokerRecoveryAction);
-    } else if (candidates.size() > 1){
-      cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
-          candidates.size() + " brokers on " + cluster.getClusterId() + " are unhealthy",
-          "Brokers " + candidates + " are unhealthy",
-          "orion"
-      ));
-      OrionServer.metricsCounterInc(
-              "broker.services.unhealthy",
-              new HashMap<String, String>() {{
-                put("clusterId", cluster.getClusterId());
-              }}
-      );
-      // more than 1 brokers are dead... better alert and have human intervention
-      logger.severe("More than one broker is in bad state - dead: " + deadBrokers + " service down: " + maybeDeadBrokers);
-      return;
+    Set<String> candidates = new HashSet<>(Sets.union(deadBrokers, maybeDeadBrokers));
+    // Check if the cluster has recovering brokers. Remove them from candidates.
+    removeRecoveringNodesFromCandidates(candidates, cluster);
+    if (candidates.size() > 0) {
+      // Create ClusterRecoveryAction and dispatch
+      ClusterRecoveryAction clusterRecoveryAction = newClusterRecoveryAction();
+      clusterRecoveryAction.setCluster(cluster);
+      clusterRecoveryAction.setCandidates(candidates);
+      clusterRecoveryAction.setDeadBrokers(deadBrokers);
+      clusterRecoveryAction.setMaybeDeadBrokers(maybeDeadBrokers);
+      clusterRecoveryAction.setNonExistentBrokers(nonExistentBrokers);
+      clusterRecoveryAction.setSensorSet(sensorSet);
+      clusterRecoveryAction.setOwner(getName());
+      logger.info("Dispatch ClusterRecoveryAction: " + clusterRecoveryAction.getName());
+      cluster.getActionEngine().dispatch(clusterRecoveryAction);
     }
-
     if (!unhealthyKafkaBrokers.isEmpty()) {
       logger.warning(
           "Exists unhealthy Kafka brokers: " + unhealthyKafkaBrokers);
@@ -330,28 +292,13 @@ public class BrokerHealingOperator extends KafkaOperator {
         .collect(Collectors.toSet());
   }
 
-  protected String deriveNonexistentHostname(String existingHostname, String existingId, String nonExistingId) {
-    existingHostname = existingHostname.split("\\.", 2)[0]; // sanitize potential suffixes
-    int diff = nonExistingId.length() - existingId.length();
-    if ( diff > 0 ) {
-      existingId = StringUtils.leftPad(existingId, diff, '0');
-    } else if (diff < 0) {
-      nonExistingId = StringUtils.leftPad(nonExistingId, -diff, '0');
-    }
-
-    String ret = existingHostname.replace(existingId, nonExistingId);
-    if (ret.equals(existingHostname)) {
-      return null;
-    }
-    return ret;
-  }
 
   @Override
   public String getName() {
     return "Broker Healing Operator";
   }
 
-  protected BrokerRecoveryAction newBrokerRecoveryAction() {
-    return new BrokerRecoveryAction();
+  protected ClusterRecoveryAction newClusterRecoveryAction() {
+    return new ClusterRecoveryAction();
   }
 }

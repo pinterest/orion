@@ -41,13 +41,12 @@ public class BrokerRecoveryAction extends NodeAction {
   private static final int maxRetries = 3;
   private static final int retryIntervalMilliseconds = 1000;
 
-  public static final String ATTR_LAST_REPLACED_NODE_ID_KEY = "last_replaced_node_id";
   public static final String ATTR_TRY_TO_RESTART_KEY = "try_restart";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_NONEXISTENT_HOST_KEY = "nonexistent_host";
   public static final String CONF_DRY_RUN_REPLACEMENT_KEY = "dry_run";
   public static final String CONF_OVERRIDE_IMAGE_KEY = "override_image";
-  private boolean isDryRun = false;
+  private boolean isDryRun = false;  // Enable dryrun to prevent EC2 actions being triggered. Useful for testing.
   private String amiOverride = null;
 
   @Override
@@ -65,6 +64,9 @@ public class BrokerRecoveryAction extends NodeAction {
   public void runAction() {
     boolean nodeExists = true;
     String nodeId = getAttribute(OrionConstants.NODE_ID).getValue();
+    String startNote = "BrokerRecoveryAction for " + nodeId + " started.";
+    logger.info(startNote);
+    getResult().appendOut(startNote);
     if(containsAttribute(ATTR_NODE_EXISTS_KEY)) {
       nodeExists = getAttribute(ATTR_NODE_EXISTS_KEY).getValue();
     }
@@ -133,7 +135,6 @@ public class BrokerRecoveryAction extends NodeAction {
           return;
         }
       }
-      getEngine().getCluster().setAttribute(ATTR_LAST_REPLACED_NODE_ID_KEY, nodeId);
       OrionServer.METRICS.counter(metricPrefix.resolve("replace_success")).inc();
       markSucceeded();
     } catch (Exception e) {
@@ -207,7 +208,15 @@ public class BrokerRecoveryAction extends NodeAction {
 
   @Override
   public String getName() {
-    return "Broker Recovery" + (isDryRun ? " - Dry Run" : "");
+    // Different action names are required for BrokerRecoveryAction to be dispatched from same ClusterRecoveryAction.
+    String name = "BrokerRecoveryAction - " + this.getUuid().toString(); // default to action uuid if nodeId is not set.
+    if (containsAttribute(OrionConstants.NODE_ID)) {
+      name = String.format(
+              "BrokerRecoveryAction for broker %s",
+              getAttribute(OrionConstants.NODE_ID).getValue().toString());
+    }
+    name = name + (isDryRun ? " - Dry Run" : "");
+    return name;
   }
 
   private boolean isHostReachable(String hostname, int port) {
