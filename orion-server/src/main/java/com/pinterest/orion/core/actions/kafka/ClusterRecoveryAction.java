@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.Node;
+import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.Action;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
 import com.pinterest.orion.core.actions.alert.AlertMessage;
@@ -16,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -27,13 +29,31 @@ public class ClusterRecoveryAction extends GenericClusterWideAction.ClusterActio
     protected Set<String> maybeDeadBrokers;
     protected Set<String> nonExistentBrokers;
     protected Set<String> sensorSet;
+    protected int maxNumBrokersForAutomaticRecovery = 3; // Default value
     private static final Logger logger = Logger.getLogger(ClusterRecoveryAction.class.getName());
     public static final String ATTR_RECOVERING_NODES = "recovering_nodes";
-    private static final long cooldownMilliseconds = 3600_000L; // 1 hour
+    protected static final long cooldownMilliseconds = 3600_000L; // 1 hour
+    protected static final long WAIT_TIME_BETWEEN_TRIGGERING_ACTIONS_MILLISECONDS = 5_000;
+    protected static final String CONF_MAX_NUM_BROKERS_FOR_AUTOMATIC_RECOVERY = "maxNumBrokersForAutomaticRecovery";
+
+    @Override
+    public void initialize(Map<String, Object> config) throws PluginConfigurationException {
+        super.initialize(config);
+        if (config.containsKey(CONF_MAX_NUM_BROKERS_FOR_AUTOMATIC_RECOVERY)) {
+            logger.info(String.format("ClusterRecoveryAction is configured with %s = %s",
+                    CONF_MAX_NUM_BROKERS_FOR_AUTOMATIC_RECOVERY,
+                    config.get(CONF_MAX_NUM_BROKERS_FOR_AUTOMATIC_RECOVERY).toString()));
+            maxNumBrokersForAutomaticRecovery =
+                    Integer.parseInt(config.get(CONF_MAX_NUM_BROKERS_FOR_AUTOMATIC_RECOVERY).toString());
+        }
+    }
 
     @Override
     public String getName() {
-        return "Cluster Recovery Action";
+        // Different action names are required for ClusterRecoveryAction to be dispatched from same cluster.
+        return String.format("ClusterRecoveryAction for broker %s in cluster %s.",
+                StringUtils.join(candidates, ","),
+                cluster.getClusterId());
     }
 
     @Override
@@ -139,32 +159,25 @@ public class ClusterRecoveryAction extends GenericClusterWideAction.ClusterActio
     }
 
     /**
-     * This method triggers a BrokerRecoveryAction for each broker in candidates.
-     * It checks if the number of candidates is more than one.
-     * If the number of candidates is more than one, it will alert and not trigger any action.
+     * 1. If the number of brokers in bad states is greater than maxNumBrokersForAutomaticRecovery, alert and skip automatic recovery.
+     * 2. If the number of brokers in bad states is less than or equal to maxNumBrokersForAutomaticRecovery, trigger recovery actions for all brokers in bad states.
+     * 3. If there is no broker in bad states, skip automatic recovery.
      * @param candidates a set of broker ids that are in bad states.
-     * @return true if all the child actions are triggered successfully.
-     * @throws Exception if any of the child actions is not triggered successfully.
+     * @return true if all actions are triggered, false otherwise.
+     * @throws Exception if action triggering fails.
      */
     protected boolean healBrokers(Set<String> candidates) throws Exception {
-        String output;
-        boolean isActionTriggered = false;
-        if (candidates.size() == 1) {
-            output = String.format(
-                    "ClusterRecoveryAction attempts to recover broker %s. ",
-                    candidates.iterator().next());
-            String brokerId = candidates.iterator().next();
-            logger.info(output);
-            triggerBrokerRecoveryAction(brokerId);
-            isActionTriggered = true;
-        } else if (candidates.size() > 1){
-            // more than 1 brokers are dead... better alert and have human intervention
-            output = String.format("More than one brokers are in bad state - dead: %s, service down: %s. " +
-                            "ClusterRecoveryAction skips automatic recovery and pages oncall. ",
-                    deadBrokers, maybeDeadBrokers);
+        // TODO: Validate brokers in same AZ? Check brokers in the same hardware?
+        boolean isAllActionsTriggered = false;
+        if (candidates.size() > maxNumBrokersForAutomaticRecovery) {
+            String noteForTooManyBrokers = String.format(
+                    "To many brokers in bad states: %s. %d is the max number of brokers for automatic recovery. " +
+                            "ClusterRecoveryAction skips automatic recovery and pages oncall.",
+                    StringUtils.join(candidates, ","),
+                    maxNumBrokersForAutomaticRecovery);
             cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
                     candidates.size() + " brokers on " + cluster.getClusterId() + " are unhealthy",
-                    output,
+                    noteForTooManyBrokers,
                     "orion"
             ));
             OrionServer.metricsCounterInc(
@@ -173,13 +186,26 @@ public class ClusterRecoveryAction extends GenericClusterWideAction.ClusterActio
                         put("clusterId", cluster.getClusterId());
                     }}
             );
-            logger.severe(output);
+            logger.severe(noteForTooManyBrokers);
+            getResult().appendOut(noteForTooManyBrokers);
+        } else if (candidates.size() > 0) {
+            String noteForTriggeringActions = String.format(
+                    "ClusterRecoveryAction will trigger BrokerRecoveryActions for brokers %s in cluster %s.",
+                    StringUtils.join(candidates, ","),
+                    cluster.getClusterId());
+            logger.info(noteForTriggeringActions);
+            getResult().appendOut(noteForTriggeringActions);
+            for (String brokerId : candidates) {
+                triggerBrokerRecoveryAction(brokerId);
+                Thread.sleep(WAIT_TIME_BETWEEN_TRIGGERING_ACTIONS_MILLISECONDS);
+            }
+            isAllActionsTriggered = true;
         } else {
-            output = String.format("No candidates for healing in cluster %s. ", cluster.getClusterId());
-            logger.warning(output);
+            String noteForNoBroker = String.format("No candidates for healing in cluster %s.", cluster.getClusterId());
+            logger.warning(noteForNoBroker);
+            getResult().appendOut(noteForNoBroker);
         }
-        getResult().appendOut(output);
-        return isActionTriggered;
+        return isAllActionsTriggered;
     }
 
     public void setCandidates(Set<String> candidates) {
