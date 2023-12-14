@@ -171,8 +171,9 @@ public class ClusterRecoveryAction extends GenericClusterWideAction.ClusterActio
         boolean isAllActionsTriggered = false;
         if (candidates.size() > maxNumBrokersForAutomaticRecovery) {
             String noteForTooManyBrokers = String.format(
-                    "To many brokers in bad states: %s. %d is the max number of brokers for automatic recovery. " +
-                            "ClusterRecoveryAction skips automatic recovery and pages oncall.",
+                    "To many brokers in bad states: %s. " +
+                            "The max number of brokers for automatic cluster recovery is %d. " +
+                            "Sending an alert for manual intervention. ",
                     StringUtils.join(candidates, ","),
                     maxNumBrokersForAutomaticRecovery);
             cluster.getActionEngine().alert(AlertLevel.HIGH, new AlertMessage(
