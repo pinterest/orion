@@ -38,6 +38,9 @@ import {
   receiveUtilization,
   COST_REQUESTED,
   receiveCost,
+  AMILIST_REQUESTED,
+  receiveAmiList,
+  AMITAG_UPDATE
 } from "../actions/cluster";
 import {
   CLUSTERS_SUMMARY_REQUESTED,
@@ -66,6 +69,8 @@ export default function* rootSaga() {
   yield fork(utilizationWatcher);
   yield fork(costWatcher);
   yield fork(globalSensorWatcher);
+  yield fork(amiListWatcher);
+  yield fork(amiTagUpdateWatcher);
 }
 
 function* clusterSummaryWatcher() {
@@ -90,6 +95,14 @@ function* clusterWatcher() {
 
 function* globalSensorWatcher() {
   yield takeEvery(GLOBAL_SENSOR_REQUESTED, fetchGlobalSensors);
+}
+
+function* amiListWatcher() {
+  yield takeEvery(AMILIST_REQUESTED, fetchAmiList);
+}
+
+function* amiTagUpdateWatcher() {
+  yield takeEvery(AMITAG_UPDATE, fetchAmiTagUpdate);
 }
 
 function* fetchCost() {
@@ -223,6 +236,34 @@ function* fetchClusterCustomEndpoint(action) {
     }
   } catch (e) {
     yield put(requestClusterFail(e));
+  } finally {
+    yield put(hideLoading());
+  }
+}
+
+function* fetchAmiList(action) {
+  const filter = action.payload.filter;
+  try {
+    yield put(showLoading());
+    const resp = yield call(fetch, "/api/describeImages?" + filter);
+    const data = yield resp.json();
+    yield put(receiveAmiList(data));
+  } catch (e) {
+    yield put(showAppError(e));
+  } finally {
+    yield put(hideLoading());
+  }
+}
+
+function* fetchAmiTagUpdate(action) {
+  const amiId = action.payload.amiId;
+  const applicationEnvironment = action.payload.applicationEnvironment;
+  try {
+    yield put(showLoading());
+    yield call(fetch, "/api/updateImageTag?ami_id=" + amiId +
+        "&application_environment=" + applicationEnvironment, { method: 'PUT' });
+  } catch (e) {
+    yield put(showAppError(e));
   } finally {
     yield put(hideLoading());
   }
