@@ -1,5 +1,7 @@
 package com.pinterest.orion.core.actions.aws;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -7,7 +9,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import com.pinterest.orion.server.api.AMI;
-import com.pinterest.orion.server.api.BaseClustersApi;
 
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
@@ -44,23 +45,28 @@ public class AmiTagManager {
     );
     DescribeImagesResponse resp = ec2Client.describeImages(builder.build());
     if (resp.hasImages() && !resp.images().isEmpty()) {
+      ZonedDateTime cutDate = ZonedDateTime.now().minusDays(180);
       resp.images().forEach(image -> {
-        Iterator<Tag> i = image.tags().iterator();
-        Tag t;
-        String appEnvTag = null;
-        while (i.hasNext()) {
-          t = i.next();
-          if (t.key().equals("application_environment")) {
-            appEnvTag = t.value();
-            break;
+        if (ZonedDateTime.parse(image.creationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME).isAfter(cutDate)) {
+          Iterator<Tag> i = image.tags().iterator();
+          Tag t;
+          String appEnvTag = null;
+          while (i.hasNext()) {
+            t = i.next();
+            if (t.key().equals("application_environment")) {
+              appEnvTag = t.value();
+              break;
+            }
           }
+          amiList.add(new AMI(
+            image.imageId(),
+            appEnvTag,
+            image.creationDate()
+          ));
         }
-        amiList.add(new AMI(
-          image.imageId(),
-          appEnvTag,
-          image.creationDate()
-        ));
       });
+      amiList.sort((a, b) -> - ZonedDateTime.parse(a.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME)
+      .compareTo(ZonedDateTime.parse(b.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME)));
     }
     return amiList;
   }
