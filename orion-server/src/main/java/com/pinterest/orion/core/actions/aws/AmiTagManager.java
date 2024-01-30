@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.pinterest.orion.server.api.AMI;
 
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
@@ -43,30 +45,35 @@ public class AmiTagManager {
     builder = builder.filters(
       Filter.builder().name("tag:application_environment").values("*").build()
     );
-    DescribeImagesResponse resp = ec2Client.describeImages(builder.build());
-    if (resp.hasImages() && !resp.images().isEmpty()) {
-      ZonedDateTime cutDate = ZonedDateTime.now().minusDays(180);
-      resp.images().forEach(image -> {
-        if (ZonedDateTime.parse(image.creationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME).isAfter(cutDate)) {
-          Iterator<Tag> i = image.tags().iterator();
-          Tag t;
-          String appEnvTag = null;
-          while (i.hasNext()) {
-            t = i.next();
-            if (t.key().equals("application_environment")) {
-              appEnvTag = t.value();
-              break;
+    try {
+      DescribeImagesResponse resp = ec2Client.describeImages(builder.build());
+      if (resp.hasImages() && !resp.images().isEmpty()) {
+        ZonedDateTime cutDate = ZonedDateTime.now().minusDays(180);
+        resp.images().forEach(image -> {
+          if (ZonedDateTime.parse(image.creationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME).isAfter(cutDate)) {
+            Iterator<Tag> i = image.tags().iterator();
+            Tag t;
+            String appEnvTag = null;
+            while (i.hasNext()) {
+              t = i.next();
+              if (t.key().equals("application_environment")) {
+                appEnvTag = t.value();
+                break;
+              }
             }
+            amiList.add(new AMI(
+              image.imageId(),
+              appEnvTag,
+              image.creationDate()
+            ));
           }
-          amiList.add(new AMI(
-            image.imageId(),
-            appEnvTag,
-            image.creationDate()
-          ));
-        }
-      });
-      amiList.sort((a, b) -> - ZonedDateTime.parse(a.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME)
-      .compareTo(ZonedDateTime.parse(b.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME)));
+        });
+        amiList.sort((a, b) -> - ZonedDateTime.parse(a.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME)
+        .compareTo(ZonedDateTime.parse(b.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME)));
+      }
+    } catch (Exception e) {
+      logger.log(Level.SEVERE, "AMITagManager: could not retrieve AMI list", e);
+      throw e;
     }
     return amiList;
   }
@@ -80,8 +87,14 @@ public class AmiTagManager {
         .resources(amiId)
         .tags(newAppEnv)
         .build();
-    CreateTagsResponse resp = ec2Client.createTags(request);
-    if (!resp.sdkHttpResponse().isSuccessful())
-      logger.severe("Tag update failed for " + amiId + " and application_environment tag = " + applicationEnvironment);
+    CreateTagsResponse resp;
+    try {
+      resp = ec2Client.createTags(request);
+      if (!resp.sdkHttpResponse().isSuccessful())
+        throw AwsServiceException.builder().message("Http code \" + resp.sdkHttpResponse().statusCode() + \" received").build();
+    } catch (Exception e) {
+      logger.severe("AMITagManager: tag update failed for " + amiId + " and application_environment tag = " + applicationEnvironment + ", " + e);
+      throw e;
+    }
   }
 }
