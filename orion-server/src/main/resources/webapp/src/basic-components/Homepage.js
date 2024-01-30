@@ -26,7 +26,7 @@ import {
 } from "@material-ui/core";
 import Summary from "./Summary";
 import Utilization from "./Utilization";
-import AMI from "./AMI";
+import Ami from "./Ami";
 
 const routes = [
   {
@@ -41,7 +41,7 @@ const routes = [
   },
   {
     subpath: "ami",
-    component: AMI,
+    component: Ami,
     label: "AMI",
   },
 ];

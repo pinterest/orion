@@ -41,7 +41,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function AMI({ amiList, requestAmiList, updateAmiTag }) {
+function Ami({ amiList, requestAmiList, updateAmiTag }) {
   const classes = useStyles();
   const [os, setOS] = React.useState();
   const handleOSChange = event => {
@@ -266,4 +266,4 @@ function AMI({ amiList, requestAmiList, updateAmiTag }) {
   );
 }
 
-export default connect(mapState, mapDispatch)(AMI);
+export default connect(mapState, mapDispatch)(Ami);
