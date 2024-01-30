@@ -15,6 +15,10 @@
  *******************************************************************************/
 package com.pinterest.orion.server.api;
 
+/**
+ * Specialized object to store AMI information.
+ * Used to transmit a list of AMIs to the frontend.
+ */
 public class Ami {
   private final String amiId;
   private final String applicationEnvironment;

@@ -36,6 +36,11 @@ import software.amazon.awssdk.services.ec2.model.CreateTagsResponse;
 import software.amazon.awssdk.services.ec2.model.Filter;
 import software.amazon.awssdk.services.ec2.model.Tag;
 
+/**
+ * AmiTagManager interfaces APIs in
+ * {@link com.pinterest.orion.server.api.ClusterManagerApi ClusterManagerApi}
+ * with AWS for AMI tag management.
+ */
 public class AmiTagManager {
   private static final Logger logger = Logger.getLogger(AmiTagManager.class.getCanonicalName());
   private Ec2Client ec2Client;
@@ -50,6 +55,12 @@ public class AmiTagManager {
     ec2Client = Ec2Client.create();
   }
 
+  /**
+   * retrieve AMI list from cloud provider
+   *
+   * @param filter - map of criteria fields
+   * @return list of Ami objects
+   */
   public List<Ami> getAmiList(Map<String, String> filter) {
     List<Ami> amiList = new ArrayList<>();
     DescribeImagesRequest.Builder builder = DescribeImagesRequest.builder();
@@ -100,6 +111,12 @@ public class AmiTagManager {
     return amiList;
   }
 
+  /**
+   * update AMI tag 'application_environment'
+   *
+   * @param amiId - target AMI id
+   * @param applicationEnvironment - new tag value
+   */
   public void updateAmiTag(String amiId, String applicationEnvironment) {
     CreateTagsRequest.Builder builder = CreateTagsRequest.builder();
     Tag newAppEnv = Tag.builder()
