@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2020 Pinterest, Inc.
+ * Copyright 2024 Pinterest, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,9 +87,9 @@ function AMI({ amiList, requestAmiList, updateAmiTag }) {
   const applyFilter = () => {
     const parms = [];
     if (os)
-      parms.push("os=" + os);
+      parms.push("release=" + os);
     if (cpuArch)
-      parms.push("arch=" + cpuArch);
+      parms.push("cpu_architecture=" + cpuArch);
     requestAmiList(parms.join('&'));
   }
 

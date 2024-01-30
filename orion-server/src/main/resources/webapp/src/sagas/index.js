@@ -38,9 +38,9 @@ import {
   receiveUtilization,
   COST_REQUESTED,
   receiveCost,
-  AMILIST_REQUESTED,
+  AMI_LIST_REQUESTED,
   receiveAmiList,
-  AMITAG_UPDATE
+  AMI_TAG_UPDATE
 } from "../actions/cluster";
 import {
   CLUSTERS_SUMMARY_REQUESTED,
@@ -98,11 +98,11 @@ function* globalSensorWatcher() {
 }
 
 function* amiListWatcher() {
-  yield takeEvery(AMILIST_REQUESTED, fetchAmiList);
+  yield takeEvery(AMI_LIST_REQUESTED, fetchAmiList);
 }
 
 function* amiTagUpdateWatcher() {
-  yield takeEvery(AMITAG_UPDATE, fetchAmiTagUpdate);
+  yield takeEvery(AMI_TAG_UPDATE, fetchAmiTagUpdate);
 }
 
 function* fetchCost() {

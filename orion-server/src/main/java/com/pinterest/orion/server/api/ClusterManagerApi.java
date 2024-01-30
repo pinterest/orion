@@ -117,15 +117,15 @@ public class ClusterManagerApi extends BaseClustersApi {
 
   @Path("/describeImages")
   @GET
-  public List<AMI> describeImages(
-      @QueryParam("os") String os,
-      @QueryParam("arch") String arch
+  public List<Ami> describeImages(
+      @QueryParam("release") String os,
+      @QueryParam("cpu_architecture") String arch
   ) {
     Map<String, String> filter = new HashMap<>();
     if (os != null)
-      filter.put("os", os);
+      filter.put("release", os);
     if (arch != null)
-      filter.put("arch", arch);
+      filter.put("cpu_architecture", arch);
     if (amiTagManager == null)
       amiTagManager = new AmiTagManager();
     return amiTagManager.getAmiList(filter);

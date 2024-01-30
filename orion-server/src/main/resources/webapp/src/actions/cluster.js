@@ -30,9 +30,9 @@ export const UTILIZATION_REQUESTED = "UTILIZATION_REQUESTED";
 export const UTILIZATION_RECEIVED = "UTILIZATION_RECEIVED";
 export const COST_REQUESTED = "COST_REQUESTED";
 export const COST_RECEIVED = "COST_RECEIVED";
-export const AMILIST_REQUESTED = "AMILIST_REQUESTED";
-export const AMILIST_RECEIVED = "AMILIST_RECEIVED";
-export const AMITAG_UPDATE = "AMITAG_UPDATE";
+export const AMI_LIST_REQUESTED = "AMI_LIST_REQUESTED";
+export const AMI_LIST_RECEIVED = "AMI_LIST_RECEIVED";
+export const AMI_TAG_UPDATE = "AMI_TAG_UPDATE";
 
 export function requestCluster(clusterId) {
   return { type: CLUSTER_REQUESTED, payload: { clusterId } };
@@ -116,21 +116,21 @@ export function receiveClusterEndpoint(clusterId, field, data) {
 
 export function requestAmiList(filter) {
   return {
-    type: AMILIST_REQUESTED,
+    type: AMI_LIST_REQUESTED,
     payload: { filter },
   };
 }
 
 export function receiveAmiList(amiList) {
   return {
-    type: AMILIST_RECEIVED,
+    type: AMI_LIST_RECEIVED,
     payload: { amiList },
   };
 }
 
 export function updateAmiTag(amiId, applicationEnvironment) {
   return {
-    type: AMITAG_UPDATE,
+    type: AMI_TAG_UPDATE,
     payload: { amiId, applicationEnvironment },
   };
 }

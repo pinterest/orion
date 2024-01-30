@@ -22,7 +22,7 @@ import {
   AUTO_REFRESH_ENABLED,
   AUTO_REFRESH_DISABLED,
 } from "../actions/app";
-import { UTILIZATION_RECEIVED, COST_RECEIVED, AMILIST_RECEIVED } from "../actions/cluster";
+import { UTILIZATION_RECEIVED, COST_RECEIVED, AMI_LIST_RECEIVED } from "../actions/cluster";
 
 export default function showError(
   state = {
@@ -52,7 +52,7 @@ export default function showError(
       return { ...state, utilization: action.payload.utilization };
     case COST_RECEIVED:
       return { ...state, cost: action.payload.cost };
-    case AMILIST_RECEIVED:
+    case AMI_LIST_RECEIVED:
       return { ...state, amiList: action.payload.amiList };
     default:
       return state;
