@@ -24,6 +24,15 @@ public class Ami {
   private final String applicationEnvironment;
   private final String creationDate;
 
+  /**
+   * creates a new Ami instance
+   *
+   * @param amiId - for AWS, the string "ami-" and a sequence of 17 characters
+   * @param applicationEnvironment - comma-separated list of environments (dev, test,
+   *                                 staging, prod) supported by this ami
+   * @param creationDate - ami creation date, UTC
+   * @return the new Ami instance
+   */
   public Ami(String amiId, String applicationEnvironment, String creationDate) {
     this.amiId = amiId;
     this.applicationEnvironment = applicationEnvironment;
