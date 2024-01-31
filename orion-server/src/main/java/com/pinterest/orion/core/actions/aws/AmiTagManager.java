@@ -44,12 +44,14 @@ import software.amazon.awssdk.services.ec2.model.Tag;
 public class AmiTagManager {
   private static final Logger logger = Logger.getLogger(AmiTagManager.class.getCanonicalName());
   private Ec2Client ec2Client;
-  public static String KEY_APPLICATION = "application";
-  public static String KEY_RELEASE = "release";
-  public static String KEY_CPU_ARCHITECTURE = "cpu_architecture";
-  public static String KEY_APPLICATION_ENVIRONMENT = "application_environment";
-  public static String VALUE_KAFKA = "kafka";
-  UnaryOperator<String> tag = key -> "tag:" + key;
+  public static final String KEY_IS_PUBLIC = "is-public";
+  public static final String KEY_AMI_ID = "ami_id";
+  public static final String KEY_APPLICATION = "application";
+  public static final String KEY_RELEASE = "release";
+  public static final String KEY_CPU_ARCHITECTURE = "cpu_architecture";
+  public static final String KEY_APPLICATION_ENVIRONMENT = "application_environment";
+  public static final String VALUE_KAFKA = "kafka";
+  public static UnaryOperator<String> tag = key -> "tag:" + key;
 
   public AmiTagManager() {
     ec2Client = Ec2Client.create();

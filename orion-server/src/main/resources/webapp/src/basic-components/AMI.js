@@ -87,9 +87,9 @@ function Ami({ amiList, requestAmiList, updateAmiTag }) {
   const applyFilter = () => {
     const parms = [];
     if (os)
-      parms.push("release=" + os);
+      parms.push(AmiTagManager.KEY_RELEASE + "=" + os);
     if (cpuArch)
-      parms.push("cpu_architecture=" + cpuArch);
+      parms.push(AmiTagManager.KEY_CPU_ARCHITECTURE + "=" + cpuArch);
     requestAmiList(parms.join('&'));
   }
 

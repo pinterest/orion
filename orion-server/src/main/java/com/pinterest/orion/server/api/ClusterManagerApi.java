@@ -118,14 +118,14 @@ public class ClusterManagerApi extends BaseClustersApi {
   @Path("/describeImages")
   @GET
   public List<Ami> describeImages(
-      @QueryParam("release") String os,
-      @QueryParam("cpu_architecture") String arch
+      @QueryParam(AmiTagManager.KEY_RELEASE) String os,
+      @QueryParam(AmiTagManager.KEY_CPU_ARCHITECTURE) String arch
   ) {
     Map<String, String> filter = new HashMap<>();
     if (os != null)
-      filter.put("release", os);
+      filter.put(AmiTagManager.KEY_RELEASE, os);
     if (arch != null)
-      filter.put("cpu_architecture", arch);
+      filter.put(AmiTagManager.KEY_CPU_ARCHITECTURE, arch);
     if (amiTagManager == null)
       amiTagManager = new AmiTagManager();
     return amiTagManager.getAmiList(filter);
@@ -134,8 +134,8 @@ public class ClusterManagerApi extends BaseClustersApi {
   @Path("/updateImageTag")
   @PUT
   public void updateImageTag(
-      @QueryParam("ami_id") String amiId,
-      @QueryParam("application_environment") String applicationEnvironment
+      @QueryParam(AmiTagManager.KEY_AMI_ID) String amiId,
+      @QueryParam(AmiTagManager.KEY_APPLICATION_ENVIRONMENT) String applicationEnvironment
   ) {
     if (amiTagManager == null)
       amiTagManager = new AmiTagManager();
