@@ -25,9 +25,11 @@ import java.util.Map.Entry;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -41,11 +43,13 @@ import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.Utilization;
 import com.pinterest.orion.core.global.sensor.GlobalPluginManager;
 import com.pinterest.orion.core.global.sensor.GlobalSensor;
+import com.pinterest.orion.core.actions.aws.AmiTagManager;
 import com.pinterest.orion.server.config.OrionConf;
 
 @Path("/")
 @Produces({ MediaType.APPLICATION_JSON })
 public class ClusterManagerApi extends BaseClustersApi {
+  private AmiTagManager amiTagManager;
 
   public ClusterManagerApi(ClusterManager mgr) {
     super(mgr);
@@ -109,6 +113,33 @@ public class ClusterManagerApi extends BaseClustersApi {
       utilizationMap.put(entry.getKey(), entry.getValue().getUtilizationMap());
     }
     return utilizationMap;
+  }
+
+  @Path("/describeImages")
+  @GET
+  public List<Ami> describeImages(
+      @QueryParam(AmiTagManager.KEY_RELEASE) String os,
+      @QueryParam(AmiTagManager.KEY_CPU_ARCHITECTURE) String arch
+  ) {
+    Map<String, String> filter = new HashMap<>();
+    if (os != null)
+      filter.put(AmiTagManager.KEY_RELEASE, os);
+    if (arch != null)
+      filter.put(AmiTagManager.KEY_CPU_ARCHITECTURE, arch);
+    if (amiTagManager == null)
+      amiTagManager = new AmiTagManager();
+    return amiTagManager.getAmiList(filter);
+  }
+
+  @Path("/updateImageTag")
+  @PUT
+  public void updateImageTag(
+      @QueryParam(AmiTagManager.KEY_AMI_ID) String amiId,
+      @QueryParam(AmiTagManager.KEY_APPLICATION_ENVIRONMENT) String applicationEnvironment
+  ) {
+    if (amiTagManager == null)
+      amiTagManager = new AmiTagManager();
+    amiTagManager.updateAmiTag(amiId, applicationEnvironment);
   }
 
   @RolesAllowed({ OrionConf.ADMIN_ROLE, OrionConf.MGMT_ROLE })
