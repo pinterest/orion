@@ -74,15 +74,7 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleCheckboxChange = (event) => {
     env[event.target.name] = event.target.checked;
     const newAppEnv = [];
-    envTypes.forEach(envType => { if (env[envType]) newAppEnv.push(key); });
-    /*if (env.dev)
-      newAppEnv.push("dev");
-    if (env.test)
-      newAppEnv.push("test");
-    if (env.staging)
-      newAppEnv.push("staging");
-    if (env.prod)
-      newAppEnv.push("prod");*/
+    envTypes.forEach(envType => { if (env[envType]) newAppEnv.push(envType); });
     setAppEnv(newAppEnv.join(','));
   };
   const applyFilter = () => {
