@@ -142,6 +142,18 @@ public class ClusterManagerApi extends BaseClustersApi {
     amiTagManager.updateAmiTag(amiId, applicationEnvironment);
   }
 
+
+  @Path("/getEnvTypes")
+  @GET
+  public List<String> getEnvTypes() {
+    List<String> envTypes = null;
+    Map<String, Object> additionalConfigs = mgr.getOrionConf().getAdditionalConfigs();
+    if(additionalConfigs != null && additionalConfigs.containsKey(AmiTagManager.ENV_TYPES_KEY)) {
+      envTypes = (List<String>) additionalConfigs.get(AmiTagManager.ENV_TYPES_KEY);
+    }
+    return envTypes;
+  }
+
   @RolesAllowed({ OrionConf.ADMIN_ROLE, OrionConf.MGMT_ROLE })
   @Path("/costByCluster")
   @GET

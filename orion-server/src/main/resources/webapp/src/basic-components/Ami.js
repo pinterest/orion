@@ -19,19 +19,21 @@ import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField,
   FormGroup, FormControlLabel, Checkbox } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
-import { requestAmiList, updateAmiTag } from "../actions/cluster";
+import { requestAmiList, updateAmiTag, requestEnvTypes } from "../actions/cluster";
 
 const mapState = (state, ownProps) => {
-  const { amiList } = state.app;
+  const { amiList, envTypes } = state.app;
   return {
     ...ownProps,
     amiList,
+    envTypes
   };
 };
 
 const mapDispatch = {
   requestAmiList,
-  updateAmiTag
+  requestEnvTypes,
+  updateAmiTag,
 };
 
 const useStyles = makeStyles(theme => ({
@@ -41,7 +43,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function Ami({ amiList, requestAmiList, updateAmiTag }) {
+function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag }) {
   const classes = useStyles();
   const [os, setOS] = React.useState();
   const handleOSChange = event => {
@@ -65,23 +67,22 @@ function Ami({ amiList, requestAmiList, updateAmiTag }) {
   const handleAppEnvChange = event => {
     setAppEnv(event.target.value);
   };
-  const [env] = React.useState({
-    dev: false,
-    test: false,
-    staging: false,
-    prod: false,
-  });
+  const envMap = {};
+  if (envTypes !== undefined)
+    envTypes.forEach(value => { envMap[value] = false; });
+  const [env] = React.useState(envMap);
   const handleCheckboxChange = (event) => {
     env[event.target.name] = event.target.checked;
     const newAppEnv = [];
-    if (env.dev)
+    envTypes.forEach(envType => { if (env[envType]) newAppEnv.push(key); });
+    /*if (env.dev)
       newAppEnv.push("dev");
     if (env.test)
       newAppEnv.push("test");
     if (env.staging)
       newAppEnv.push("staging");
     if (env.prod)
-      newAppEnv.push("prod");
+      newAppEnv.push("prod");*/
     setAppEnv(newAppEnv.join(','));
   };
   const applyFilter = () => {
@@ -91,10 +92,13 @@ function Ami({ amiList, requestAmiList, updateAmiTag }) {
     if (cpuArch)
       parms.push("cpu_architecture=" + cpuArch);
     requestAmiList(parms.join('&'));
+    requestEnvTypes();
   }
 
   if (!amiList)
     amiList = [];
+  if (!envTypes)
+    envTypes = [];
   return (
     <div>
       <Grid container spacing={3}>
@@ -207,46 +211,18 @@ function Ami({ amiList, requestAmiList, updateAmiTag }) {
           </div>
           <div>
             <FormGroup column>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={env.dev}
-                    onChange={handleCheckboxChange}
-                    name="dev"
-                    color="primary"
-                  />}
-                label="dev"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={env.test}
-                    onChange={handleCheckboxChange}
-                    name="test"
-                    color="primary"
-                  />}
-                label="test"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={env.staging}
-                    onChange={handleCheckboxChange}
-                    name="staging"
-                    color="primary"
-                  />}
-                label="staging"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={env.prod}
-                    onChange={handleCheckboxChange}
-                    name="prod"
-                    color="primary"
-                  />}
-                label="prod"
-              />
+              { envTypes.map((envType) => (
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={env[envType]}
+                      onChange={handleCheckboxChange}
+                      name={envType}
+                      color="primary"
+                    />}
+                  label={envType}
+                />
+              ))}
             </FormGroup>
           </div>
           <div>

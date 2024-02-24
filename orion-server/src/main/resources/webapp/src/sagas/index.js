@@ -40,7 +40,9 @@ import {
   receiveCost,
   AMI_LIST_REQUESTED,
   receiveAmiList,
-  AMI_TAG_UPDATE
+  AMI_TAG_UPDATE,
+  ENV_TYPES_REQUESTED,
+  receiveEnvTypes
 } from "../actions/cluster";
 import {
   CLUSTERS_SUMMARY_REQUESTED,
@@ -71,6 +73,7 @@ export default function* rootSaga() {
   yield fork(globalSensorWatcher);
   yield fork(amiListWatcher);
   yield fork(amiTagUpdateWatcher);
+  yield fork(envTypesWatcher);
 }
 
 function* clusterSummaryWatcher() {
@@ -103,6 +106,10 @@ function* amiListWatcher() {
 
 function* amiTagUpdateWatcher() {
   yield takeEvery(AMI_TAG_UPDATE, fetchAmiTagUpdate);
+}
+
+function* envTypesWatcher() {
+  yield takeEvery(ENV_TYPES_REQUESTED, fetchEnvTypes);
 }
 
 function* fetchCost() {
@@ -262,6 +269,19 @@ function* fetchAmiTagUpdate(action) {
     yield put(showLoading());
     yield call(fetch, "/api/updateImageTag?ami_id=" + amiId +
         "&application_environment=" + applicationEnvironment, { method: 'PUT' });
+  } catch (e) {
+    yield put(showAppError(e));
+  } finally {
+    yield put(hideLoading());
+  }
+}
+
+function* fetchEnvTypes() {
+  try {
+    yield put(showLoading());
+    const resp = yield call(fetch, "/api/getEnvTypes");
+    const data = yield resp.json();
+    yield put(receiveEnvTypes(data));
   } catch (e) {
     yield put(showAppError(e));
   } finally {
