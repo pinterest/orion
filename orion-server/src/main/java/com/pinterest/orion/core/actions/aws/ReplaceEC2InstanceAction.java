@@ -532,7 +532,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
                     .addOption("m6id.4xlarge", "m6id.4xlarge")
                     .addOption("m6id.8xlarge", "m6id.8xlarge")
         )
-        .addValue(new TextValue(ATTR_AMI_KEY, "AMI id (optional, will inherit current AMI if not provided)", false))
+        .addValue(new TextValue(ATTR_AMI_KEY, "AMI id (optional, will use cluster filter criteria if not provided)", false))
         .addSchema(super.generateSchema(config));
   }
 }

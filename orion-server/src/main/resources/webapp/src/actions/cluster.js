@@ -33,6 +33,8 @@ export const COST_RECEIVED = "COST_RECEIVED";
 export const AMI_LIST_REQUESTED = "AMI_LIST_REQUESTED";
 export const AMI_LIST_RECEIVED = "AMI_LIST_RECEIVED";
 export const AMI_TAG_UPDATE = "AMI_TAG_UPDATE";
+export const ENV_TYPES_REQUESTED = "ENV_TYPES_REQUESTED";
+export const ENV_TYPES_RECEIVED = "ENV_TYPES_RECEIVED";
 
 export function requestCluster(clusterId) {
   return { type: CLUSTER_REQUESTED, payload: { clusterId } };
@@ -132,5 +134,19 @@ export function updateAmiTag(amiId, applicationEnvironment) {
   return {
     type: AMI_TAG_UPDATE,
     payload: { amiId, applicationEnvironment },
+  };
+}
+
+export function requestEnvTypes() {
+  return {
+    type: ENV_TYPES_REQUESTED,
+    payload: {},
+  };
+}
+
+export function receiveEnvTypes(envTypeList) {
+  return {
+    type: ENV_TYPES_RECEIVED,
+    payload: { envTypeList },
   };
 }

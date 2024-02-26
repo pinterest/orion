@@ -24,6 +24,7 @@ import com.pinterest.orion.core.actions.audit.ActionAuditor;
 import com.pinterest.orion.core.automation.operator.OperatorFactory;
 import com.pinterest.orion.core.automation.sensor.SensorFactory;
 import com.pinterest.orion.core.metrics.MetricsStore;
+import com.pinterest.orion.server.config.OrionConf;
 import com.pinterest.orion.server.config.OrionPluginConfig;
 
 public class ClusterManager {
@@ -37,6 +38,7 @@ public class ClusterManager {
   private ClusterStateSink stateSink;
   private MetricsStore metricsStore;
   private CostCalculator costCalculator;
+  private OrionConf configuration;
 
   public ClusterManager(SensorFactory sensorFactory,
                         OperatorFactory operatorFactory,
@@ -115,6 +117,21 @@ public class ClusterManager {
    */
   public MetricsStore getMetricsStore() {
     return metricsStore;
+  }
+
+  /**
+   * @return the configuration
+   */
+  public OrionConf getOrionConf() {
+    return configuration;
+  }
+
+  /**
+   * @param configuration the Orion server configuration
+   */
+  public void setOrionConf(OrionConf configuration) {
+    this.configuration = configuration;
+    return;
   }
   
 }
