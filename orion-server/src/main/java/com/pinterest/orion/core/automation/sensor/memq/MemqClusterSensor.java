@@ -30,12 +30,15 @@ import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 import com.pinterest.orion.utils.NetworkUtils;
 
+import static com.pinterest.orion.core.memq.MemqCluster.CLUSTER_CONTEXT;
+
 public class MemqClusterSensor extends MemqSensor {
 
   public static final String WRITE_ASSIGNMENTS = "writeAssignments";
   public static final String TOPIC_CONFIG = "topicconfig";
   public static final String BROKERS = "/brokers";
   public static final String TOPICS = "/topics";
+  public static final String GOVERNOR = "/governor";
   public static final String RAW_BROKER_INFO = "rawBrokerInfo";
 
   @Override
@@ -102,9 +105,15 @@ public class MemqClusterSensor extends MemqSensor {
         TopicConfig topicConfig = gson.fromJson(new String(topicData), TopicConfig.class);
         topicConfigMap.put(topic, topicConfig);
       }
+
+      byte[] governorData = zkClient.getData().forPath(GOVERNOR);
+      String governorIp = new String(governorData);
+      String clusterContext = "Governor: " + governorIp + "\n";
+
       setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
       setAttribute(cluster, RAW_BROKER_INFO, rawBrokerMap);
       setAttribute(cluster, WRITE_ASSIGNMENTS, writeBrokerAssignments);
+      setAttribute(cluster, CLUSTER_CONTEXT, clusterContext);
     } catch (Exception e) {
       e.printStackTrace();
       throw e;
