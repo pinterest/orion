@@ -73,6 +73,7 @@ export default function Topics(props) {
       batchSizeMB: topicInfoRow.config.batchSizeMB,
       configs: topicInfoRow.configs,
       storageConfigs: topicInfoRow.config.storageHandlerConfig,
+      storageHandlerName: topicInfoRow.config.storageHandlerName,
       raw: topicInfoRow,
     };
   });

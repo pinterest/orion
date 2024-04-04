@@ -45,6 +45,7 @@ public class MemqCluster extends Cluster {
   public static final String SERVERSET_PATH = "serversetPath";
   public static final String ZK_CONNECTION_STRING = "zkConnectionString";
   public static final String CLUSTER_REGION = "region";
+  public static final String CLUSTER_CONTEXT = "cluster.context";
   public static final String DEFAULT_REGION = "us-east-1";
   private static final long serialVersionUID = 1L;
   private static final Logger logger = Logger.getLogger(MemqCluster.class.getName());
