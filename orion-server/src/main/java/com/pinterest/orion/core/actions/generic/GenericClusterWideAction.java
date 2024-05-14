@@ -528,6 +528,32 @@ public class GenericClusterWideAction {
     }
   }
 
+  public static class ParallelReplaceNodeAction extends ParallelAction {
+    public ParallelReplaceNodeAction() {
+      super("Replace");
+    }
+
+    @Override
+    public Action getChildAction() {
+      return new NodeAction() {
+        @Override
+        public String getName() {
+          return "ReplaceNodeAction";
+        }
+      };
+    }
+
+    @Override
+    public boolean isCancelAllIfFailed() {
+      return true;
+    }
+
+    @Override
+    public boolean failIfNoNodeIds() {
+      return true;
+    }
+  }
+
   public static class ParallelRebootNodeAction extends ParallelAction {
     public ParallelRebootNodeAction() {
       super("Reboot");
