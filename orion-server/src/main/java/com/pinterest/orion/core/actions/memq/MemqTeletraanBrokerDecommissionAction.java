@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 public abstract class MemqTeletraanBrokerDecommissionAction extends NodeDecommissionAction {
 
     private static final int POST_TERMINATION_CHECK_WAIT_TIME_MS = 10_000; // 10 seconds
-    private static final int TERMINATION_CHECK_TIME_INTERVAL_MS = 300_000; // 5 minutes
+    private static final int TERMINATION_CHECK_TIME_INTERVAL_MS = 60_000; // 1 minute
     private static final int TERMINATION_CHECK_TIMEOUT_MS = 1_800_000; // 30 minutes
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
