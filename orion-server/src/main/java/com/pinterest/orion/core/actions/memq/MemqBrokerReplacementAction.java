@@ -2,12 +2,9 @@ package com.pinterest.orion.core.actions.memq;
 
 import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.memq.MemqCluster;
-import com.pinterest.orion.utils.EC2Helper;
-import com.pinterest.orion.utils.TeletraanClient;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import com.pinterest.orion.core.actions.aws.EC2Helper;
 
-public abstract class MemqTeletraanBrokerReplacementAction extends NodeAction {
+public abstract class MemqBrokerReplacementAction extends NodeAction {
 
     private static final int POST_TERMINATION_CHECK_WAIT_TIME_MS = 10_000; // 10 seconds
     private static final int TERMINATION_CHECK_TIME_INTERVAL_MS = 60_000; // 1 minute
@@ -30,26 +27,25 @@ public abstract class MemqTeletraanBrokerReplacementAction extends NodeAction {
             markFailed("No running brokers found in cluster " + clusterId);
             return;
         }
-        // Get the host name and instance ID of the node to be replaced.
+        // Get the host name and host ID of the node to be replaced.
         String fullHostName = node.getCurrentNodeInfo().getHostname();
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
-        String instanceId = getEC2Helper().getInstanceIdUsingHostName(fullHostName, region);
+        String hostId = getEC2Helper().getHostIdUsingHostName(fullHostName, region);
         String hostName = fullHostName.split("\\.")[0];
         getResult().appendOut(String.format(
                 "Start replacement for host %s(%s) in cluster %s. Initial broker count: %d.",
-                hostName, instanceId, clusterId, startBrokerCount));
-        // Replace the host via Teletraan API.
-        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-        if (!getTeletraanClient().replaceHost(httpClient, instanceId, clusterId, null)) {
+                hostName, hostId, clusterId, startBrokerCount));
+        // Replace the host via API.
+        if (!getEC2Helper().replaceHost(hostId, clusterId)) {
             markFailed(String.format("Failed to replace host %s(%s) in cluster %s.",
-                    hostName, instanceId, clusterId));
+                    hostName, hostId, clusterId));
         }
         // Check if the host is pending termination.
         // The host should be in pending termination status after the API call.
         Thread.sleep(getPostTerminationCheckWaitTimeMs());
-        if (!getTeletraanClient().isInstancePendingTermination(httpClient, hostName, null)) {
+        if (!getEC2Helper().isHostPendingTermination(hostName)) {
             markFailed(String.format("Failed post termination check for host %s(%s) in cluster %s.",
-                    hostName, instanceId, clusterId));
+                    hostName, hostId, clusterId));
         }
         getResult().appendOut("Host " + hostName + " is in pending termination status.");
         // Wait for the host to terminate.
@@ -57,17 +53,17 @@ public abstract class MemqTeletraanBrokerReplacementAction extends NodeAction {
         while (true) {
             Thread.sleep(getTerminationCheckTimeIntervalMs());
             long elapsedTime = System.currentTimeMillis() - startTime;
-            if (getTeletraanClient().isInstanceTerminated(httpClient, hostName, null)) {
+            if (getEC2Helper().isHostTerminated(hostName)) {
                 getResult().appendOut(String.format("Host %s(%s) in cluster %s has been terminated.",
-                        hostName, instanceId, clusterId));
+                        hostName, hostId, clusterId));
                 break;
             } else if (elapsedTime > getTerminationCheckTimeoutMs()) {
                 markFailed(String.format("Timed out waiting for host %s(%s) in cluster %s to terminate.",
-                        hostName, instanceId, clusterId));
+                        hostName, hostId, clusterId));
                 break;
             }
             getResult().appendOut(String.format("Host %s(%s) in cluster %s is still terminating after %d ms.",
-                    hostName, instanceId, clusterId, elapsedTime));
+                    hostName, hostId, clusterId, elapsedTime));
         }
         // Wait for the replacement host to be added to the cluster.
         // If the broker count is >= the initial count, the replacement is successful.
@@ -102,7 +98,7 @@ public abstract class MemqTeletraanBrokerReplacementAction extends NodeAction {
 
     @Override
     public String getName() {
-        return "MemqTeletraanBrokerReplacementAction";
+        return "MemqBrokerReplacementAction";
     }
 
     /**
@@ -136,8 +132,6 @@ public abstract class MemqTeletraanBrokerReplacementAction extends NodeAction {
     }
 
     protected abstract EC2Helper getEC2Helper();
-
-    protected abstract TeletraanClient getTeletraanClient();
 
     protected abstract String getClusterBrokerPrefix(String clusterId);
 }

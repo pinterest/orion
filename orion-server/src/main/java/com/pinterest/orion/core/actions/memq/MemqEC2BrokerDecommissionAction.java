@@ -4,7 +4,7 @@ import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.actions.aws.Ec2Utils;
 import com.pinterest.orion.core.actions.generic.NodeDecommissionAction;
 import com.pinterest.orion.core.memq.MemqCluster;
-import com.pinterest.orion.utils.EC2Helper;
+import com.pinterest.orion.core.actions.aws.EC2Helper;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
@@ -19,7 +19,7 @@ public abstract class MemqEC2BrokerDecommissionAction extends NodeDecommissionAc
             Arrays.asList(InstanceStateName.STOPPED, InstanceStateName.TERMINATED));
 
     /**
-     * Decommission the node by terminating the EC2 instance via the EC2 client.
+     * Decommission the node by terminating the EC2 host via the EC2 client.
      * @param node The node to decommission
      * @return true if the decommission action is successful, false otherwise
      * @throws Exception if there is an error during decommission
@@ -28,20 +28,20 @@ public abstract class MemqEC2BrokerDecommissionAction extends NodeDecommissionAc
     public boolean decommission(Node node) throws Exception {
         String hostName = node.getCurrentNodeInfo().getHostname();
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
-        String instanceId = getEC2Helper().getInstanceIdUsingHostName(hostName, region);
+        String hostId = getEC2Helper().getHostIdUsingHostName(hostName, region);
         try (Ec2Client ec2Client = getEc2Client()) {
-            boolean hasTerminating = doTermination(ec2Client, instanceId);
+            boolean hasTerminating = doTermination(ec2Client, hostId);
             if (!hasTerminating) {
-                markFailed("Could not terminate the instance " + instanceId);
+                markFailed("Could not terminate the host " + hostId);
                 return false;
             }
-            boolean terminated = isInstanceTerminated(ec2Client, instanceId);
+            boolean terminated = isInstanceTerminated(ec2Client, hostId);
             if (!terminated) {
-                markFailed("Termination state check timeout for " + instanceId);
+                markFailed("Termination state check timeout for " + hostId);
                 return false;
             }
         } catch (Exception e) {
-            markFailed("Error in instance termination: " + e);
+            markFailed("Error in host termination: " + e);
             return false;
         }
         super.decommission(node);
@@ -49,17 +49,17 @@ public abstract class MemqEC2BrokerDecommissionAction extends NodeDecommissionAc
         return true;
     }
 
-    protected static boolean doTermination(Ec2Client ec2Client, String instanceId) {
+    protected static boolean doTermination(Ec2Client ec2Client, String hostId) {
         TerminateInstancesRequest terminateInstancesRequest =
-                TerminateInstancesRequest.builder().instanceIds(instanceId).build();
+                TerminateInstancesRequest.builder().instanceIds(hostId).build();
         TerminateInstancesResponse terminateInstancesResponse =
                 ec2Client.terminateInstances(terminateInstancesRequest);
         return terminateInstancesResponse.hasTerminatingInstances();
     }
 
-    protected boolean isInstanceTerminated(Ec2Client ec2Client, String instanceId) {
+    protected boolean isInstanceTerminated(Ec2Client ec2Client, String hostId) {
         try {
-            Ec2Utils.waitForInstanceStateChange(ec2Client, instanceId, TERMINATION_STATE, logger());
+            Ec2Utils.waitForInstanceStateChange(ec2Client, hostId, TERMINATION_STATE, logger());
         } catch (Exception e) {
             return false;
         }

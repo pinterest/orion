@@ -1,4 +1,4 @@
-package com.pinterest.orion.utils;
+package com.pinterest.orion.teletraan;
 
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 public class TestTeletraanClient {
 
     private TeletraanClient teletraanClient = new TeletraanClient(
-            "https://teletraan.com/", "test_token");
+            "https://teletraan.com/", "test_token", "memq");
 
     @Test
     public void testGetTerminateHostUrl() {
@@ -81,7 +81,7 @@ public class TestTeletraanClient {
         Mockito.when(response.getStatusLine()).thenReturn(statusLine);
         Mockito.when(statusLine.getStatusCode()).thenReturn(HttpURLConnection.HTTP_OK);
         Mockito.when(response.getEntity()).thenReturn(new StringEntity("[]"));
-        assertTrue(teletraanClient.isInstancePendingTermination(httpClient, hostName, "test_token"));
+        assertTrue(teletraanClient.isHostPendingTermination(httpClient, hostName, "test_token"));
         verify(httpClient, times(1)).execute(Mockito.any());
     }
 
@@ -94,26 +94,26 @@ public class TestTeletraanClient {
         Mockito.when(httpClient.execute(Mockito.any())).thenReturn(response);
         Mockito.when(response.getStatusLine()).thenReturn(statusLine);
         Mockito.when(statusLine.getStatusCode()).thenReturn(HttpURLConnection.HTTP_GATEWAY_TIMEOUT);
-        assertFalse(teletraanClient.isInstancePendingTermination(httpClient, hostName, "test_token"));
+        assertFalse(teletraanClient.isHostPendingTermination(httpClient, hostName, "test_token"));
         verify(httpClient, times(1)).execute(Mockito.any());
     }
 
     @Test
     public void testParsePendingTerminationStatus() throws Exception {
         String testResponseEntityString = "[]";
-        assertEquals(teletraanClient.ParseHostPendingTerminationStatus(new StringEntity(testResponseEntityString)), true);
+        assertEquals(teletraanClient.IsHostTerminatedOrPendingTermination(new StringEntity(testResponseEntityString)), true);
         testResponseEntityString = "[{'pendingTerminate': True, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'hostId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
-        assertEquals(teletraanClient.ParseHostPendingTerminationStatus(new StringEntity(testResponseEntityString)), true);
+        assertEquals(teletraanClient.IsHostTerminatedOrPendingTermination(new StringEntity(testResponseEntityString)), true);
         testResponseEntityString = "[{'pendingTerminate': False, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'hostId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
-        assertEquals(teletraanClient.ParseHostPendingTerminationStatus(new StringEntity(testResponseEntityString)), false);
+        assertEquals(teletraanClient.IsHostTerminatedOrPendingTermination(new StringEntity(testResponseEntityString)), false);
     }
 
     @Test
     public void testParseTerminatedStatus() throws Exception {
         String testResponseEntityString = "[]";
-        assertEquals(teletraanClient.ParseHostTerminatedStatus(new StringEntity(testResponseEntityString)), true);
+        assertEquals(teletraanClient.IsHostTerminated(new StringEntity(testResponseEntityString)), true);
         testResponseEntityString = "[{'pendingTerminate': True, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'hostId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
-        assertEquals(teletraanClient.ParseHostTerminatedStatus(new StringEntity(testResponseEntityString)), false);
+        assertEquals(teletraanClient.IsHostTerminated(new StringEntity(testResponseEntityString)), false);
     }
 
     @Test

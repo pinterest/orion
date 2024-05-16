@@ -3,13 +3,13 @@ package com.pinterest.orion.core.actions.memq;
 import com.pinterest.orion.core.actions.aws.Ec2Utils;
 import com.pinterest.orion.core.actions.aws.RebootEC2InstanceAction;
 import com.pinterest.orion.core.memq.MemqCluster;
-import com.pinterest.orion.utils.EC2Helper;
+import com.pinterest.orion.core.actions.aws.EC2Helper;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 
 public abstract class MemqEC2BrokerRebootAction extends RebootEC2InstanceAction {
 
     /**
-     * Reboot the node by rebooting the EC2 instance via the EC2 client.
+     * Reboot the node by rebooting the EC2 host via the EC2 client.
      * @throws Exception if there is an error during reboot
      */
     @Override
@@ -19,7 +19,7 @@ public abstract class MemqEC2BrokerRebootAction extends RebootEC2InstanceAction 
         }
         setHostname(node.getCurrentNodeInfo().getHostname());
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
-        setInstanceId(getEC2Helper().getInstanceIdUsingHostName(getHostname(), region));
+        setInstanceId(getEC2Helper().getHostIdUsingHostName(getHostname(), region));
         try (Ec2Client ec2Client = getEc2Client()) {
             super.rebootInstance(ec2Client);
             boolean running = isInstanceRunning(ec2Client);
@@ -28,7 +28,7 @@ public abstract class MemqEC2BrokerRebootAction extends RebootEC2InstanceAction 
                 return;
             }
         } catch (Exception e) {
-            markFailed("Error in instance reboot: " + e);
+            markFailed("Error in host reboot: " + e);
             return;
         }
         markSucceeded();
