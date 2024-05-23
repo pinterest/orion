@@ -19,7 +19,7 @@ public abstract class MemqEC2BrokerRebootAction extends RebootEC2InstanceAction 
         }
         setHostname(node.getCurrentNodeInfo().getHostname());
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
-        setInstanceId(getEC2Helper().getHostIdUsingHostName(getHostname(), region));
+        setInstanceId(getEC2Helper().getInstanceIdUsingHostName(getHostname(), region));
         try (Ec2Client ec2Client = getEc2Client()) {
             super.rebootInstance(ec2Client);
             boolean running = isInstanceRunning(ec2Client);

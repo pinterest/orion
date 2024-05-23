@@ -19,12 +19,12 @@ public abstract class MemqBrokerDecommissionAction extends NodeDecommissionActio
         String fullHostName = node.getCurrentNodeInfo().getHostname();
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
         String clusterId = node.getCluster().getClusterId();
-        String hostId = getEC2Helper().getHostIdUsingHostName(fullHostName, region);
+        String instanceId = getEC2Helper().getInstanceIdUsingHostName(fullHostName, region);
         String hostName = fullHostName.split("\\.")[0];
         // Terminate the host via API.
-        if (!getEC2Helper().terminateHost(hostId, clusterId)) {
+        if (!getEC2Helper().terminateHost(instanceId, clusterId)) {
             markFailed(String.format("Failed to terminate host %s(%s) in cluster %s.",
-                    hostName, hostId, clusterId));
+                    hostName, instanceId, clusterId));
             return false;
         }
         // Check if the host is pending termination.
@@ -32,7 +32,7 @@ public abstract class MemqBrokerDecommissionAction extends NodeDecommissionActio
         Thread.sleep(getPostTerminationCheckWaitTimeMs());
         if (!getEC2Helper().isHostPendingTermination(hostName)) {
             markFailed(String.format("Failed post termination check for host %s(%s) in cluster %s.",
-                    hostName, hostId, clusterId));
+                    hostName, instanceId, clusterId));
             return false;
         }
         getResult().appendOut("Host " + hostName + " is in pending termination status.");
@@ -44,15 +44,15 @@ public abstract class MemqBrokerDecommissionAction extends NodeDecommissionActio
             long elapsedTime = System.currentTimeMillis() - startTime;
             if (getEC2Helper().isHostTerminated(hostName)) {
                 getResult().appendOut(String.format("Host %s(%s) in cluster %s has been terminated.",
-                        hostName, hostId, clusterId));
+                        hostName, instanceId, clusterId));
                 break;
             } else if (elapsedTime > getTerminationCheckTimeoutMs()) {
                 markFailed(String.format("Timed out waiting for host %s(%s) in cluster %s to terminate.",
-                        hostName, hostId, clusterId));
+                        hostName, instanceId, clusterId));
                 return false;
             }
             getResult().appendOut(String.format("Host %s(%s) in cluster %s is still terminating after %d ms.",
-                    hostName, hostId, clusterId, elapsedTime));
+                    hostName, instanceId, clusterId, elapsedTime));
         }
         // Remove the node from the Orion cluster and mark the action as succeeded
         super.decommission(node);

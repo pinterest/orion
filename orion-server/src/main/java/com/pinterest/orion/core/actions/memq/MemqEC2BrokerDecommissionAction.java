@@ -28,16 +28,16 @@ public abstract class MemqEC2BrokerDecommissionAction extends NodeDecommissionAc
     public boolean decommission(Node node) throws Exception {
         String hostName = node.getCurrentNodeInfo().getHostname();
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
-        String hostId = getEC2Helper().getHostIdUsingHostName(hostName, region);
+        String instanceId = getEC2Helper().getInstanceIdUsingHostName(hostName, region);
         try (Ec2Client ec2Client = getEc2Client()) {
-            boolean hasTerminating = doTermination(ec2Client, hostId);
+            boolean hasTerminating = doTermination(ec2Client, instanceId);
             if (!hasTerminating) {
-                markFailed("Could not terminate the host " + hostId);
+                markFailed("Could not terminate the host " + instanceId);
                 return false;
             }
-            boolean terminated = isInstanceTerminated(ec2Client, hostId);
+            boolean terminated = isInstanceTerminated(ec2Client, instanceId);
             if (!terminated) {
-                markFailed("Termination state check timeout for " + hostId);
+                markFailed("Termination state check timeout for " + instanceId);
                 return false;
             }
         } catch (Exception e) {
@@ -49,17 +49,17 @@ public abstract class MemqEC2BrokerDecommissionAction extends NodeDecommissionAc
         return true;
     }
 
-    protected static boolean doTermination(Ec2Client ec2Client, String hostId) {
+    protected static boolean doTermination(Ec2Client ec2Client, String instanceId) {
         TerminateInstancesRequest terminateInstancesRequest =
-                TerminateInstancesRequest.builder().instanceIds(hostId).build();
+                TerminateInstancesRequest.builder().instanceIds(instanceId).build();
         TerminateInstancesResponse terminateInstancesResponse =
                 ec2Client.terminateInstances(terminateInstancesRequest);
         return terminateInstancesResponse.hasTerminatingInstances();
     }
 
-    protected boolean isInstanceTerminated(Ec2Client ec2Client, String hostId) {
+    protected boolean isInstanceTerminated(Ec2Client ec2Client, String instanceId) {
         try {
-            Ec2Utils.waitForInstanceStateChange(ec2Client, hostId, TERMINATION_STATE, logger());
+            Ec2Utils.waitForInstanceStateChange(ec2Client, instanceId, TERMINATION_STATE, logger());
         } catch (Exception e) {
             return false;
         }

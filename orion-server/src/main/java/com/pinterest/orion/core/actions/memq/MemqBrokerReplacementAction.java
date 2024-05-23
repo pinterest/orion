@@ -30,22 +30,22 @@ public abstract class MemqBrokerReplacementAction extends NodeAction {
         // Get the host name and host ID of the node to be replaced.
         String fullHostName = node.getCurrentNodeInfo().getHostname();
         String region = node.getCluster().getAttribute(MemqCluster.CLUSTER_REGION).getValue();
-        String hostId = getEC2Helper().getHostIdUsingHostName(fullHostName, region);
+        String instanceId = getEC2Helper().getInstanceIdUsingHostName(fullHostName, region);
         String hostName = fullHostName.split("\\.")[0];
         getResult().appendOut(String.format(
                 "Start replacement for host %s(%s) in cluster %s. Initial broker count: %d.",
-                hostName, hostId, clusterId, startBrokerCount));
+                hostName, instanceId, clusterId, startBrokerCount));
         // Replace the host via API.
-        if (!getEC2Helper().replaceHost(hostId, clusterId)) {
+        if (!getEC2Helper().replaceHost(instanceId, clusterId)) {
             markFailed(String.format("Failed to replace host %s(%s) in cluster %s.",
-                    hostName, hostId, clusterId));
+                    hostName, instanceId, clusterId));
         }
         // Check if the host is pending termination.
         // The host should be in pending termination status after the API call.
         Thread.sleep(getPostTerminationCheckWaitTimeMs());
         if (!getEC2Helper().isHostPendingTermination(hostName)) {
             markFailed(String.format("Failed post termination check for host %s(%s) in cluster %s.",
-                    hostName, hostId, clusterId));
+                    hostName, instanceId, clusterId));
         }
         getResult().appendOut("Host " + hostName + " is in pending termination status.");
         // Wait for the host to terminate.
@@ -55,15 +55,15 @@ public abstract class MemqBrokerReplacementAction extends NodeAction {
             long elapsedTime = System.currentTimeMillis() - startTime;
             if (getEC2Helper().isHostTerminated(hostName)) {
                 getResult().appendOut(String.format("Host %s(%s) in cluster %s has been terminated.",
-                        hostName, hostId, clusterId));
+                        hostName, instanceId, clusterId));
                 break;
             } else if (elapsedTime > getTerminationCheckTimeoutMs()) {
                 markFailed(String.format("Timed out waiting for host %s(%s) in cluster %s to terminate.",
-                        hostName, hostId, clusterId));
+                        hostName, instanceId, clusterId));
                 break;
             }
             getResult().appendOut(String.format("Host %s(%s) in cluster %s is still terminating after %d ms.",
-                    hostName, hostId, clusterId, elapsedTime));
+                    hostName, instanceId, clusterId, elapsedTime));
         }
         // Wait for the replacement host to be added to the cluster.
         // If the broker count is >= the initial count, the replacement is successful.

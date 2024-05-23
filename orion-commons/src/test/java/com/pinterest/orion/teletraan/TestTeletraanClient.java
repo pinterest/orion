@@ -102,9 +102,9 @@ public class TestTeletraanClient {
     public void testParsePendingTerminationStatus() throws Exception {
         String testResponseEntityString = "[]";
         assertEquals(teletraanClient.IsHostTerminatedOrPendingTermination(new StringEntity(testResponseEntityString)), true);
-        testResponseEntityString = "[{'pendingTerminate': True, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'hostId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
+        testResponseEntityString = "[{'pendingTerminate': True, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'instanceId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
         assertEquals(teletraanClient.IsHostTerminatedOrPendingTermination(new StringEntity(testResponseEntityString)), true);
-        testResponseEntityString = "[{'pendingTerminate': False, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'hostId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
+        testResponseEntityString = "[{'pendingTerminate': False, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'instanceId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
         assertEquals(teletraanClient.IsHostTerminatedOrPendingTermination(new StringEntity(testResponseEntityString)), false);
     }
 
@@ -112,7 +112,7 @@ public class TestTeletraanClient {
     public void testParseTerminatedStatus() throws Exception {
         String testResponseEntityString = "[]";
         assertEquals(teletraanClient.IsHostTerminated(new StringEntity(testResponseEntityString)), true);
-        testResponseEntityString = "[{'pendingTerminate': True, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'hostId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
+        testResponseEntityString = "[{'pendingTerminate': True, 'hostName': 'hostName', 'groupName': 'groupName', 'ip': '8.8.8.8', 'instanceId': 'i-0000000000000000', 'accountId': '00000000000', 'createDate': 1712018950930, 'lastUpdateDate': 1712018950930, 'state': 'ACTIVE', 'canRetire': 0}]";
         assertEquals(teletraanClient.IsHostTerminated(new StringEntity(testResponseEntityString)), false);
     }
 

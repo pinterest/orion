@@ -15,23 +15,23 @@ public abstract class EC2Helper {
      * @param region the region of the host
      * @return the instance id
      */
-    public abstract String getHostIdUsingHostName(String fullHostName, String region);
+    public abstract String getInstanceIdUsingHostName(String fullHostName, String region);
 
     /**
      * Replace the host with the given instance id
-     * @param hostId
+     * @param instanceId
      * @param clusterId
      * @return true if the replacement workflow is triggered successfully
      */
-    public abstract boolean replaceHost(String hostId, String clusterId);
+    public abstract boolean replaceHost(String instanceId, String clusterId);
 
     /**
      * Terminate the host with the given instance id
-     * @param hostId
+     * @param instanceId
      * @param clusterId
      * @return true if the termination workflow is triggered successfully
      */
-    public abstract boolean terminateHost(String hostId, String clusterId);
+    public abstract boolean terminateHost(String instanceId, String clusterId);
 
     /**
      * Check if the host is pending termination

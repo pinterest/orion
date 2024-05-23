@@ -15,9 +15,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.util.logging.Logger;
 
-import static com.pinterest.orion.teletraan.TeletraanConstants.CHECK_HOST_STATUS_URL_POSTFIX;
-import static com.pinterest.orion.teletraan.TeletraanConstants.REPLACE_HOST_URL_POSTFIX;
-import static com.pinterest.orion.teletraan.TeletraanConstants.TERMINATE_HOST_URL_POSTFIX;
+import static com.pinterest.orion.teletraan.Constants.CHECK_HOST_STATUS_URL_POSTFIX;
+import static com.pinterest.orion.teletraan.Constants.REPLACE_HOST_URL_POSTFIX;
+import static com.pinterest.orion.teletraan.Constants.TERMINATE_HOST_URL_POSTFIX;
 
 /**
  * TeletraanClient is a client to interact with the Teletraan API via HTTP requests.
@@ -95,55 +95,55 @@ public class TeletraanClient {
 
     /**
      * Generate a StringEntity for the host to be replaced or terminated.
-     * @param hostId
+     * @param instanceId
      * @return StringEntity for the host to be replaced or terminated.
      * @throws UnsupportedEncodingException
      */
-    protected StringEntity generateHostEntity(String hostId) throws UnsupportedEncodingException {
+    protected StringEntity generateHostEntity(String instanceId) throws UnsupportedEncodingException {
         JsonArray hostArray = new JsonArray();
-        hostArray.add(hostId);
+        hostArray.add(instanceId);
         return new StringEntity(hostArray.toString());
     }
 
     /**
      * Replace a host in a cluster using the Teletraan API.
-     * @param hostId
+     * @param instanceId
      * @param clusterId
      * @return boolean indicating success or failure
      */
-    public boolean replaceHost(String hostId, String clusterId) {
-        return replaceHost(httpClient, hostId, clusterId, null);
+    public boolean replaceHost(String instanceId, String clusterId) {
+        return replaceHost(httpClient, instanceId, clusterId, null);
     }
 
     /**
      * Replace a host in a cluster using the Teletraan API.
      * @param httpClient
-     * @param hostId
+     * @param instanceId
      * @param clusterId
      * @param overrideTeletraanToken
      * @return boolean indicating success or failure
      */
     public boolean replaceHost(
             CloseableHttpClient httpClient,
-            String hostId,
+            String instanceId,
             String clusterId,
             String overrideTeletraanToken) {
         try {
             String replaceHostUrl = getReplaceHostUrl(clusterId);
             HttpDeleteWithBody hostReplacementRequest = new HttpDeleteWithBody(replaceHostUrl);
-            hostReplacementRequest.setEntity(generateHostEntity(hostId));
+            hostReplacementRequest.setEntity(generateHostEntity(instanceId));
             hostReplacementRequest.setHeader("Content-Type", "application/json");
             hostReplacementRequest.setHeader("Authorization", getTokenHeader(overrideTeletraanToken));
             logger.info(String.format(
                     "Replacing host %s in cluster %s via teletraan API: %s",
-                    hostId, clusterId, replaceHostUrl));
+                    instanceId, clusterId, replaceHostUrl));
 
             CloseableHttpResponse response = httpClient.execute(hostReplacementRequest);
             if (response.getStatusLine().getStatusCode() != HttpURLConnection.HTTP_OK
                     && response.getStatusLine().getStatusCode() != HttpURLConnection.HTTP_NO_CONTENT) {
                 logger.severe(String.format(
                         "Failed to replace host %s in cluster %s via teletraan API: %s. Status: %s",
-                        hostId, clusterId, replaceHostUrl, response.getStatusLine().getStatusCode()));
+                        instanceId, clusterId, replaceHostUrl, response.getStatusLine().getStatusCode()));
                 return false;
             }
             return true;
@@ -155,43 +155,43 @@ public class TeletraanClient {
 
     /**
      * Terminate a host from a cluster using the Teletraan API.
-     * @param hostId
+     * @param instanceId
      * @param clusterId
      * @return boolean indicating success or failure
      */
-    public boolean terminateHost(String hostId, String clusterId) {
-        return terminateHost(httpClient, hostId, clusterId, null);
+    public boolean terminateHost(String instanceId, String clusterId) {
+        return terminateHost(httpClient, instanceId, clusterId, null);
     }
 
     /**
      * Terminate a host from a cluster using the Teletraan API.
      * @param httpClient
-     * @param hostId
+     * @param instanceId
      * @param clusterId
      * @param overrideTeletraanToken
      * @return boolean indicating success or failure
      */
     public boolean terminateHost(
             CloseableHttpClient httpClient,
-            String hostId,
+            String instanceId,
             String clusterId,
             String overrideTeletraanToken) {
         try {
             String terminateHostUrl = getTerminateHostUrl(clusterId);
             HttpDeleteWithBody hostTerminationRequest = new HttpDeleteWithBody(terminateHostUrl);
-            hostTerminationRequest.setEntity(generateHostEntity(hostId));
+            hostTerminationRequest.setEntity(generateHostEntity(instanceId));
             hostTerminationRequest.setHeader("Content-Type", "application/json");
             hostTerminationRequest.setHeader("Authorization", getTokenHeader(overrideTeletraanToken));
             logger.info(String.format(
                     "Terminating host %s from cluster %s via teletraan API: %s",
-                    hostId, clusterId, terminateHostUrl));
+                    instanceId, clusterId, terminateHostUrl));
 
             CloseableHttpResponse response = httpClient.execute(hostTerminationRequest);
             if (response.getStatusLine().getStatusCode() != HttpURLConnection.HTTP_OK
                     && response.getStatusLine().getStatusCode() != HttpURLConnection.HTTP_NO_CONTENT) {
                 logger.severe(String.format(
                         "Failed to terminate host %s from cluster %s via teletraan API: %s. Status: %s",
-                        hostId, clusterId, terminateHostUrl, response.getStatusLine().getStatusCode()));
+                        instanceId, clusterId, terminateHostUrl, response.getStatusLine().getStatusCode()));
                 return false;
             }
             return true;
