@@ -103,6 +103,16 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>com.clickhouse</groupId>
+			<artifactId>clickhouse-http-client</artifactId>
+			<version>0.6.0</version>
+		</dependency>
+		<dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.3</version>
+        </dependency>
+		<dependency>
 			<groupId>org.apache.curator</groupId>
 			<artifactId>curator-framework</artifactId>
 			<version>${curator-framework.version}</version>

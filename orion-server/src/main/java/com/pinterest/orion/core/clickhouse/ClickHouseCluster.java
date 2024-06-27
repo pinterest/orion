@@ -25,6 +25,15 @@ public class ClickHouseCluster extends Cluster {
   private static final Logger logger = Logger.getLogger(ClickHouseNode.class.getName());
   public static final String CLUSTER_REGION = "region";
   public static final String DEFAULT_REGION = "us-east-1";
+
+  public static final String USER = "user";
+  private static final String DEFAULT_USER = "default";
+
+  public static final String PASSWORD = "password";
+  private static final String DEFAULT_PASSWORD = "";
+
+  public static final String SERVERSET_PATH = "serversetPath";
+
   private Map<String, Object> config;
 
   public ClickHouseCluster(String id,
@@ -44,6 +53,9 @@ public class ClickHouseCluster extends Cluster {
   protected void bootstrapClusterInfo(Map<String, Object> config) throws PluginConfigurationException {
     this.config = config;
     setAttribute(CLUSTER_REGION, config.getOrDefault(CLUSTER_REGION, DEFAULT_REGION));
+    setAttribute(USER, config.getOrDefault(USER, DEFAULT_USER));
+    setAttribute(PASSWORD, config.getOrDefault(PASSWORD, DEFAULT_PASSWORD));
+    setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
   }
 
   @Override

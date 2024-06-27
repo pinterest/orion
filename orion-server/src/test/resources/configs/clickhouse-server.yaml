@@ -1,0 +1,37 @@
+logging:
+  level: INFO
+  appenders:
+    - type: file
+      # The file to which current statements will be logged.
+      currentLogFilename: /var/log/orion/orion.log
+      # When the log file rotates, the archived log will be renamed to this and gzipped. The
+      # %d is replaced with the previous day (yyyy-MM-dd). Custom rolling windows can be created
+      # by passing a SimpleDateFormat-compatible format as an argument: "%d{yyyy-MM-dd-hh}".
+      archivedLogFilenamePattern: /var/log/orion/orion-%d.log.gz
+      # The number of archived files to keep.
+      archivedFileCount: 5
+
+server:
+  requestLog:
+    appenders: []
+  applicationConnectors:
+    - type: http
+      port: 8090
+      bindHost: 127.0.0.1
+  adminConnectors:
+    - type: http
+      port: 8444
+      bindHost: 0.0.0.0
+
+clusterConfigs:
+  - clusterId: testclickhouse
+    type: clickhouse
+    configuration: 
+        serversetPath: /opt/orion-server/discovery.testclickhouse.test
+
+plugins:
+  sensorConfigs:
+    - key: clusterSensor
+      class: com.pinterest.orion.core.automation.sensor.clickhouse.ClickHouseClusterSensor
+      interval: 60
+      enabled: true
