@@ -24,6 +24,7 @@ import com.pinterest.orion.core.automation.sensor.Sensor;
 import com.pinterest.orion.core.hbase.HBaseCluster;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.core.memq.MemqCluster;
+import com.pinterest.orion.core.clickhouse.ClickHouseCluster;
 
 public class ClusterTypeMap {
 
@@ -36,6 +37,7 @@ public class ClusterTypeMap {
     clusterTypeMap.put("kafka", KafkaCluster.class);
     clusterTypeMap.put("memq", MemqCluster.class);
     clusterTypeMap.put("hbase", HBaseCluster.class);
+    clusterTypeMap.put("clickhouse", ClickHouseCluster.class);
 
     try {
       Reflections reflections = new Reflections("com.pinterest.orion.core");

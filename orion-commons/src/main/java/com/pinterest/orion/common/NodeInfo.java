@@ -174,15 +174,19 @@ public class NodeInfo implements Serializable {
     this.nodeType = nodeType;
   }
 
+  protected String listPropertiesStr() {
+    return "nodeId=" + nodeId + ", hostname=" + hostname + ", ip=" + ip + ", clusterId="
+      + clusterId + ", servicePort=" + servicePort + ", localtime="
+      + localtime + ", rack=" + rack + ", serviceInfo=" + serviceInfo + ", agentSettings="
+      + agentSettings + ", environment=" + environment;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
   @Override
   public String toString() {
-    return "NodeInfo [nodeId=" + nodeId + ", hostname=" + hostname + ", ip=" + ip + ", clusterId="
-        + clusterId + ", servicePort=" + servicePort + ", localtime="
-        + localtime + ", rack=" + rack + ", serviceInfo=" + serviceInfo + ", agentSettings="
-        + agentSettings + ", environment=" + environment + "]";
+    return "NodeInfo [" + listPropertiesStr() + "]";
   }
 
 }
