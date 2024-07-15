@@ -49,9 +49,13 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleOSChange = event => {
     setOS(event.target.value);
   };
-  const [cpuArch, setCPUArch] = React.useState();
-  const handleCPUArchChange = event => {
-    setCPUArch(event.target.value);
+  const [arch, setArch] = React.useState();
+  const handleArchChange = event => {
+    setArch(event.target.value);
+  };
+  const [volumeSize, setVolumeSize] = React.useState();
+  const handleVolumeSizeChange = event => {
+    setVolumeSize(event.target.value);
   };
   const [selected, setSelected] = React.useState([]);
   const handleTableRowSelect = (id, row) => {
@@ -81,8 +85,10 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     const parms = [];
     if (os)
       parms.push("release=" + os);
-    if (cpuArch)
-      parms.push("cpu_architecture=" + cpuArch);
+    if (arch)
+      parms.push("architecture=" + arch);
+    if (volumeSize)
+      parms.push("ebs_volume_size=" + volumeSize);
     requestAmiList(parms.join('&'));
     requestEnvTypes();
   }
@@ -121,22 +127,35 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
               >
                 <MenuItem value={"bionic"}>bionic</MenuItem>
                 <MenuItem value={"focal"}>focal</MenuItem>
+                <MenuItem value={"noble"}>noble</MenuItem>
               </Select>
             </FormControl>
           </div>
           <div>
             <FormControl className={classes.formControl}>
-              <InputLabel id="lblCPUArch">CPU Architecture</InputLabel>
+              <InputLabel id="lblArch">architecture</InputLabel>
               <Select
-                labelId="lblSelectCPUArch"
-                id="selectCPUArch"
-                value={cpuArch}
-                onChange={handleCPUArchChange}
+                labelId="lblSelectArch"
+                id="selectArch"
+                value={arch}
+                onChange={handleArchChange}
                 style={{ width: "200px", textAlign: "left" }}
               >
-                <MenuItem value={"amd64"}>amd64</MenuItem>
+                <MenuItem value={"x86_64"}>x86_64</MenuItem>
                 <MenuItem value={"arm64"}>arm64</MenuItem>
               </Select>
+            </FormControl>
+          </div>
+          <div>
+            <FormControl className={classes.formControl}>
+              <TextField
+                id="volume_size"
+                label="volume_size"
+                value={volumeSize}
+                onChange={handleVolumeSizeChange}
+                style={{ width: "200px" }}
+                InputLabelProps={{ shrink: true }}  
+                />
             </FormControl>
           </div>
           <div>

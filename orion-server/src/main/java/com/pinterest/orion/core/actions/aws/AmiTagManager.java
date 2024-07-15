@@ -30,12 +30,12 @@ import com.pinterest.orion.server.api.Ami;
 
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.BlockDeviceMapping;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
 import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
 import software.amazon.awssdk.services.ec2.model.CreateTagsResponse;
 import software.amazon.awssdk.services.ec2.model.Filter;
-import software.amazon.awssdk.services.ec2.model.Image;
 import software.amazon.awssdk.services.ec2.model.Tag;
 
 /**
@@ -50,8 +50,9 @@ public class AmiTagManager {
   public static final String KEY_AMI_ID = "ami_id";
   public static final String KEY_APPLICATION = "application";
   public static final String KEY_RELEASE = "release";
-  public static final String KEY_CPU_ARCHITECTURE = "cpu_architecture";
+  public static final String KEY_ARCHITECTURE = "architecture";
   public static final String KEY_APPLICATION_ENVIRONMENT = "application_environment";
+  public static final String KEY_VOLUME_SIZE = "ebs_volume_size";
   public static final String VALUE_KAFKA = "kafka";
   public static UnaryOperator<String> tag = key -> "tag:" + key;
   public static final String ENV_TYPES_KEY = "envTypes";
@@ -82,10 +83,10 @@ public class AmiTagManager {
           .values(filter.get(KEY_RELEASE))
           .build()
       );
-    if (filter.containsKey(KEY_CPU_ARCHITECTURE))
+    if (filter.containsKey(KEY_ARCHITECTURE))
       filterList.add(
-        filterBuilder.name(tag.apply(KEY_CPU_ARCHITECTURE))
-          .values(filter.get(KEY_CPU_ARCHITECTURE))
+        filterBuilder.name(KEY_ARCHITECTURE)
+          .values(filter.get(KEY_ARCHITECTURE))
           .build()
       );
     filterList.add(
@@ -98,9 +99,20 @@ public class AmiTagManager {
       DescribeImagesResponse resp = ec2Client.describeImages(builder.build());
       if (resp.hasImages() && !resp.images().isEmpty()) {
         // The limitation of images newer than 180 days is temporarily suspended
-        //ZonedDateTime cutDate = ZonedDateTime.now().minusDays(180);
+        // ZonedDateTime cutDate = ZonedDateTime.now().minusDays(180);
+        boolean filterVolumeSize = filter.containsKey(KEY_VOLUME_SIZE);
+        int volumeSize = filterVolumeSize ? Integer.parseInt(filter.get(KEY_VOLUME_SIZE)) : 0;
         resp.images().forEach(image -> {
           /*if (ZonedDateTime.parse(image.creationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME).isAfter(cutDate)) {*/
+          boolean matchesVolumeSizeCriteria = ! filterVolumeSize;
+          if (filterVolumeSize) {
+            for (BlockDeviceMapping dev : image.blockDeviceMappings()) {
+              if (dev.deviceName().equals("/dev/sda1") && dev.ebs() != null)
+                matchesVolumeSizeCriteria = (dev.ebs().volumeSize() == volumeSize);
+                break;
+            }
+          }
+          if (matchesVolumeSizeCriteria) {
             Iterator<Tag> i = image.tags().iterator();
             Tag t;
             String appEnvTag = null;
@@ -116,7 +128,7 @@ public class AmiTagManager {
               appEnvTag,
               image.creationDate()
             ));
-          // }
+          }
         });
         Function<Ami, ZonedDateTime> parse = i -> ZonedDateTime.parse(i.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
         amiList.sort((a, b) -> - parse.apply(a).compareTo(parse.apply(b)));
