@@ -52,7 +52,6 @@ public class AmiTagManager {
   public static final String KEY_RELEASE = "release";
   public static final String KEY_ARCHITECTURE = "architecture";
   public static final String KEY_APPLICATION_ENVIRONMENT = "application_environment";
-  public static final String KEY_VOLUME_SIZE = "ebs_volume_size";
   public static final String VALUE_KAFKA = "kafka";
   public static UnaryOperator<String> tag = key -> "tag:" + key;
   public static final String ENV_TYPES_KEY = "envTypes";
@@ -100,19 +99,8 @@ public class AmiTagManager {
       if (resp.hasImages() && !resp.images().isEmpty()) {
         // The limitation of images newer than 180 days is temporarily suspended
         // ZonedDateTime cutDate = ZonedDateTime.now().minusDays(180);
-        boolean filterVolumeSize = filter.containsKey(KEY_VOLUME_SIZE);
-        int volumeSize = filterVolumeSize ? Integer.parseInt(filter.get(KEY_VOLUME_SIZE)) : 0;
         resp.images().forEach(image -> {
           /*if (ZonedDateTime.parse(image.creationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME).isAfter(cutDate)) {*/
-          boolean matchesVolumeSizeCriteria = ! filterVolumeSize;
-          if (filterVolumeSize) {
-            for (BlockDeviceMapping dev : image.blockDeviceMappings()) {
-              if (dev.deviceName().equals("/dev/sda1") && dev.ebs() != null)
-                matchesVolumeSizeCriteria = (dev.ebs().volumeSize() == volumeSize);
-                break;
-            }
-          }
-          if (matchesVolumeSizeCriteria) {
             Iterator<Tag> i = image.tags().iterator();
             Tag t;
             String appEnvTag = null;
@@ -128,7 +116,7 @@ public class AmiTagManager {
               appEnvTag,
               image.creationDate()
             ));
-          }
+          // }
         });
         Function<Ami, ZonedDateTime> parse = i -> ZonedDateTime.parse(i.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
         amiList.sort((a, b) -> - parse.apply(a).compareTo(parse.apply(b)));

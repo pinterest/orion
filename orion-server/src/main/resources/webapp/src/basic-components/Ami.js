@@ -53,10 +53,6 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleArchChange = event => {
     setArch(event.target.value);
   };
-  const [volumeSize, setVolumeSize] = React.useState();
-  const handleVolumeSizeChange = event => {
-    setVolumeSize(event.target.value);
-  };
   const [selected, setSelected] = React.useState([]);
   const handleTableRowSelect = (id, row) => {
     setSelected(id);
@@ -87,8 +83,6 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
       parms.push("release=" + os);
     if (arch)
       parms.push("architecture=" + arch);
-    if (volumeSize)
-      parms.push("ebs_volume_size=" + volumeSize);
     requestAmiList(parms.join('&'));
     requestEnvTypes();
   }
@@ -144,18 +138,6 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
                 <MenuItem value={"x86_64"}>x86_64</MenuItem>
                 <MenuItem value={"arm64"}>arm64</MenuItem>
               </Select>
-            </FormControl>
-          </div>
-          <div>
-            <FormControl className={classes.formControl}>
-              <TextField
-                id="volume_size"
-                label="volume_size"
-                value={volumeSize}
-                onChange={handleVolumeSizeChange}
-                style={{ width: "200px" }}
-                InputLabelProps={{ shrink: true }}  
-                />
             </FormControl>
           </div>
           <div>
