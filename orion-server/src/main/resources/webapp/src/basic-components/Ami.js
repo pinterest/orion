@@ -88,8 +88,6 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     requestAmiList(parms.join('&'));
     requestEnvTypes();
   }
-  console.log("env = " + JSON.stringify(env))
-  // console.log("envMap = " + JSON.stringify(envMap))
 
   if (!amiList)
     amiList = [];
