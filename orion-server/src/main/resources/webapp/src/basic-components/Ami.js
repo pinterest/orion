@@ -54,12 +54,18 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     setArch(event.target.value);
   };
   const [selected, setSelected] = React.useState([]);
+  const [env, setEnv] = React.useState({});
+  if (envTypes !== undefined && Object.keys(env).length == 0) {
+    const targetEnv = {};
+    envTypes.forEach(value => { targetEnv[value] = false; });
+    setEnv(targetEnv);
+  }
   const handleTableRowSelect = (id, row) => {
     setSelected(id);
     setAppEnv(row.applicationEnvironment);
     const envs_str = row.applicationEnvironment;
     const envs = envs_str.split(',');
-    env.dev = env.test = env.staging = env.prod = false;
+    envTypes.forEach(envType => { env[envType] = false; });
     for (const env_str of envs)
       env[env_str] = true;
   };
@@ -67,10 +73,6 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleAppEnvChange = event => {
     setAppEnv(event.target.value);
   };
-  const envMap = {};
-  if (envTypes !== undefined)
-    envTypes.forEach(value => { envMap[value] = false; });
-  const [env] = React.useState(envMap);
   const handleCheckboxChange = (event) => {
     env[event.target.name] = event.target.checked;
     const newAppEnv = [];
@@ -86,6 +88,8 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     requestAmiList(parms.join('&'));
     requestEnvTypes();
   }
+  console.log("env = " + JSON.stringify(env))
+  // console.log("envMap = " + JSON.stringify(envMap))
 
   if (!amiList)
     amiList = [];
