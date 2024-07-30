@@ -49,17 +49,23 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleOSChange = event => {
     setOS(event.target.value);
   };
-  const [cpuArch, setCPUArch] = React.useState();
-  const handleCPUArchChange = event => {
-    setCPUArch(event.target.value);
+  const [arch, setArch] = React.useState();
+  const handleArchChange = event => {
+    setArch(event.target.value);
   };
   const [selected, setSelected] = React.useState([]);
+  const [env, setEnv] = React.useState({});
+  if (envTypes !== undefined && Object.keys(env).length == 0) {
+    const targetEnv = {};
+    envTypes.forEach(value => { targetEnv[value] = false; });
+    setEnv(targetEnv);
+  }
   const handleTableRowSelect = (id, row) => {
     setSelected(id);
     setAppEnv(row.applicationEnvironment);
     const envs_str = row.applicationEnvironment;
     const envs = envs_str.split(',');
-    env.dev = env.test = env.staging = env.prod = false;
+    envTypes.forEach(envType => { env[envType] = false; });
     for (const env_str of envs)
       env[env_str] = true;
   };
@@ -67,10 +73,6 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleAppEnvChange = event => {
     setAppEnv(event.target.value);
   };
-  const envMap = {};
-  if (envTypes !== undefined)
-    envTypes.forEach(value => { envMap[value] = false; });
-  const [env] = React.useState(envMap);
   const handleCheckboxChange = (event) => {
     env[event.target.name] = event.target.checked;
     const newAppEnv = [];
@@ -81,8 +83,8 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     const parms = [];
     if (os)
       parms.push("release=" + os);
-    if (cpuArch)
-      parms.push("cpu_architecture=" + cpuArch);
+    if (arch)
+      parms.push("architecture=" + arch);
     requestAmiList(parms.join('&'));
     requestEnvTypes();
   }
@@ -121,20 +123,21 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
               >
                 <MenuItem value={"bionic"}>bionic</MenuItem>
                 <MenuItem value={"focal"}>focal</MenuItem>
+                <MenuItem value={"noble"}>noble</MenuItem>
               </Select>
             </FormControl>
           </div>
           <div>
             <FormControl className={classes.formControl}>
-              <InputLabel id="lblCPUArch">CPU Architecture</InputLabel>
+              <InputLabel id="lblArch">architecture</InputLabel>
               <Select
-                labelId="lblSelectCPUArch"
-                id="selectCPUArch"
-                value={cpuArch}
-                onChange={handleCPUArchChange}
+                labelId="lblSelectArch"
+                id="selectArch"
+                value={arch}
+                onChange={handleArchChange}
                 style={{ width: "200px", textAlign: "left" }}
               >
-                <MenuItem value={"amd64"}>amd64</MenuItem>
+                <MenuItem value={"x86_64"}>x86_64</MenuItem>
                 <MenuItem value={"arm64"}>arm64</MenuItem>
               </Select>
             </FormControl>

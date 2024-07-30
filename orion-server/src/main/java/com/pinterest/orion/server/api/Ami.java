@@ -29,7 +29,7 @@ public class Ami {
    *
    * @param amiId - for AWS, the string "ami-" and a sequence of 17 characters
    * @param applicationEnvironment - comma-separated list of environments (dev, test,
-   *                                 staging, prod) supported by this ami
+   *                                 stage, prod, m10n) supported by this ami
    * @param creationDate - ami creation date, UTC
    * @return the new Ami instance
    */
