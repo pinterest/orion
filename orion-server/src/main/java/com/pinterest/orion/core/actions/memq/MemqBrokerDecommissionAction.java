@@ -38,6 +38,14 @@ public abstract class MemqBrokerDecommissionAction extends NodeDecommissionActio
         getResult().appendOut("Host " + hostName + " is in pending termination status.");
         // Wait for the host to terminate. Check every 5 minutes for 30 minutes.
         // If the host is still not terminated after 30 minutes, mark the action as failed.
+        if (waitForTermination(clusterId, instanceId, hostName)) return false;
+        // Remove the node from the Orion cluster and mark the action as succeeded
+        super.decommission(node);
+        markSucceeded();
+        return true;
+    }
+
+    private boolean waitForTermination(String clusterId, String instanceId, String hostName) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         while (true) {
             Thread.sleep(getTerminationCheckTimeIntervalMs());
@@ -49,15 +57,12 @@ public abstract class MemqBrokerDecommissionAction extends NodeDecommissionActio
             } else if (elapsedTime > getTerminationCheckTimeoutMs()) {
                 markFailed(String.format("Timed out waiting for host %s(%s) in cluster %s to terminate.",
                         hostName, instanceId, clusterId));
-                return false;
+                return true;
             }
             getResult().appendOut(String.format("Host %s(%s) in cluster %s is still terminating after %d ms.",
                     hostName, instanceId, clusterId, elapsedTime));
         }
-        // Remove the node from the Orion cluster and mark the action as succeeded
-        super.decommission(node);
-        markSucceeded();
-        return true;
+        return false;
     }
 
     @Override
