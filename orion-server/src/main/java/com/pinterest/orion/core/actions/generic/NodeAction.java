@@ -30,6 +30,8 @@ public abstract class NodeAction extends Action {
 
   public static final String POSTHEALTHCHECK_INTERVAL = "postHealthcheckInterval";
   public static final String RECOVERY_TIMEOUT = "recoveryTimeout";
+  private static final int DEFAULT_RECOVERY_TIMEOUT_MS = 1800_000; // 30 minutes
+  private static final int DEFAULT_HEALTHCHECK_INTERVAL_MS = 10_000; // 10 seconds
 
   enum MaintenancePolicy {
     NONE,
@@ -151,8 +153,8 @@ public abstract class NodeAction extends Action {
 
   public void checkAndWaitForNodeToRecover() throws TimeoutException {
     long completeTime = System.currentTimeMillis();
-    int timeout = 60_000;
-    int healthCheckInterval = 10_000;
+    int timeout = DEFAULT_RECOVERY_TIMEOUT_MS;
+    int healthCheckInterval = DEFAULT_HEALTHCHECK_INTERVAL_MS;
     if (containsAttribute(RECOVERY_TIMEOUT)) {
       timeout = getAttribute(RECOVERY_TIMEOUT).getValue();
     }
