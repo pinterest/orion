@@ -33,6 +33,8 @@ public class ClickHouseCluster extends Cluster {
   private static final String DEFAULT_PASSWORD = "";
 
   public static final String SERVERSET_PATH = "serversetPath";
+  public static final String CONFIG_S3_BUCKET = "configS3Bucket";
+  public static final String CONFIG_TEMPLATE_PATH = "configTemplatePath";
 
   private Map<String, Object> config;
 
@@ -56,6 +58,8 @@ public class ClickHouseCluster extends Cluster {
     setAttribute(USER, config.getOrDefault(USER, DEFAULT_USER));
     setAttribute(PASSWORD, config.getOrDefault(PASSWORD, DEFAULT_PASSWORD));
     setAttribute(SERVERSET_PATH, config.get(SERVERSET_PATH));
+    setAttribute(CONFIG_S3_BUCKET, config.get(CONFIG_S3_BUCKET));
+    setAttribute(CONFIG_TEMPLATE_PATH, config.get(CONFIG_TEMPLATE_PATH));
   }
 
   @Override

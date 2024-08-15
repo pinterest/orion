@@ -4,7 +4,9 @@ import com.pinterest.orion.common.NodeInfo;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.List;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 class ShardReplicaInfo {
   public int shardNum;
@@ -28,6 +30,10 @@ public class ClickHouseNodeInfo extends NodeInfo implements Serializable {
 
   public void addShardReplicaInfo(String cluster, int shardNum, int shardWeight, int replicaNum) {
     infoByCluster.put(cluster, new ShardReplicaInfo(shardNum, shardWeight, replicaNum));
+  }
+
+  public List<String> getLogicalClusters() {
+    return new ArrayList<String>(infoByCluster.keySet());
   }
 
   public int getShardNum(String cluster) {
