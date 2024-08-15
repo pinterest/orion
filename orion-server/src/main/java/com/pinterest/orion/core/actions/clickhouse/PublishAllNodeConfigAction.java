@@ -171,6 +171,8 @@ public class PublishAllNodeConfigAction extends GenericClusterWideAction.Cluster
           new HashMap<String, String>());
       } catch (S3Exception e) {
         markFailed("Pushing config to S3 for node " + hostname + " failed: " + e);
+        s3.close();
+        return;
       }
     }
     s3.close();
