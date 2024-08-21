@@ -29,9 +29,27 @@ clusterConfigs:
     configuration: 
         serversetPath: /opt/orion-server/discovery.testclickhouse.test
 
+clusterConfigs:
+  - clusterId: testclickhouse
+    type: clickhouse
+    configuration: 
+        serversetPath: /opt/orion-server/discovery.testclickhouse.test
+        configS3Bucket: test_config_bucket
+        configTemplatePath: /opt/orion-server/conf/config.xml
+
 plugins:
   sensorConfigs:
     - key: clusterSensor
       class: com.pinterest.orion.core.automation.sensor.clickhouse.ClickHouseClusterSensor
       interval: 60
+      enabled: true
+
+  actionConfigs:
+    - key: publishAllNodeConfig
+      class: com.pinterest.orion.core.actions.clickhouse.PublishAllNodeConfigAction
+      enabled: true
+  
+  operatorConfigs:
+    - key: publishConfigOperator
+      class: com.pinterest.orion.core.automation.operator.clickhouse.PublishConfigOperator
       enabled: true

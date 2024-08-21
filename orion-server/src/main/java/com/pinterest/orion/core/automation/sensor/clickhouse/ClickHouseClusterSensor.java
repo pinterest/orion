@@ -23,6 +23,7 @@ import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.clickhouse.ClickHouseCluster;
 import com.pinterest.orion.core.clickhouse.ClickHouseNodeInfo;
+import com.pinterest.orion.core.actions.clickhouse.PublishAllNodeConfigAction;
 
 public class ClickHouseClusterSensor extends ClickHouseSensor {
 
@@ -30,6 +31,7 @@ public class ClickHouseClusterSensor extends ClickHouseSensor {
   public static final String SHARD_NUM_COL = "shard_num";
   public static final String SHARD_WEIGHT_COL = "shard_weight";
   public static final String REPLICA_NUM_COL = "replica_num";
+  public static final String PORT_COL = "port";
   public static final String HOST_NAME_COL = "host_name";
 
   public static final String CLUSTERS_QUERY = "SELECT * FROM system.clusters WHERE is_local=1";
@@ -95,9 +97,11 @@ public class ClickHouseClusterSensor extends ClickHouseSensor {
           int shard = r.getValue(SHARD_NUM_COL).asInteger();
           int shardWeight = r.getValue(SHARD_WEIGHT_COL).asInteger();
           int replicaNum = r.getValue(REPLICA_NUM_COL).asInteger();
+          int servicePort = r.getValue(PORT_COL).asInteger();
           String hostName = r.getValue(HOST_NAME_COL).asString();
 
           nodeInfo.setHostname(hostName);
+          nodeInfo.setServicePort(servicePort);
           nodeInfo.addShardReplicaInfo(cluster, shard, shardWeight, replicaNum);        
         }
     } catch (InterruptedException e) {
