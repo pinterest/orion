@@ -29,12 +29,18 @@ import com.pinterest.orion.utils.OrionConstants;
 
 import io.dropwizard.metrics5.MetricName;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.BlockDeviceMapping;
+import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.EbsBlockDevice;
 import software.amazon.awssdk.services.ec2.model.Ec2Exception;
+import software.amazon.awssdk.services.ec2.model.Filter;
 import software.amazon.awssdk.services.ec2.model.GroupIdentifier;
 import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
 import software.amazon.awssdk.services.ec2.model.Instance;
+import software.amazon.awssdk.services.ec2.model.InstanceBlockDeviceMapping;
 import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 import software.amazon.awssdk.services.ec2.model.InstanceType;
 import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
@@ -46,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -54,6 +61,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   public static final String ATTR_CAUSE_KEY = "cause";
   public static final String ATTR_AMI_KEY = "ami";
   public static final String ATTR_INSTANCE_TYPE_KEY = "instance_type";
+  public static final String ATTR_VOLUME_SIZE_KEY = "volume_size";
   public static final String ATTR_SKIP_CLUSTER_HEALTH_CHECK_KEY = "skip_cluster_health_check";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_HOSTNAME_KEY = "hostname";
@@ -398,8 +406,10 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         setInstanceId(instanceId);
         String userdata = getUserdata(env);
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
+        String targetAmi = getTargetAmi(victim.imageId());
+        List<BlockDeviceMapping> blockDeviceMappings = containsAttribute(ATTR_VOLUME_SIZE_KEY) ? updateBlockDeviceMappings(ec2Client, targetAmi) : null;
         // build launch instance request based on source of instance info
-        RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim);
+        RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim, targetAmi, blockDeviceMappings);
         InstanceStateName instanceStateName = victim.state().name();
         return new InstanceStateAndRequest(instanceStateName, runInstancesRequest);
       }
@@ -417,9 +427,12 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         instance.subnetId() != null;
   }
 
-  protected RunInstancesRequest getRunInstancesRequestFromInstance(String userdata,
-                                                                 Instance victim) {
-    String targetAmi = getTargetAmi(victim.imageId());
+  protected RunInstancesRequest getRunInstancesRequestFromInstance(
+    String userdata,
+    Instance victim,
+    String targetAmi,
+    List<BlockDeviceMapping> blockDeviceMappings
+  ) {
     InstanceType instanceType = getTargetInstanceType(victim.instanceType());
 
     RunInstancesRequest.Builder req =  RunInstancesRequest.builder()
@@ -439,6 +452,8 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         .privateIpAddress(victim.privateIpAddress())
         .minCount(1)
         .maxCount(1);
+    if (containsAttribute(ATTR_VOLUME_SIZE_KEY))
+      req.blockDeviceMappings(blockDeviceMappings);
     return req.build();
   }
 
@@ -450,6 +465,36 @@ public class ReplaceEC2InstanceAction extends NodeAction {
           "Instance type override requested for:" + hostname);
     }
     return instanceType;
+  }
+
+  // override volume size if provided in attributes
+  protected List<BlockDeviceMapping> updateBlockDeviceMappings(
+    Ec2Client ec2Client,
+    String targetAmi
+  ) {
+    DescribeImagesRequest req = DescribeImagesRequest.builder()
+        .imageIds(targetAmi)
+        .build();
+    DescribeImagesResponse resp = ec2Client.describeImages(req);
+    if (!resp.hasImages() || resp.images().isEmpty())
+      return null;
+    List<BlockDeviceMapping> amiBDMs = resp.images().get(0).blockDeviceMappings();
+    // Copy all mappings but /dev/sda1
+    List<BlockDeviceMapping> newBDMs = amiBDMs.stream()  
+        .filter(mapping -> !mapping.deviceName().equals("/dev/sda1"))  
+        .collect(Collectors.toList());  
+    // Add new /dev/sda1
+    EbsBlockDevice ebs = EbsBlockDevice.builder()
+      .volumeSize(Integer.parseInt(getAttribute(ATTR_VOLUME_SIZE_KEY).getValue()))
+      .build();
+    BlockDeviceMapping blockDeviceMapping = BlockDeviceMapping.builder()  
+      .deviceName("/dev/sda1")  
+      .ebs(ebs)  
+      .build();
+    newBDMs.add(blockDeviceMapping);
+    logger().info(
+      "Volume size override requested for:" + hostname);
+    return newBDMs;
   }
 
   // override AMI if provided in attributes
@@ -532,6 +577,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
                     .addOption("m6id.4xlarge", "m6id.4xlarge")
                     .addOption("m6id.8xlarge", "m6id.8xlarge")
         )
+        .addValue(new TextValue(ATTR_VOLUME_SIZE_KEY, "EBS root volume size (optional, will use AMI setting if not provided)", false))
         .addValue(new TextValue(ATTR_AMI_KEY, "AMI id (optional, will use cluster filter criteria if not provided)", false))
         .addSchema(super.generateSchema(config));
   }
