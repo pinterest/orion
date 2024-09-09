@@ -24,6 +24,7 @@ import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.schema.AttributeSchema;
 import com.pinterest.orion.core.actions.schema.TextEnumValue;
 import com.pinterest.orion.core.actions.schema.TextValue;
+import com.pinterest.orion.server.config.OrionConf;
 import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 
@@ -36,11 +37,9 @@ import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
 import software.amazon.awssdk.services.ec2.model.EbsBlockDevice;
 import software.amazon.awssdk.services.ec2.model.Ec2Exception;
-import software.amazon.awssdk.services.ec2.model.Filter;
 import software.amazon.awssdk.services.ec2.model.GroupIdentifier;
 import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
 import software.amazon.awssdk.services.ec2.model.Instance;
-import software.amazon.awssdk.services.ec2.model.InstanceBlockDeviceMapping;
 import software.amazon.awssdk.services.ec2.model.InstanceStateName;
 import software.amazon.awssdk.services.ec2.model.InstanceType;
 import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
@@ -52,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -61,11 +59,11 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   public static final String ATTR_CAUSE_KEY = "cause";
   public static final String ATTR_AMI_KEY = "ami";
   public static final String ATTR_INSTANCE_TYPE_KEY = "instance_type";
-  public static final String ATTR_EBS_VOLUME_SIZE_KEY = "ebs_volume_size";
   public static final String ATTR_SKIP_CLUSTER_HEALTH_CHECK_KEY = "skip_cluster_health_check";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_HOSTNAME_KEY = "hostname";
   public static final String ATTR_FALLBACK_MAPPING = "instanceFallBackMapping";
+  public static final String CONF_EBS_VOLUME_SIZE = "ebs_volume_size";
   private String confRoute53ZoneId;
   private String confRoute53Name;
   private String hostname;
@@ -73,6 +71,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   private Map<String, List<String>> fallbacksMap = new HashMap<>();
   private ActionNotificationHelper notificationHelper;
   protected boolean skipClusterHealthCheck = false;
+  private int ebsVolumeSize;
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
@@ -92,6 +91,10 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
     setAttribute(RECOVERY_TIMEOUT, 3600_000);
+    // Check Additional Configs for EBS volume size
+    Map<String, Object> additionalConfigs = ((OrionConf) config).getAdditionalConfigs();
+    if (additionalConfigs != null && additionalConfigs.containsKey(CONF_EBS_VOLUME_SIZE))
+      ebsVolumeSize = Integer.parseInt((String) additionalConfigs.get(CONF_EBS_VOLUME_SIZE));
   }
 
   @Override
@@ -407,7 +410,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         String userdata = getUserdata(env);
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
         String targetAmi = getTargetAmi(victim.imageId());
-        List<BlockDeviceMapping> blockDeviceMappings = containsAttribute(ATTR_EBS_VOLUME_SIZE_KEY) ? updateBlockDeviceMappings(ec2Client, targetAmi) : null;
+        List<BlockDeviceMapping> blockDeviceMappings = (ebsVolumeSize > 0) ? updateBlockDeviceMappings(ec2Client, targetAmi) : null;
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim, targetAmi, blockDeviceMappings);
         InstanceStateName instanceStateName = victim.state().name();
@@ -452,7 +455,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         .privateIpAddress(victim.privateIpAddress())
         .minCount(1)
         .maxCount(1);
-    if (containsAttribute(ATTR_EBS_VOLUME_SIZE_KEY))
+    if (ebsVolumeSize > 0)
       req.blockDeviceMappings(blockDeviceMappings);
     return req.build();
   }
@@ -485,7 +488,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         .collect(Collectors.toList());  
     // Add new /dev/sda1
     EbsBlockDevice ebs = EbsBlockDevice.builder()
-      .volumeSize(Integer.parseInt(getAttribute(ATTR_EBS_VOLUME_SIZE_KEY).getValue()))
+      .volumeSize(ebsVolumeSize)
       .build();
     BlockDeviceMapping blockDeviceMapping = BlockDeviceMapping.builder()  
       .deviceName("/dev/sda1")  
