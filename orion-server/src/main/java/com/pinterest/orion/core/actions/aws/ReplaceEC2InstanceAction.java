@@ -16,6 +16,7 @@
 package com.pinterest.orion.core.actions.aws;
 
 import com.pinterest.orion.core.Attribute;
+import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.alert.ActionNotificationHelper;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
@@ -24,7 +25,7 @@ import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.schema.AttributeSchema;
 import com.pinterest.orion.core.actions.schema.TextEnumValue;
 import com.pinterest.orion.core.actions.schema.TextValue;
-import com.pinterest.orion.server.config.OrionConf;
+import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 
@@ -63,7 +64,6 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_HOSTNAME_KEY = "hostname";
   public static final String ATTR_FALLBACK_MAPPING = "instanceFallBackMapping";
-  public static final String CONF_EBS_VOLUME_SIZE = "ebs_volume_size";
   private String confRoute53ZoneId;
   private String confRoute53Name;
   private String hostname;
@@ -71,11 +71,15 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   private Map<String, List<String>> fallbacksMap = new HashMap<>();
   private ActionNotificationHelper notificationHelper;
   protected boolean skipClusterHealthCheck = false;
-  private int ebsVolumeSize;
+  private int overrideEbsVolumeSize;
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
     super.initialize(config);
+    // Check if cluster overrides EBS volume size
+    Cluster cluster = getEngine().getCluster();
+    if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY))
+      overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
     if (!config.containsKey(Ec2Utils.CONF_ROUTE53_ZONE_ID)) {
       throw new PluginConfigurationException(
           "Cannot find key " + Ec2Utils.CONF_ROUTE53_ZONE_ID + " in config of " + getName());
@@ -91,10 +95,6 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
     setAttribute(RECOVERY_TIMEOUT, 3600_000);
-    // Check Additional Configs for EBS volume size
-    Map<String, Object> additionalConfigs = ((OrionConf) config).getAdditionalConfigs();
-    if (additionalConfigs != null && additionalConfigs.containsKey(CONF_EBS_VOLUME_SIZE))
-      ebsVolumeSize = Integer.parseInt((String) additionalConfigs.get(CONF_EBS_VOLUME_SIZE));
   }
 
   @Override

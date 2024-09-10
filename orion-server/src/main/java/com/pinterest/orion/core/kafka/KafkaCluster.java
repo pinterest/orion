@@ -85,6 +85,7 @@ public class KafkaCluster extends Cluster {
   private transient Properties props;
   private AdminClient adminClient;
   private KafkaConsumer<byte[], byte[]> kafkaConsumer;
+  public static final String ATTR_EBS_VOLUME_SIZE_KEY = "ebs_volume_size";
 
   public KafkaCluster(String clusterId,
                       String name,
@@ -466,5 +467,13 @@ public class KafkaCluster extends Cluster {
       }
     }
     return timeoutMs;
+  }
+
+  public int getEbsVolumeSize() {
+    return ebsVolumeSize;
+  }
+
+  public void setEbsVolumeSize(int ebsVolumeSize) {
+    this.ebsVolumeSize = ebsVolumeSize;
   }
 }
