@@ -91,10 +91,6 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
     setAttribute(RECOVERY_TIMEOUT, 3600_000);
-    // Check if cluster overrides EBS volume size
-    Cluster cluster = getEngine().getCluster();
-    if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY))
-      overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
   }
 
   @Override
@@ -410,7 +406,15 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         String userdata = getUserdata(env);
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
         String targetAmi = getTargetAmi(victim.imageId());
-        List<BlockDeviceMapping> blockDeviceMappings = (overrideEbsVolumeSize > 0) ? updateBlockDeviceMappings(ec2Client, targetAmi) : null;
+        // Check if cluster config overrides EBS volume size
+        // If yes, create custom block device mapping
+        Cluster cluster = getEngine().getCluster();
+        List<BlockDeviceMapping> blockDeviceMappings = null;
+        if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY)) {
+          overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
+          if (overrideEbsVolumeSize > 0)
+            updateBlockDeviceMappings(ec2Client, targetAmi);
+        }
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim, targetAmi, blockDeviceMappings);
         InstanceStateName instanceStateName = victim.state().name();
