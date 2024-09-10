@@ -76,10 +76,6 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
     super.initialize(config);
-    // Check if cluster overrides EBS volume size
-    Cluster cluster = getEngine().getCluster();
-    if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY))
-      overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
     if (!config.containsKey(Ec2Utils.CONF_ROUTE53_ZONE_ID)) {
       throw new PluginConfigurationException(
           "Cannot find key " + Ec2Utils.CONF_ROUTE53_ZONE_ID + " in config of " + getName());
@@ -95,6 +91,10 @@ public class ReplaceEC2InstanceAction extends NodeAction {
     confRoute53ZoneId = config.get(Ec2Utils.CONF_ROUTE53_ZONE_ID).toString();
     confRoute53Name = config.get(Ec2Utils.CONF_ROUTE53_ZONE_NAME).toString();
     setAttribute(RECOVERY_TIMEOUT, 3600_000);
+    // Check if cluster overrides EBS volume size
+    Cluster cluster = getEngine().getCluster();
+    if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY))
+      overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
   }
 
   @Override
@@ -410,7 +410,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         String userdata = getUserdata(env);
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
         String targetAmi = getTargetAmi(victim.imageId());
-        List<BlockDeviceMapping> blockDeviceMappings = (ebsVolumeSize > 0) ? updateBlockDeviceMappings(ec2Client, targetAmi) : null;
+        List<BlockDeviceMapping> blockDeviceMappings = (overrideEbsVolumeSize > 0) ? updateBlockDeviceMappings(ec2Client, targetAmi) : null;
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim, targetAmi, blockDeviceMappings);
         InstanceStateName instanceStateName = victim.state().name();
@@ -455,7 +455,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         .privateIpAddress(victim.privateIpAddress())
         .minCount(1)
         .maxCount(1);
-    if (ebsVolumeSize > 0)
+    if (overrideEbsVolumeSize > 0)
       req.blockDeviceMappings(blockDeviceMappings);
     return req.build();
   }
@@ -488,7 +488,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         .collect(Collectors.toList());  
     // Add new /dev/sda1
     EbsBlockDevice ebs = EbsBlockDevice.builder()
-      .volumeSize(ebsVolumeSize)
+      .volumeSize(overrideEbsVolumeSize)
       .build();
     BlockDeviceMapping blockDeviceMapping = BlockDeviceMapping.builder()  
       .deviceName("/dev/sda1")  

@@ -468,12 +468,4 @@ public class KafkaCluster extends Cluster {
     }
     return timeoutMs;
   }
-
-  public int getEbsVolumeSize() {
-    return ebsVolumeSize;
-  }
-
-  public void setEbsVolumeSize(int ebsVolumeSize) {
-    this.ebsVolumeSize = ebsVolumeSize;
-  }
 }
