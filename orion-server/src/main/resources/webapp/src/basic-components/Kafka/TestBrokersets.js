@@ -1,0 +1,115 @@
+/*******************************************************************************
+ * Copyright 2020 Pinterest, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
+import React, {Suspense, useState} from "react";
+import MaterialTable from "material-table";
+import {Backdrop, Box, Fade, Modal} from "@material-ui/core";
+import {useHistory, useRouteMatch} from "react-router-dom";
+import BrokersetEntry from "./BrokersetEntry";
+
+export default function TestBrokersets(props) {
+    let clusterId = props.cluster.clusterId;
+    let brokersetToRowValuesMap = {};
+    brokersetToRowValuesMap["Capacity_B0_P0_0"] = {
+        "brokersetName": "Capacity_B0_P0_0",
+        "clusterId": clusterId,
+        "maxCpuUsage": 20,
+        "minCpuUsage": 10,
+        "lastUpdated": "2020-07-01 12:00:00"
+    }
+    let columns = [
+        { title: "Name", field: "brokersetName" },
+        { title: "Max CPU Usage", field: "maxCpuUsage" },
+        { title: "Min CPU Usage", field: "minCpuUsage" },
+        { title: "Last Updated", field: "lastUpdated" }
+    ]
+    let data = Object.values(brokersetToRowValuesMap);
+
+    const classes = modalStyles();
+    const history = useHistory();
+    let match = useRouteMatch("/clusters/:clusterId/service/testbrokersets/:brokersetName?");
+
+    const [selectedRow, setSelectedRow] = useState();
+    const [openModal, setOpenModal] = useState(false);
+    const [openDetailsModal, setOpenDetailsModal] = useState(false);
+    const handleOpen = () => {
+        setOpenModal(true);
+    };
+    const handleClose = () => {
+        setOpenModal(false);
+    };
+    const handleDetailsClose = () => {
+        setOpenDetailsModal(false);
+        setSelectedRow();
+        history.push("/clusters/" + clusterId + "/service/testbrokersets")
+    }
+
+    if (match && match.params.testbrokersetName) {
+        if (!selectedRow) {
+            setSelectedRow(topicToRowValuesMap[match.params.testbrokersetName]);
+        }
+    }
+
+    if (selectedRow != null && !openDetailsModal) {
+        setOpenDetailsModal(true);
+    }
+
+    return (
+        <Box>
+            <Modal
+                aria-labelledby="transition-modal-title"
+                aria-describedby="transition-modal-description"
+                className={classes.modal}
+                open={openDetailsModal}
+                onClose={handleDetailsClose}
+                closeAfterTransition
+                BackdropComponent={Backdrop}
+                BackdropProps={{
+                    timeout: 500
+                }}
+            >
+                <Fade in={openDetailsModal}>
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            padding: "20px",
+                            width: "1000px"
+                        }}
+                    >
+                        {selectedRow && (
+                            <Suspense fallback={<div>Loading...</div>}>
+                                <BrokersetEntry
+                                    rowData={selectedRow}
+                                    clusterId={clusterId}
+                                />
+                            </Suspense>
+                        )}
+                    </div>
+                </Fade>
+            </Modal>
+            <MaterialTable
+                options={{ pageSize: 10, grouping: true, filtering: false }}
+                title={""}
+                onRowClick={(event, rowData, togglePanel) => {
+                    history.push("/clusters/" + clusterId + "/service/testbrokersets/" + rowData.brokersetName);
+                    setSelectedRow(rowData);
+                    setOpenDetailsModal(true);
+                }}
+                columns={columns}
+                data={data}
+            />
+        </Box>
+    )
+}

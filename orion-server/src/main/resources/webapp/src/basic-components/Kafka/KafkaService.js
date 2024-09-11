@@ -20,6 +20,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import Topics from "./Topics";
 import Brokersets from "./Brokersets";
 import ConsumerGroups from "./ConsumerGroups";
+import TestBrokersets from "./TestBrokersets";
 
 const useStyles = makeStyles({
   table: {
@@ -42,6 +43,11 @@ const routes = [
     subpath: "consumergroups",
     component: ConsumerGroups,
     label: "Consumer Groups"
+  },
+  {
+    subpath: "testbrokersets",
+    component: TestBrokersets,
+    label: "Test-Brokersets"
   }
 ];
 

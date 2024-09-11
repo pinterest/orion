@@ -44,14 +44,14 @@ const routes = [
   {
     subpath: "brokersets",
     component: PropsTable,
-    label: "Brokersets",
+    label: "TEST-Brokersets",
     getData: getBrokersetData,
     getColumns: getBrokersetColumns,
   },
   {
     subpath: "brokerstatus",
     component: PropsTable,
-    label: "Broker Status",
+    label: "TEST-Broker Status",
     getData: getBrokerStatusData,
     getColumns: getBrokerStatusColumns,
   }
@@ -218,8 +218,8 @@ function getTopicPartitionsColumns() {
 
 function getBrokersetData(cluster, node) {
     let brokersetData = [];
-    brokersetData.push({key: "0", value: "brokerset a"});
-    brokersetData.push({key: "1", value: "brokerset b"});
+    brokersetData.push({key: "0", value: "Capacity_B0_P0_0"});
+    brokersetData.push({key: "1", value: "Static_B0_P0_0"});
     return brokersetData;
 }
 
