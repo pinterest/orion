@@ -27,7 +27,7 @@ const routes = [
     },
 ];
 
-function getStatusData(clusterId, brokerset) {
+function getStatusData(clusterId, rawData) {
     let brokersetStatus = [];
     brokersetStatus.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
     brokersetStatus.push({ key: "Max CPU usage", value: "20%" });
@@ -41,7 +41,7 @@ function getStatusColumns() {
     ];
 }
 
-function getBrokerData(clusterId, brokerset) {
+function getBrokerData(clusterId, rawData) {
     let brokers = [];
     brokers.push({ brokerName: "Broker 0", cpuUsage: "10%", diskUsage: "20%", lastUpdated: "2024-09-01 00:00:00" });
     brokers.push({ brokerName: "Broker 1", cpuUsage: "10%", diskUsage: "20%", lastUpdated: "2024-09-01 00:00:00" });
@@ -57,7 +57,7 @@ function getBrokerColumns() {
     ];
 }
 
-function getAssignmentData(clusterId, brokerset) {
+function getAssignmentData(clusterId, rawData) {
     let assignments = [];
     assignments.push({ startIndex: "001", endIndex: "002" });
     assignments.push({ startIndex: "004", endIndex: "005" });
@@ -119,7 +119,7 @@ export default function BrokersetEntry(props) {
                                     path={"/clusters/:clusterId/service/testbrokersets/:brokersetName/" + route.subpath}
                                 >
                                 {<route.component
-                                    data={route.getData(cluster, brokerset)}
+                                    data={route.getData(props.clusterId, props.rowData)}
                                     columns={route.getColumns()}
                                 />}
                                 </Route>
