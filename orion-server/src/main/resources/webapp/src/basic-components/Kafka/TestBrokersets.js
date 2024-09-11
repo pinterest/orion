@@ -41,15 +41,11 @@ export default function TestBrokersets(props) {
     brokersetToRowValuesMap["Capacity_B0_P0_0"] = {
         "brokersetName": "Capacity_B0_P0_0",
         "clusterId": clusterId,
-        "maxCpuUsage": 20,
-        "minCpuUsage": 10,
-        "lastUpdated": "2020-07-01 12:00:00"
+        "brokerCount": 4
     }
     let columns = [
         { title: "Name", field: "brokersetName" },
-        { title: "Max CPU Usage", field: "maxCpuUsage" },
-        { title: "Min CPU Usage", field: "minCpuUsage" },
-        { title: "Last Updated", field: "lastUpdated" }
+        { title: "Broker Count", field: "brokerCount" }
     ]
     let data = Object.values(brokersetToRowValuesMap);
 

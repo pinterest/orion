@@ -1,5 +1,5 @@
 import React from "react";
-import { Tab, Tabs, Grid } from "@material-ui/core";
+import {Tab, Tabs, Grid, Box, Link} from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import PropsTable from "../Commons/PropsTable";
 
@@ -30,7 +30,9 @@ const routes = [
 function getStatusData(clusterId, rawData) {
     let brokersetStatus = [];
     brokersetStatus.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
+    brokersetStatus.push({ key: "Broker Count", value: "4" });
     brokersetStatus.push({ key: "Max CPU usage", value: "20%" });
+    brokersetStatus.push({ key: "Min CPU usage", value: "10%" });
     return brokersetStatus;
 }
 
@@ -41,10 +43,43 @@ function getStatusColumns() {
     ];
 }
 
+function brokerToLink(broker, clusterId) {
+    return (
+        <Link
+            component={RouterLink}
+            to={"/clusters/" + clusterId + "/nodes/" + broker}
+        >
+            {broker}
+        </Link>
+    );
+}
+
 function getBrokerData(clusterId, rawData) {
     let brokers = [];
-    brokers.push({ brokerName: "Broker 0", cpuUsage: "10%", diskUsage: "20%", lastUpdated: "2024-09-01 00:00:00" });
-    brokers.push({ brokerName: "Broker 1", cpuUsage: "10%", diskUsage: "20%", lastUpdated: "2024-09-01 00:00:00" });
+    brokers.push({
+        brokerName: <Box>{brokerToLink("1", clusterId)}</Box>,
+        cpuUsage: "10%",
+        diskUsage: "20%",
+        lastUpdated: "2024-09-01 00:00:00"
+    });
+    brokers.push({
+        brokerName: <Box>{brokerToLink("2", clusterId)}</Box>,
+        cpuUsage: "20%",
+        diskUsage: "30%",
+        lastUpdated: "2024-09-01 00:00:00"
+    });
+    brokers.push({
+        brokerName: <Box>{brokerToLink("4", clusterId)}</Box>,
+        cpuUsage: "20%",
+        diskUsage: "30%",
+        lastUpdated: "2024-09-01 00:00:00"
+    });
+    brokers.push({
+        brokerName: <Box>{brokerToLink("5", clusterId)}</Box>,
+        cpuUsage: "20%",
+        diskUsage: "30%",
+        lastUpdated: "2024-09-01 00:00:00"
+    });
     return brokers;
 }
 
@@ -59,15 +94,15 @@ function getBrokerColumns() {
 
 function getAssignmentData(clusterId, rawData) {
     let assignments = [];
-    assignments.push({ startIndex: "001", endIndex: "002" });
-    assignments.push({ startIndex: "004", endIndex: "005" });
+    assignments.push({ startId: "1", endId: "2" });
+    assignments.push({ startId: "4", endId: "5" });
     return assignments;
 }
 
 function getAssignmentColumns() {
     return [
-        { title: "Start Index", field: "startIndex" },
-        { title: "End Index", field: "endIndex" },
+        { title: "Start Broker ID", field: "startId" },
+        { title: "End Broker ID", field: "endId" },
     ];
 }
 
