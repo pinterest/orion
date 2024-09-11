@@ -40,6 +40,20 @@ const routes = [
     label: "Broker Environment",
     getData: getBrokerEnvironmentData,
     getColumns: getBrokerEnvironmentColumns,
+  },
+  {
+    subpath: "brokersets",
+    component: PropsTable,
+    label: "Brokersets",
+    getData: getBrokersetData,
+    getColumns: getBrokersetColumns,
+  },
+  {
+    subpath: "brokerstatus",
+    component: PropsTable,
+    label: "Broker Status",
+    getData: getBrokerStatusData,
+    getColumns: getBrokerStatusColumns,
   }
 ];
 
@@ -199,6 +213,34 @@ function getTopicPartitionsColumns() {
     { title: "Is Leader?", field: "isLeader" },
     { title: "Preferred Leader?", field: "isPreferredLeader" },
     { title: "Size (GB)", field: "size", type: "numeric" }
+  ]);
+}
+
+function getBrokersetData(cluster, node) {
+    let brokersetData = [];
+    brokersetData.push({key: "0", value: "brokerset a"});
+    brokersetData.push({key: "1", value: "brokerset b"});
+    return brokersetData;
+}
+
+function getBrokersetColumns() {
+    return ([
+        { title: "Index", field: "key" },
+        { title: "Brokerset Name", field: "value" }
+    ]);
+}
+
+function getBrokerStatusData(cluster, node) {
+  let brokerStatusData = [];
+  brokerStatusData.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
+  brokerStatusData.push({ key: "CPU usage", value: "20%" });
+  return brokerStatusData;
+}
+
+function getBrokerStatusColumns() {
+  return ([
+      { title: "Key", field: "key" },
+      { title: "Value", field: "value" }
   ]);
 }
 
