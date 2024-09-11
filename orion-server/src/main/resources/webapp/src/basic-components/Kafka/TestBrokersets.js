@@ -18,6 +18,22 @@ import MaterialTable from "material-table";
 import {Backdrop, Box, Fade, Modal} from "@material-ui/core";
 import {useHistory, useRouteMatch} from "react-router-dom";
 import BrokersetEntry from "./BrokersetEntry";
+import {makeStyles} from "@material-ui/core/styles";
+
+const modalStyles = makeStyles(theme => ({
+    modal: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    paper: {
+        backgroundColor: theme.palette.background.paper,
+        border: "2px solid #000",
+        maxHeight: "500px",
+        boxShadow: theme.shadows[5],
+        padding: theme.spacing(2, 4, 3)
+    }
+}));
 
 export default function TestBrokersets(props) {
     let clusterId = props.cluster.clusterId;
@@ -54,12 +70,6 @@ export default function TestBrokersets(props) {
         setOpenDetailsModal(false);
         setSelectedRow();
         history.push("/clusters/" + clusterId + "/service/testbrokersets")
-    }
-
-    if (match && match.params.testbrokersetName) {
-        if (!selectedRow) {
-            setSelectedRow(topicToRowValuesMap[match.params.testbrokersetName]);
-        }
     }
 
     if (selectedRow != null && !openDetailsModal) {
