@@ -413,7 +413,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY)) {
           overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
           if (overrideEbsVolumeSize > 0)
-            updateBlockDeviceMappings(ec2Client, targetAmi);
+            blockDeviceMappings = updateBlockDeviceMappings(ec2Client, targetAmi);
         }
         // build launch instance request based on source of instance info
         RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim, targetAmi, blockDeviceMappings);
@@ -500,7 +500,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
       .build();
     newBDMs.add(blockDeviceMapping);
     logger().info(
-      "Volume size override requested for:" + hostname);
+      "EBS volume size override of " + overrideEbsVolumeSize + "GB requested for:" + hostname);
     return newBDMs;
   }
 
