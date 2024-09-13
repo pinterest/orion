@@ -16,6 +16,7 @@
 package com.pinterest.orion.core.actions.aws;
 
 import com.pinterest.orion.core.Attribute;
+import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.actions.alert.ActionNotificationHelper;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
@@ -24,13 +25,18 @@ import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.schema.AttributeSchema;
 import com.pinterest.orion.core.actions.schema.TextEnumValue;
 import com.pinterest.orion.core.actions.schema.TextValue;
+import com.pinterest.orion.core.kafka.KafkaCluster;
 import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.OrionConstants;
 
 import io.dropwizard.metrics5.MetricName;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.BlockDeviceMapping;
+import software.amazon.awssdk.services.ec2.model.DescribeImagesRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeImagesResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.EbsBlockDevice;
 import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 import software.amazon.awssdk.services.ec2.model.GroupIdentifier;
 import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
@@ -65,6 +71,7 @@ public class ReplaceEC2InstanceAction extends NodeAction {
   private Map<String, List<String>> fallbacksMap = new HashMap<>();
   private ActionNotificationHelper notificationHelper;
   protected boolean skipClusterHealthCheck = false;
+  private int overrideEbsVolumeSize;
 
   @Override
   public void initialize(Map<String, Object> config) throws PluginConfigurationException {
@@ -398,8 +405,18 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         setInstanceId(instanceId);
         String userdata = getUserdata(env);
         Instance victim = getAndValidateInstance(ec2Client, instanceId);
+        String targetAmi = getTargetAmi(victim.imageId());
+        // Check if cluster config overrides EBS volume size
+        // If yes, create custom block device mapping
+        Cluster cluster = getEngine().getCluster();
+        List<BlockDeviceMapping> blockDeviceMappings = null;
+        if (cluster.containsAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY)) {
+          overrideEbsVolumeSize = cluster.getAttribute(KafkaCluster.ATTR_EBS_VOLUME_SIZE_KEY).getValue();
+          if (overrideEbsVolumeSize > 0)
+            blockDeviceMappings = updateBlockDeviceMappings(ec2Client, targetAmi);
+        }
         // build launch instance request based on source of instance info
-        RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim);
+        RunInstancesRequest runInstancesRequest = getRunInstancesRequestFromInstance(userdata, victim, targetAmi, blockDeviceMappings);
         InstanceStateName instanceStateName = victim.state().name();
         return new InstanceStateAndRequest(instanceStateName, runInstancesRequest);
       }
@@ -417,9 +434,12 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         instance.subnetId() != null;
   }
 
-  protected RunInstancesRequest getRunInstancesRequestFromInstance(String userdata,
-                                                                 Instance victim) {
-    String targetAmi = getTargetAmi(victim.imageId());
+  protected RunInstancesRequest getRunInstancesRequestFromInstance(
+    String userdata,
+    Instance victim,
+    String targetAmi,
+    List<BlockDeviceMapping> blockDeviceMappings
+  ) {
     InstanceType instanceType = getTargetInstanceType(victim.instanceType());
 
     RunInstancesRequest.Builder req =  RunInstancesRequest.builder()
@@ -439,6 +459,8 @@ public class ReplaceEC2InstanceAction extends NodeAction {
         .privateIpAddress(victim.privateIpAddress())
         .minCount(1)
         .maxCount(1);
+    if (overrideEbsVolumeSize > 0)
+      req.blockDeviceMappings(blockDeviceMappings);
     return req.build();
   }
 
@@ -450,6 +472,36 @@ public class ReplaceEC2InstanceAction extends NodeAction {
           "Instance type override requested for:" + hostname);
     }
     return instanceType;
+  }
+
+  // override volume size if provided in attributes
+  protected List<BlockDeviceMapping> updateBlockDeviceMappings(
+    Ec2Client ec2Client,
+    String targetAmi
+  ) {
+    DescribeImagesRequest req = DescribeImagesRequest.builder()
+        .imageIds(targetAmi)
+        .build();
+    DescribeImagesResponse resp = ec2Client.describeImages(req);
+    if (!resp.hasImages() || resp.images().isEmpty())
+      return null;
+    List<BlockDeviceMapping> amiBDMs = resp.images().get(0).blockDeviceMappings();
+    // Copy all mappings but /dev/sda1
+    List<BlockDeviceMapping> newBDMs = amiBDMs.stream()  
+        .filter(mapping -> !mapping.deviceName().equals("/dev/sda1"))  
+        .collect(Collectors.toList());  
+    // Add new /dev/sda1
+    EbsBlockDevice ebs = EbsBlockDevice.builder()
+      .volumeSize(overrideEbsVolumeSize)
+      .build();
+    BlockDeviceMapping blockDeviceMapping = BlockDeviceMapping.builder()  
+      .deviceName("/dev/sda1")  
+      .ebs(ebs)  
+      .build();
+    newBDMs.add(blockDeviceMapping);
+    logger().info(
+      "EBS volume size override of " + overrideEbsVolumeSize + "GB requested for:" + hostname);
+    return newBDMs;
   }
 
   // override AMI if provided in attributes
