@@ -43,6 +43,11 @@ export default function TestBrokersets(props) {
         "clusterId": clusterId,
         "brokerCount": 4
     }
+    brokersetToRowValuesMap["Static_B0_P0_0"] = {
+        "brokersetName": "Static_B0_P0_0",
+        "clusterId": clusterId,
+        "brokerCount": 0
+    }
     let columns = [
         { title: "Name", field: "brokersetName" },
         { title: "Broker Count", field: "brokerCount" }
