@@ -16,7 +16,6 @@
 import React from "react";
 import { Tab, Tabs, Grid, Typography, Box, Chip, Link } from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
-import { makeStyles } from "@material-ui/core/styles";
 import PropsTable from "../Commons/PropsTable";
 
 const routes = [
@@ -40,6 +39,20 @@ const routes = [
     label: "Broker Environment",
     getData: getBrokerEnvironmentData,
     getColumns: getBrokerEnvironmentColumns,
+  },
+  {
+    subpath: "brokersets",
+    component: PropsTable,
+    label: "TEST-Brokersets",
+    getData: getBrokersetData,
+    getColumns: getBrokersetColumns,
+  },
+  {
+    subpath: "brokerstatus",
+    component: PropsTable,
+    label: "TEST-Broker Status",
+    getData: getBrokerStatusData,
+    getColumns: getBrokerStatusColumns,
   }
 ];
 
@@ -199,6 +212,53 @@ function getTopicPartitionsColumns() {
     { title: "Is Leader?", field: "isLeader" },
     { title: "Preferred Leader?", field: "isPreferredLeader" },
     { title: "Size (GB)", field: "size", type: "numeric" }
+  ]);
+}
+
+function brokersetToLink(brokerset, clusterId) {
+  return (
+      <Link
+          component={RouterLink}
+          to={"/clusters/" + clusterId + "/service/testbrokersets/" + brokerset + "/status"}
+      >
+        {brokerset}
+      </Link>
+  );
+}
+
+function getBrokersetData(cluster, node) {
+  let clusterId = node.currentNodeInfo.clusterId;
+  let brokersetData = [];
+  brokersetData.push({
+    brokersetName: <Box>{brokersetToLink("Capacity_B0_P0_0", clusterId)}</Box>
+  });
+  brokersetData.push({
+    brokersetName: <Box>{brokersetToLink("Static_B0_P0_0", clusterId)}</Box>
+  });
+  return brokersetData;
+}
+
+function getBrokersetColumns() {
+    return ([
+        { title: "Brokerset Name", field: "brokersetName" }
+    ]);
+}
+
+function getBrokerStatusData(cluster, node) {
+  let brokerStatusData = [];
+  brokerStatusData.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
+  brokerStatusData.push({ key: "CPU Usage (P99) - Now/1D/7D", value: "20% / 15% / 14%" });
+  brokerStatusData.push({ key: "Memory Usage (P99) - Now/1D/7D", value: "45% / 43% / 42%" });
+  brokerStatusData.push({ key: "Disk Usage (P99) - Now/1D/7D", value: "70% / 68% / 65%" });
+  brokerStatusData.push({ key: "Disk Used Size (GB) - Now", value: "107" });
+  brokerStatusData.push({ key: "Disk Total Size (GB) - Now", value: "154" });
+  return brokerStatusData;
+}
+
+function getBrokerStatusColumns() {
+  return ([
+      { title: "Key", field: "key" },
+      { title: "Value", field: "value" }
   ]);
 }
 
