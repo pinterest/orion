@@ -43,7 +43,7 @@ const routes = [
   {
     subpath: "brokersets",
     component: PropsTable,
-    label: "TEST-Brokersets",
+    label: "Brokersets",
     getData: getBrokersetData,
     getColumns: getBrokersetColumns,
   },
@@ -228,6 +228,7 @@ function brokersetToLink(brokerset, clusterId) {
 
 function getBrokersetData(cluster, node) {
   let clusterId = node.currentNodeInfo.clusterId;
+  // TODO: Get brokerset data from the node object, loop through the brokersets and create the data
   let brokersetData = [];
   brokersetData.push({
     brokersetName: <Box>{brokersetToLink("Capacity_B0_P0_0", clusterId)}</Box>

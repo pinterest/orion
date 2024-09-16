@@ -25,9 +25,11 @@ import com.google.gson.stream.MalformedJsonException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -42,6 +44,7 @@ public class Brokerset implements Iterable<Integer>, Serializable {
   private String brokersetAlias;
   private List<BrokersetRange> entries;
   private int partitions;   // will be final after all brokersets.json are refactored
+  private Set<String> brokerIds = new HashSet<>();
 
   public Brokerset() {
   }
@@ -68,6 +71,14 @@ public class Brokerset implements Iterable<Integer>, Serializable {
   public int getSize() {
     int size = entries.stream().mapToInt(e -> e.getSize()).sum();
     return size;
+  }
+
+  public Set<String> getBrokerIds() {
+    return brokerIds;
+  }
+
+  public void setBrokerIds(Set<String> brokerIds) {
+    this.brokerIds = brokerIds;
   }
 
   public String getBrokersetAlias() {
