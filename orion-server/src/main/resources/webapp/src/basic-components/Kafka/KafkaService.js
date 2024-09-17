@@ -18,9 +18,8 @@ import { Tab, Tabs, Grid } from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import Topics from "./Topics";
-import Brokersets from "./Brokersets";
 import ConsumerGroups from "./ConsumerGroups";
-import TestBrokersets from "./TestBrokersets";
+import Brokersets from "./Brokersets";
 
 const useStyles = makeStyles({
   table: {
@@ -43,11 +42,6 @@ const routes = [
     subpath: "consumergroups",
     component: ConsumerGroups,
     label: "Consumer Groups"
-  },
-  {
-    subpath: "testbrokersets",
-    component: TestBrokersets,
-    label: "Test-Brokersets"
   }
 ];
 

@@ -4,13 +4,13 @@ import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import PropsTable from "../Commons/PropsTable";
 
 const routes = [
-    {
-        subpath: "status",
-        component: PropsTable,
-        label: "Status",
-        getData: getStatusData,
-        getColumns: getStatusColumns,
-    },
+    // {
+    //     subpath: "status",
+    //     component: PropsTable,
+    //     label: "Status",
+    //     getData: getStatusData,
+    //     getColumns: getStatusColumns,
+    // },
     {
         subpath: "brokers",
         component: PropsTable,
@@ -18,13 +18,13 @@ const routes = [
         getData: getBrokerData,
         getColumns: getBrokerColumns,
     },
-    {
-        subpath: "assignments",
-        component: PropsTable,
-        label: "Assignments",
-        getData: getAssignmentData,
-        getColumns: getAssignmentColumns,
-    },
+    // {
+    //     subpath: "assignments",
+    //     component: PropsTable,
+    //     label: "Assignments",
+    //     getData: getAssignmentData,
+    //     getColumns: getAssignmentColumns,
+    // },
 ];
 
 function getStatusData(clusterId, rawData) {
@@ -55,40 +55,17 @@ function brokerToLink(broker, clusterId) {
 }
 
 function getBrokerData(clusterId, rawData) {
+    console.log("[DEBUG-brokersetEntry]" + rawData)
     let brokers = [];
-    brokers.push({
-        brokerName: <Box>{brokerToLink("1", clusterId)}</Box>,
-        cpuUsage: "10%",
-        diskUsage: "20%",
-        lastUpdated: "2024-09-01 00:00:00"
-    });
-    brokers.push({
-        brokerName: <Box>{brokerToLink("2", clusterId)}</Box>,
-        cpuUsage: "20%",
-        diskUsage: "30%",
-        lastUpdated: "2024-09-01 00:00:00"
-    });
-    brokers.push({
-        brokerName: <Box>{brokerToLink("4", clusterId)}</Box>,
-        cpuUsage: "20%",
-        diskUsage: "30%",
-        lastUpdated: "2024-09-01 00:00:00"
-    });
-    brokers.push({
-        brokerName: <Box>{brokerToLink("5", clusterId)}</Box>,
-        cpuUsage: "20%",
-        diskUsage: "30%",
-        lastUpdated: "2024-09-01 00:00:00"
-    });
+    for (let broker of rawData.brokerIds) {
+        brokers.push({ broker: brokerToLink(broker, clusterId) });
+    }
     return brokers;
 }
 
 function getBrokerColumns() {
     return [
-        { title: "Broker", field: "brokerName" },
-        { title: "CPU Usage", field: "cpuUsage" },
-        { title: "Disk Usage", field: "diskUsage" },
-        { title: "Last Updated", field: "lastUpdated" },
+        { title: "Broker", field: "broker" },
     ];
 }
 
@@ -135,11 +112,11 @@ export default function BrokersetEntry(props) {
                     <Switch>
                         <Redirect
                             exact
-                            from="/clusters/:clusterId/service/testbrokersets/:brokersetName"
-                            to="/clusters/:clusterId/service/testbrokersets/:brokersetName/status"
+                            from="/clusters/:clusterId/service/brokersets/:brokersetName"
+                            to="/clusters/:clusterId/service/brokersets/:brokersetName/status"
                         ></Redirect>
                         <Route
-                            path="/clusters/:clusterId/service/testbrokersets/:brokersetName/:tab"
+                            path="/clusters/:clusterId/service/brokersets/:brokersetName/:tab"
                             children={BrokersetNavTabs}
                         />
                     </Switch>
@@ -151,7 +128,7 @@ export default function BrokersetEntry(props) {
                                 <Route
                                     key={idx}
                                     exact
-                                    path={"/clusters/:clusterId/service/testbrokersets/:brokersetName/" + route.subpath}
+                                    path={"/clusters/:clusterId/service/brokersets/:brokersetName/" + route.subpath}
                                 >
                                 {<route.component
                                     data={route.getData(props.clusterId, props.rowData)}

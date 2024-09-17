@@ -35,7 +35,7 @@ public class BrokersetNodeOperator extends KafkaOperator {
             Set<String> brokerIds = new HashSet<>();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
             if (brokersetRanges == null || brokersetRanges.isEmpty()) {
-                // TODO: Brokerset has no brokerset range. Publish metrics?
+                // TODO: Brokerset has no brokerset range. Publish metrics - override internally?
                 continue;
             }
             for (Brokerset.BrokersetRange brokersetRange : brokersetRanges) {

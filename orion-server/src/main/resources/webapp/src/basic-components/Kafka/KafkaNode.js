@@ -219,7 +219,7 @@ function brokersetToLink(brokerset, clusterId) {
   return (
       <Link
           component={RouterLink}
-          to={"/clusters/" + clusterId + "/service/testbrokersets/" + brokerset + "/status"}
+          to={"/clusters/" + clusterId + "/service/brokersets/" + brokerset + "/status"}
       >
         {brokerset}
       </Link>
