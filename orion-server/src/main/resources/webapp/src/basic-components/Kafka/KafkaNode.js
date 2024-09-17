@@ -146,6 +146,14 @@ function getNodeInfoHeader(node, nodeId, brokerId, hostname) {
               label={node.currentNodeInfo.rack}
             />
           </Grid>
+          <Grid item>
+            <Chip
+                variant="outlined"
+                color="primary"
+                size="small"
+                label={node.currentNodeInfo.brokersets.length + " brokersets"}
+            />
+          </Grid>
         </Grid>
       </Box>
     </div>
@@ -229,18 +237,36 @@ function brokersetToLink(brokerset, clusterId) {
 function getBrokersetData(cluster, node) {
   let clusterId = node.currentNodeInfo.clusterId;
   let brokersets = node.currentNodeInfo.brokersets;
-  let brokersetData = [];
-  for (let brokerset of brokersets) {
-    brokersetData.push({
-      brokersetAlias: <Box>{brokersetToLink(brokerset, clusterId)}</Box>
+  let brokersetRows = [];
+  for (let brokersetAlias of brokersets) {
+    const brokersetAliasSplit = brokersetAlias.split("_");
+    let type = brokersetAliasSplit[0];
+    let brokerCount = brokersetAliasSplit[1];
+    let partitionCount = brokersetAliasSplit[2];
+    brokersetRows.push({
+      brokersetAlias: <Box>{brokersetToLink(brokersetAlias, clusterId)}</Box>,
+      type: type,
+      brokerCount: brokerCount,
+      partitionCount: partitionCount
     });
   }
+  let brokersetData = brokersetRows.map(entry => {
+    return {
+      brokersetAlias: entry.brokersetAlias,
+      type: entry.type,
+      brokerCount: entry.brokerCount,
+      partitionCount: entry.partitionCount
+    };
+  });
   return brokersetData;
 }
 
 function getBrokersetColumns() {
     return ([
-        { title: "Brokerset Name", field: "brokersetAlias" }
+      { title: "Brokerset Name", field: "brokersetAlias" },
+      { title: "Type", field: "type" },
+      { title: "Broker Count", field: "brokerCount" },
+      { title: "Partition Count", field: "partitionCount" }
     ]);
 }
 
