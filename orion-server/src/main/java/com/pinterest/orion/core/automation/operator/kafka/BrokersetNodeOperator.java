@@ -18,29 +18,24 @@ public class BrokersetNodeOperator extends KafkaOperator {
         .getLogger(BrokersetNodeOperator.class.getName());
     @Override
     public void operate(KafkaCluster cluster) throws Exception {
-        // Add brokerset to broker and broker id to brokerset
-        // Just initialize with all nodes
         Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
         if (brokersetMapAttr == null) {
-            System.out.println("[TEST] brokersetMapAttr is null for cluster: " + cluster.getName());
+            // TODO: Cluster has not brokerset. Return.
             return;
         }
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
-        // Broker -> brokersets map
+        // BrokerId to brokerset alias set map
         Map<String, Set<String>> brokerToBrokersetsMap = new HashMap<>();
         for (String nodeId : cluster.getNodeMap().keySet()) {
             brokerToBrokersetsMap.put(nodeId, new HashSet<>());
         }
-
         for (Brokerset brokerset : brokersetMap.values()) {
+            String brokersetAlias = brokerset.getBrokersetAlias();
             // brokerIds in this brokerset
             Set<String> brokerIds = new HashSet<>();
-            String brokersetAlias = brokerset.getBrokersetAlias();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
             if (brokersetRanges == null || brokersetRanges.isEmpty()) {
-                System.out.println(
-                    String.format("[TEST] brokersetRanges is null or empty for brokerset: %s in cluster: %s",
-                        brokersetAlias, cluster.getName()));
+                // TODO: Brokerset has no brokerset range. Publish metrics?
                 continue;
             }
             for (Brokerset.BrokersetRange brokersetRange : brokersetRanges) {
@@ -48,16 +43,13 @@ public class BrokersetNodeOperator extends KafkaOperator {
                 int end = brokersetRange.getEndBrokerIdx();
                 for (int i = start; i <= end; i++) {
                     String nodeId = Integer.toString(i);
-                    Node node = cluster.getNodeMap().get(nodeId);
-                    if (node == null || node.getCurrentNodeInfo() == null) {
-                        System.out.println(
-                            String.format(
-                                "[TEST] node is null for nodeId: %s in cluster: %s",
-                                nodeId, cluster.getName()));
-                        continue;
+                    if (cluster.getNodeMap().containsKey(nodeId)) {
+                        Node node = cluster.getNodeMap().get(nodeId);
+                        brokerIds.add(node.getCurrentNodeInfo().getNodeId());
+                        brokerToBrokersetsMap.get(nodeId).add(brokersetAlias);
+                    } else {
+                        // TODO: Brokerset contains invalid broker id.
                     }
-                    brokerIds.add(node.getCurrentNodeInfo().getNodeId());
-                    brokerToBrokersetsMap.get(nodeId).add(brokersetAlias);
                 }
             }
             brokerset.setBrokerIds(brokerIds);

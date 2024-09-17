@@ -228,14 +228,13 @@ function brokersetToLink(brokerset, clusterId) {
 
 function getBrokersetData(cluster, node) {
   let clusterId = node.currentNodeInfo.clusterId;
-  // TODO: Get brokerset data from the node object, loop through the brokersets and create the data
+  let brokersets = node.currentNodeInfo.brokersets;
   let brokersetData = [];
-  brokersetData.push({
-    brokersetName: <Box>{brokersetToLink("Capacity_B0_P0_0", clusterId)}</Box>
-  });
-  brokersetData.push({
-    brokersetName: <Box>{brokersetToLink("Static_B0_P0_0", clusterId)}</Box>
-  });
+  for (let brokerset of brokersets) {
+    brokersetData.push({
+      brokersetName: <Box>{brokersetToLink(brokerset, clusterId)}</Box>
+    });
+  }
   return brokersetData;
 }
 
