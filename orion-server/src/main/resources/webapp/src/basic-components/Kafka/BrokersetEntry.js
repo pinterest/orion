@@ -18,13 +18,13 @@ const routes = [
         getData: getBrokerData,
         getColumns: getBrokerColumns,
     },
-    // {
-    //     subpath: "assignments",
-    //     component: PropsTable,
-    //     label: "Assignments",
-    //     getData: getAssignmentData,
-    //     getColumns: getAssignmentColumns,
-    // },
+    {
+        subpath: "assignments",
+        component: PropsTable,
+        label: "Assignments",
+        getData: getAssignmentData,
+        getColumns: getAssignmentColumns,
+    }
 ];
 
 function getStatusData(clusterId, rawData) {
@@ -55,15 +55,13 @@ function brokerToLink(broker, clusterId) {
 }
 
 function getBrokerData(clusterId, rawData) {
-    let rawDataStr = JSON.stringify(rawData);
-    console.log("[DEBUG-brokersetEntry]" + rawDataStr)
     let brokersetData = rawData.brokersetData;
-    let brokersetDataStr = JSON.stringify(brokersetData);
-    console.log("[DEBUG-brokersetData]" + brokersetDataStr)
     let brokers = [];
     for (let brokerId of brokersetData.brokerIds) {
+        console.log("[DEBUG-brokerId]" + brokerId)
         brokers.push({ broker: brokerToLink(brokerId, clusterId) });
     }
+    console.log("[DEBUG-brokers]" + brokers)
     return brokers;
 }
 
@@ -74,16 +72,23 @@ function getBrokerColumns() {
 }
 
 function getAssignmentData(clusterId, rawData) {
+    let brokersetData = rawData.brokersetData;
     let assignments = [];
-    assignments.push({ startId: "1", endId: "2" });
-    assignments.push({ startId: "4", endId: "5" });
+    for (let entry of brokersetData.entries) {
+        assignments.push({
+            startId: entry.startBrokerIdx,
+            endId: entry.endBrokerIdx,
+            size: entry.size
+        });
+    }
     return assignments;
 }
 
 function getAssignmentColumns() {
     return [
-        { title: "Start Broker ID", field: "startId" },
-        { title: "End Broker ID", field: "endId" },
+        { title: "Start Broker Id", field: "startBrokerIdx" },
+        { title: "End Broker Id", field: "endBrokerIdx" },
+        { title: "Size", field: "size" }
     ];
 }
 

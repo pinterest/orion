@@ -46,11 +46,11 @@ export default function Brokersets(props) {
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
-    let brokersetsStr = JSON.stringify(brokersets);
-    console.log("[DEBUG-brokersets]" + brokersetsStr);
+    // let brokersetsStr = JSON.stringify(brokersets);
+    // console.log("[DEBUG-brokersets]" + brokersetsStr);
     for (let brokerset of brokersets) {
-        let brokersetStr = JSON.stringify(brokerset);
-        console.log("[DEBUG-brokerset]" + brokersetStr)
+        // let brokersetStr = JSON.stringify(brokerset);
+        // console.log("[DEBUG-brokerset]" + brokersetStr)
         let brokersetAlias = brokerset.brokersetAlias;
         brokersetToRowValuesMap[brokersetAlias] = {
             "brokersetName": brokersetAlias,
