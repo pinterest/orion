@@ -51,10 +51,12 @@ export default function Brokersets(props) {
     for (let brokerset of brokersets) {
         let brokersetStr = JSON.stringify(brokerset);
         console.log("[DEBUG-brokerset]" + brokersetStr)
-        brokersetToRowValuesMap[brokerset.brokersetName] = {
-            "brokersetName": brokerset.brokersetAlias,
+        let brokersetAlias = brokerset.brokersetAlias;
+        brokersetToRowValuesMap[brokersetAlias] = {
+            "brokersetName": brokersetAlias,
             "clusterId": clusterId,
-            "brokerCount": 0
+            "brokerCount": brokerset.size,
+            "brokersetData": brokerset
         }
     }
 
