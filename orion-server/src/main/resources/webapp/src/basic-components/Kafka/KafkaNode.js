@@ -50,7 +50,7 @@ const routes = [
   {
     subpath: "brokerstatus",
     component: PropsTable,
-    label: "TEST-Broker Status",
+    label: "Broker Status",
     getData: getBrokerStatusData,
     getColumns: getBrokerStatusColumns,
   }
@@ -232,7 +232,7 @@ function getBrokersetData(cluster, node) {
   let brokersetData = [];
   for (let brokerset of brokersets) {
     brokersetData.push({
-      brokersetName: <Box>{brokersetToLink(brokerset, clusterId)}</Box>
+      brokersetAlias: <Box>{brokersetToLink(brokerset, clusterId)}</Box>
     });
   }
   return brokersetData;
@@ -240,18 +240,18 @@ function getBrokersetData(cluster, node) {
 
 function getBrokersetColumns() {
     return ([
-        { title: "Brokerset Name", field: "brokersetName" }
+        { title: "Brokerset Name", field: "brokersetAlias" }
     ]);
 }
 
 function getBrokerStatusData(cluster, node) {
   let brokerStatusData = [];
-  brokerStatusData.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
-  brokerStatusData.push({ key: "CPU Usage (P99) - Now/1D/7D", value: "20% / 15% / 14%" });
-  brokerStatusData.push({ key: "Memory Usage (P99) - Now/1D/7D", value: "45% / 43% / 42%" });
-  brokerStatusData.push({ key: "Disk Usage (P99) - Now/1D/7D", value: "70% / 68% / 65%" });
-  brokerStatusData.push({ key: "Disk Used Size (GB) - Now", value: "107" });
-  brokerStatusData.push({ key: "Disk Total Size (GB) - Now", value: "154" });
+  // brokerStatusData.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
+  // brokerStatusData.push({ key: "CPU Usage (P99) - Now/1D/7D", value: "20% / 15% / 14%" });
+  // brokerStatusData.push({ key: "Memory Usage (P99) - Now/1D/7D", value: "45% / 43% / 42%" });
+  // brokerStatusData.push({ key: "Disk Usage (P99) - Now/1D/7D", value: "70% / 68% / 65%" });
+  // brokerStatusData.push({ key: "Disk Used Size (GB) - Now", value: "107" });
+  // brokerStatusData.push({ key: "Disk Total Size (GB) - Now", value: "154" });
   return brokerStatusData;
 }
 

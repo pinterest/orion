@@ -1,16 +1,16 @@
 import React from "react";
-import {Tab, Tabs, Grid, Box, Link} from "@material-ui/core";
+import {Tab, Tabs, Grid, Box, Link, Typography, Chip} from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
 import PropsTable from "../Commons/PropsTable";
 
 const routes = [
-    // {
-    //     subpath: "status",
-    //     component: PropsTable,
-    //     label: "Status",
-    //     getData: getStatusData,
-    //     getColumns: getStatusColumns,
-    // },
+    {
+        subpath: "status",
+        component: PropsTable,
+        label: "Status",
+        getData: getStatusData,
+        getColumns: getStatusColumns,
+    },
     {
         subpath: "brokers",
         component: PropsTable,
@@ -29,10 +29,8 @@ const routes = [
 
 function getStatusData(clusterId, rawData) {
     let brokersetStatus = [];
-    brokersetStatus.push({ key: "Last Update Time", value: "2024-09-01 00:00:00" });
-    brokersetStatus.push({ key: "Broker Count", value: "4" });
-    brokersetStatus.push({ key: "Max CPU usage", value: "20%" });
-    brokersetStatus.push({ key: "Min CPU usage", value: "10%" });
+    let brokersetData = rawData.brokersetData;
+    brokersetStatus.push({ key: "Broker Count", value: brokersetData.size});
     return brokersetStatus;
 }
 
@@ -58,10 +56,8 @@ function getBrokerData(clusterId, rawData) {
     let brokersetData = rawData.brokersetData;
     let brokers = [];
     for (let brokerId of brokersetData.brokerIds) {
-        console.log("[DEBUG-brokerId]" + brokerId)
         brokers.push({ broker: brokerToLink(brokerId, clusterId) });
     }
-    console.log("[DEBUG-brokers]" + brokers)
     return brokers;
 }
 
@@ -76,8 +72,8 @@ function getAssignmentData(clusterId, rawData) {
     let assignments = [];
     for (let entry of brokersetData.entries) {
         assignments.push({
-            startId: entry.startBrokerIdx,
-            endId: entry.endBrokerIdx,
+            startBrokerIdx: entry.startBrokerIdx,
+            endBrokerIdx: entry.endBrokerIdx,
             size: entry.size
         });
     }
@@ -111,21 +107,52 @@ function BrokersetNavTabs(props) {
     );
 }
 
+function getBrokersetInfoHeader(rawData, clusterId) {
+    let rawDataStr = JSON.stringify(rawData);
+    console.log("[DEBUG-getBrokersetInfoHeader]" + rawDataStr)
+
+    let brokersetData = rawData.brokersetData;
+    let brokersetAlias = brokersetData.brokersetAlias;
+    let brokerCount = brokersetData.size;
+
+    return (
+        <Box my={2}>
+            <Grid container display="flex" alignItems="center" spacing={2}>
+                <Grid item>
+                    <Typography variant="h6">
+                        {brokersetAlias}
+                    </Typography>
+                </Grid>
+                <Grid item>
+                    <Chip variant="outlined" label="Kafka Brokerset" size="small" />
+                </Grid>
+                <Grid item>
+                    <Chip
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        label={brokerCount + " brokers"}
+                    />
+                </Grid>
+            </Grid>
+        </Box>
+    );
+}
 
 export default function BrokersetEntry(props) {
     return (
         <div>
-            {/*Add brokerset header*/}
+            {getBrokersetInfoHeader(props.rowData, props.clusterId)}
             <Grid>
                 <Grid item xs={10}>
                     <Switch>
                         <Redirect
                             exact
-                            from="/clusters/:clusterId/service/brokersets/:brokersetName"
-                            to="/clusters/:clusterId/service/brokersets/:brokersetName/status"
+                            from="/clusters/:clusterId/service/brokersets/:brokersetAlias"
+                            to="/clusters/:clusterId/service/brokersets/:brokersetAlias/status"
                         ></Redirect>
                         <Route
-                            path="/clusters/:clusterId/service/brokersets/:brokersetName/:tab"
+                            path="/clusters/:clusterId/service/brokersets/:brokersetAlias/:tab"
                             children={BrokersetNavTabs}
                         />
                     </Switch>
@@ -137,7 +164,7 @@ export default function BrokersetEntry(props) {
                                 <Route
                                     key={idx}
                                     exact
-                                    path={"/clusters/:clusterId/service/brokersets/:brokersetName/" + route.subpath}
+                                    path={"/clusters/:clusterId/service/brokersets/:brokersetAlias/" + route.subpath}
                                 >
                                 {<route.component
                                     data={route.getData(props.clusterId, props.rowData)}

@@ -41,19 +41,15 @@ export default function Brokersets(props) {
         brokersets = Object.values(props.cluster.attributes.brokerset);
     }
     let columns = [
-        { title: "Name", field: "brokersetName" },
+        { title: "Name", field: "brokersetAlias" },
         { title: "Broker Count", field: "brokerCount" }
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
-    // let brokersetsStr = JSON.stringify(brokersets);
-    // console.log("[DEBUG-brokersets]" + brokersetsStr);
     for (let brokerset of brokersets) {
-        // let brokersetStr = JSON.stringify(brokerset);
-        // console.log("[DEBUG-brokerset]" + brokersetStr)
         let brokersetAlias = brokerset.brokersetAlias;
         brokersetToRowValuesMap[brokersetAlias] = {
-            "brokersetName": brokersetAlias,
+            "brokersetAlias": brokersetAlias,
             "clusterId": clusterId,
             "brokerCount": brokerset.size,
             "brokersetData": brokerset
@@ -64,7 +60,7 @@ export default function Brokersets(props) {
 
     const classes = modalStyles();
     const history = useHistory();
-    let match = useRouteMatch("/clusters/:clusterId/service/brokersets/:brokersetName?");
+    let match = useRouteMatch("/clusters/:clusterId/service/brokersets/:brokersetAlias?");
 
     const [selectedRow, setSelectedRow] = useState();
     const [openModal, setOpenModal] = useState(false);
@@ -122,7 +118,7 @@ export default function Brokersets(props) {
                 options={{ pageSize: 10, grouping: true, filtering: false }}
                 title={""}
                 onRowClick={(event, rowData, togglePanel) => {
-                    history.push("/clusters/" + clusterId + "/service/brokersets/" + rowData.brokersetName);
+                    history.push("/clusters/" + clusterId + "/service/brokersets/" + rowData.brokersetAlias);
                     setSelectedRow(rowData);
                     setOpenDetailsModal(true);
                 }}
