@@ -21,6 +21,10 @@ public class BrokersetNodeOperator extends KafkaOperator {
         // Need removal logic as well
         // Add validation
         Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
+        if (brokersetMapAttr == null) {
+            System.out.println("[TEST] brokersetMapAttr is null");
+            return;
+        }
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
 //        System.out.println("[TEST] brokersetMap: " + brokersetMap);
 //        System.out.println("[TEST] nodeMapKeys: " + cluster.getNodeMap().keySet());
