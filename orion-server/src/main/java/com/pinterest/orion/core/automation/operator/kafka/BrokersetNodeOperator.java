@@ -22,13 +22,17 @@ public class BrokersetNodeOperator extends KafkaOperator {
         // Add validation
         Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
-        System.out.println("[TEST] brokersetMap: " + brokersetMap);
-        System.out.println("[TEST] nodeMapKeys: " + cluster.getNodeMap().keySet());
-        System.out.println("[TEST] nodeMap: " + cluster.getNodeMap());
+//        System.out.println("[TEST] brokersetMap: " + brokersetMap);
+//        System.out.println("[TEST] nodeMapKeys: " + cluster.getNodeMap().keySet());
+//        System.out.println("[TEST] nodeMap: " + cluster.getNodeMap());
         Set<String> brokerIds = new HashSet<>();
         for (Brokerset brokerset : brokersetMap.values()) {
             String brokersetAlias = brokerset.getBrokersetAlias();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
+            if (brokersetRanges == null || brokersetRanges.isEmpty()) {
+                System.out.println("[TEST] brokersetRanges is null for brokersetAlias: " + brokersetAlias);
+                continue;
+            }
             for (Brokerset.BrokersetRange brokersetRange : brokersetRanges) {
                 int start = brokersetRange.getStartBrokerIdx();
                 int end = brokersetRange.getEndBrokerIdx();
