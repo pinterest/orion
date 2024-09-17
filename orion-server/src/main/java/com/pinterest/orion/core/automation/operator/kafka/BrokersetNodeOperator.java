@@ -6,6 +6,7 @@ import com.pinterest.orion.core.automation.sensor.kafka.KafkaClusterInfoSensor;
 import com.pinterest.orion.core.kafka.Brokerset;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,23 +19,28 @@ public class BrokersetNodeOperator extends KafkaOperator {
     @Override
     public void operate(KafkaCluster cluster) throws Exception {
         // Add brokerset to broker and broker id to brokerset
-        // Need removal logic as well
-        // Add validation
+        // Just initialize with all nodes
         Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
         if (brokersetMapAttr == null) {
-            System.out.println("[TEST] brokersetMapAttr is null");
+            System.out.println("[TEST] brokersetMapAttr is null for cluster: " + cluster.getName());
             return;
         }
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
-//        System.out.println("[TEST] brokersetMap: " + brokersetMap);
-//        System.out.println("[TEST] nodeMapKeys: " + cluster.getNodeMap().keySet());
-//        System.out.println("[TEST] nodeMap: " + cluster.getNodeMap());
-        Set<String> brokerIds = new HashSet<>();
+        // Broker -> brokersets map
+        Map<String, Set<String>> brokerToBrokersetsMap = new HashMap<>();
+        for (String nodeId : cluster.getNodeMap().keySet()) {
+            brokerToBrokersetsMap.put(nodeId, new HashSet<>());
+        }
+
         for (Brokerset brokerset : brokersetMap.values()) {
+            // brokerIds in this brokerset
+            Set<String> brokerIds = new HashSet<>();
             String brokersetAlias = brokerset.getBrokersetAlias();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
             if (brokersetRanges == null || brokersetRanges.isEmpty()) {
-                System.out.println("[TEST] brokersetRanges is null for brokersetAlias: " + brokersetAlias);
+                System.out.println(
+                    String.format("[TEST] brokersetRanges is null or empty for brokerset: %s in cluster: %s",
+                        brokersetAlias, cluster.getName()));
                 continue;
             }
             for (Brokerset.BrokersetRange brokersetRange : brokersetRanges) {
@@ -43,19 +49,27 @@ public class BrokersetNodeOperator extends KafkaOperator {
                 for (int i = start; i <= end; i++) {
                     String nodeId = Integer.toString(i);
                     Node node = cluster.getNodeMap().get(nodeId);
-                    if (node == null) {
-                        System.out.println("[TEST] id: " + nodeId + " is null");
-                    } else {
-                        brokerIds.add(node.getCurrentNodeInfo().getNodeId());
-                        node.getCurrentNodeInfo().getBrokersets().add(brokersetAlias);
+                    if (node == null || node.getCurrentNodeInfo() == null) {
+                        System.out.println(
+                            String.format(
+                                "[TEST] node is null for nodeId: %s in cluster: %s",
+                                nodeId, cluster.getName()));
+                        continue;
                     }
+                    brokerIds.add(node.getCurrentNodeInfo().getNodeId());
+                    brokerToBrokersetsMap.get(nodeId).add(brokersetAlias);
                 }
             }
-            System.out.println("[TEST] brokersetAlias: " + brokersetAlias);
-            System.out.println("[TEST] brokerIds: " + brokerIds);
             brokerset.setBrokerIds(brokerIds);
         }
-
+        for (Node node : cluster.getNodeMap().values()) {
+            if (node != null && node.getCurrentNodeInfo() != null) {
+                String nodeId = node.getCurrentNodeInfo().getNodeId();
+                node.getCurrentNodeInfo().setBrokersets(brokerToBrokersetsMap.get(nodeId));
+            }
+        }
+        System.out.println(String.format("[TEST1] Cluster: %s brokerToBrokersetsMap: %s",
+            cluster.getName(), brokerToBrokersetsMap));
     }
 
     @Override
