@@ -55,11 +55,12 @@ function brokerToLink(broker, clusterId) {
 }
 
 function getBrokerData(clusterId, rawData) {
-    console.log("[DEBUG-brokersetEntry]" + rawData)
+    let rawDataStr = JSON.stringify(rawData);
+    console.log("[DEBUG-brokersetEntry]" + rawDataStr)
     let brokers = [];
-    for (let broker of rawData.brokerIds) {
-        brokers.push({ broker: brokerToLink(broker, clusterId) });
-    }
+    // for (let broker of rawData.brokerIds) {
+    //     brokers.push({ broker: brokerToLink(broker, clusterId) });
+    // }
     return brokers;
 }
 
