@@ -240,12 +240,17 @@ function getBrokersetData(cluster, node) {
   let brokersetRows = [];
   for (let brokersetAlias of brokersets) {
     const brokersetAliasSplit = brokersetAlias.split("_");
-    let type = brokersetAliasSplit[0];
-    let brokerCount = brokersetAliasSplit[1];
-    let partitionCount = brokersetAliasSplit[2];
+    let brokersetType = brokersetAliasSplit[0];
+    if (brokersetType === "Capacity" || brokersetType === "Static") {
+      let brokerCount = brokersetAliasSplit[1].replace("B", "");
+      let partitionCount = brokersetAliasSplit[2].replace("P", "");
+    } else {
+      let brokerCount = "N/A";
+      let partitionCount = "N/A";
+    }
     brokersetRows.push({
       brokersetAlias: <Box>{brokersetToLink(brokersetAlias, clusterId)}</Box>,
-      type: type,
+      type: brokersetType,
       brokerCount: brokerCount,
       partitionCount: partitionCount
     });

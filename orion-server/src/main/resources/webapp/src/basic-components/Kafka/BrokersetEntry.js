@@ -5,11 +5,11 @@ import PropsTable from "../Commons/PropsTable";
 
 const routes = [
     {
-        subpath: "status",
+        subpath: "assignments",
         component: PropsTable,
-        label: "Status",
-        getData: getStatusData,
-        getColumns: getStatusColumns,
+        label: "Assignments",
+        getData: getAssignmentData,
+        getColumns: getAssignmentColumns,
     },
     {
         subpath: "brokers",
@@ -19,11 +19,11 @@ const routes = [
         getColumns: getBrokerColumns,
     },
     {
-        subpath: "assignments",
+        subpath: "status",
         component: PropsTable,
-        label: "Assignments",
-        getData: getAssignmentData,
-        getColumns: getAssignmentColumns,
+        label: "Status",
+        getData: getStatusData,
+        getColumns: getStatusColumns,
     }
 ];
 
@@ -140,16 +140,18 @@ function getBrokersetInfoHeader(rawData, clusterId) {
 }
 
 export default function BrokersetEntry(props) {
+    let rowData = props.rowData;
+    let clusterId = props.clusterId;
     return (
         <div>
-            {getBrokersetInfoHeader(props.rowData, props.clusterId)}
+            {getBrokersetInfoHeader(rowData, clusterId)}
             <Grid>
                 <Grid item xs={10}>
                     <Switch>
                         <Redirect
                             exact
                             from="/clusters/:clusterId/service/brokersets/:brokersetAlias"
-                            to="/clusters/:clusterId/service/brokersets/:brokersetAlias/status"
+                            to="/clusters/:clusterId/service/brokersets/:brokersetAlias/assignments"
                         ></Redirect>
                         <Route
                             path="/clusters/:clusterId/service/brokersets/:brokersetAlias/:tab"
@@ -167,7 +169,7 @@ export default function BrokersetEntry(props) {
                                     path={"/clusters/:clusterId/service/brokersets/:brokersetAlias/" + route.subpath}
                                 >
                                 {<route.component
-                                    data={route.getData(props.clusterId, props.rowData)}
+                                    data={route.getData(clusterId, rowData)}
                                     columns={route.getColumns()}
                                 />}
                                 </Route>
