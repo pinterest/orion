@@ -9,9 +9,6 @@ public class BrokersetState {
     private List<List<Integer>> brokersetRanges = new ArrayList<>();
     private List<String> brokerIds;
 
-    public BrokersetState() {
-    }
-
     public BrokersetState(String brokersetAlias) {
         this.brokersetAlias = brokersetAlias;
     }

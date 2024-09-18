@@ -21,11 +21,22 @@ public class BrokersetStateSensor extends KafkaSensor {
 
     @Override
     public void sense(KafkaCluster cluster) throws Exception {
-        Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
-        if (brokersetMapAttr == null) {
-            logger.warning(String.format("Cluster %s has no brokerset.", cluster.getName()));
+        // Brokerset information and broker information are loaded from other sensors.
+        // If they are not ready, skip this sensor.
+        if (!cluster.containsAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY)) {
+            // No brokerset information available. Skip.
             return;
         }
+        Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
+        if (brokersetMapAttr == null) {
+            // No brokerset information available. Skip.
+            return;
+        }
+        if (cluster.getNodeMap() == null || cluster.getNodeMap().isEmpty()) {
+            // No node information available. Skip.
+            return;
+        }
+        // Brokerset info from config files
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
         // Brokerset state map.
         Map<String, BrokersetState> brokersetStateMap = new HashMap<>();
@@ -34,10 +45,10 @@ public class BrokersetStateSensor extends KafkaSensor {
         for (String nodeId : cluster.getNodeMap().keySet()) {
             brokerToBrokersetsMap.put(nodeId, new HashSet<>());
         }
+        // Get broker ids for each brokerset.
         for (Brokerset brokerset : brokersetMap.values()) {
             String brokersetAlias = brokerset.getBrokersetAlias();
             BrokersetState brokersetState = new BrokersetState(brokersetAlias);
-            // brokerIds in this brokerset
             Set<String> brokerIds = new HashSet<>();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
             if (brokersetRanges == null || brokersetRanges.isEmpty()) {
@@ -45,6 +56,7 @@ public class BrokersetStateSensor extends KafkaSensor {
                     brokersetAlias, cluster.getName()));
                 continue;
             }
+            boolean invalidBrokerset = false;
             for (Brokerset.BrokersetRange brokersetRange : brokersetRanges) {
                 int start = brokersetRange.getStartBrokerIdx();
                 int end = brokersetRange.getEndBrokerIdx();
@@ -55,21 +67,26 @@ public class BrokersetStateSensor extends KafkaSensor {
                         brokerIds.add(node.getCurrentNodeInfo().getNodeId());
                         brokerToBrokersetsMap.get(nodeId).add(brokersetAlias);
                     } else {
-                        handleInvalidBrokerset(nodeId, brokersetAlias, cluster.getName());
+                        invalidBrokerset = true;
                     }
                 }
                 brokersetState.addBrokerRange(Arrays.asList(start, end));
             }
             brokersetState.setBrokerIds(new ArrayList<>(brokerIds));
             brokersetStateMap.put(brokersetAlias, brokersetState);
+            if (invalidBrokerset) {
+                handleInvalidBrokerset(brokersetAlias, cluster.getName());
+            }
         }
+        // TODO: Add other brokerset status information (ex. usage data).
+        cluster.setAttribute(ATTR_BROKERSET_STATE_KEY, brokersetStateMap);
+        // Update node info with brokerset information.
         for (Node node : cluster.getNodeMap().values()) {
             if (node != null && node.getCurrentNodeInfo() != null) {
                 String nodeId = node.getCurrentNodeInfo().getNodeId();
                 node.getCurrentNodeInfo().setBrokersets(brokerToBrokersetsMap.get(nodeId));
             }
         }
-        cluster.setAttribute(ATTR_BROKERSET_STATE_KEY, brokersetStateMap);
     }
 
     @Override
@@ -77,8 +94,8 @@ public class BrokersetStateSensor extends KafkaSensor {
         return "BrokersetStateSensor";
     }
 
-    protected void handleInvalidBrokerset(String nodeId, String brokersetAlias, String clusterId) {
-        logger.warning(String.format("Brokerset %s in cluster %s has invalid broker id %s.",
-            brokersetAlias, clusterId, nodeId));
+    protected void handleInvalidBrokerset(String brokersetAlias, String clusterId) {
+        logger.warning(String.format("Brokerset %s in cluster %s has invalid brokers.",
+            brokersetAlias, clusterId));
     }
 }

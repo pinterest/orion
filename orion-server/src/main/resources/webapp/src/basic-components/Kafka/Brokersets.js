@@ -40,8 +40,6 @@ export default function Brokersets(props) {
     if (props.cluster.attributes.brokersetState) {
         brokersets = Object.values(props.cluster.attributes.brokersetState);
     }
-    let brokersetsStr = JSON.stringify(brokersets);
-    console.log("[DEBUG-Brokersets]" + brokersetsStr);
     let columns = [
         { title: "Name", field: "brokersetAlias" },
         { title: "Broker Count", field: "brokerCount" }

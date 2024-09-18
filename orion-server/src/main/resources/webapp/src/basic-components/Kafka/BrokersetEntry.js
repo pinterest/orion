@@ -53,8 +53,6 @@ function brokerToLink(broker, clusterId) {
 }
 
 function getBrokerData(clusterId, rawData) {
-    let rawDataStr = JSON.stringify(rawData);
-    console.log("DEBUG" + rawDataStr);
     let brokersetData = rawData.brokersetData;
     let brokers = [];
     for (let brokerId of brokersetData.brokerIds) {
@@ -110,13 +108,9 @@ function BrokersetNavTabs(props) {
 }
 
 function getBrokersetInfoHeader(rawData, clusterId) {
-    let rawDataStr = JSON.stringify(rawData);
-    console.log("[DEBUG-getBrokersetInfoHeader]" + rawDataStr)
-
     let brokersetData = rawData.brokersetData;
     let brokersetAlias = brokersetData.brokersetAlias;
     let brokerCount = brokersetData.size;
-
     return (
         <Box my={2}>
             <Grid container display="flex" alignItems="center" spacing={2}>
