@@ -28,6 +28,8 @@ public class BrokersetNodeSensor extends KafkaSensor {
         for (String nodeId : cluster.getNodeMap().keySet()) {
             brokerToBrokersetsMap.put(nodeId, new HashSet<>());
         }
+        System.out.println("BrokersetNodeSensor.sense: cluster= " + cluster.getName()
+            + "brokersets=" + brokersetMap.keySet());
         for (Brokerset brokerset : brokersetMap.values()) {
             String brokersetAlias = brokerset.getBrokersetAlias();
             // brokerIds in this brokerset
@@ -53,6 +55,9 @@ public class BrokersetNodeSensor extends KafkaSensor {
                 }
             }
             brokerset.setBrokerIds(brokerIds);
+            System.out.println("BrokersetNodeSensor.sense: cluster= " + cluster.getName()
+                + "brokerset=" + brokersetAlias
+                + "brokerIds=" + brokerIds);
         }
         for (Node node : cluster.getNodeMap().values()) {
             if (node != null && node.getCurrentNodeInfo() != null) {
@@ -60,8 +65,6 @@ public class BrokersetNodeSensor extends KafkaSensor {
                 node.getCurrentNodeInfo().setBrokersets(brokerToBrokersetsMap.get(nodeId));
             }
         }
-        System.out.println(String.format("[TEST1] Cluster: %s brokerToBrokersetsMap: %s",
-            cluster.getName(), brokerToBrokersetsMap));
     }
 
     @Override
