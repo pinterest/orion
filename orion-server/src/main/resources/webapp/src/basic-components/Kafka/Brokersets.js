@@ -13,46 +13,118 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import React from "react";
-import BrokersetPanel from "./BrokersetPanel";
+import React, {Suspense, useState} from "react";
 import MaterialTable from "material-table";
-import { Box } from "@material-ui/core";
-import CreateTopicPanel from "./CreateTopicPanel";
+import {Backdrop, Box, Fade, Modal} from "@material-ui/core";
+import {useHistory, useRouteMatch} from "react-router-dom";
+import BrokersetEntry from "./BrokersetEntry";
+import {makeStyles} from "@material-ui/core/styles";
 
+const modalStyles = makeStyles(theme => ({
+    modal: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    paper: {
+        backgroundColor: theme.palette.background.paper,
+        border: "2px solid #000",
+        maxHeight: "500px",
+        boxShadow: theme.shadows[5],
+        padding: theme.spacing(2, 4, 3)
+    }
+}));
 
 export default function Brokersets(props) {
-  let rows = [];
-  if (props.cluster.attributes.brokerset) {
-    rows = Object.values(props.cluster.attributes.brokerset);
-  }
+    let brokersets = [];
+    if (props.cluster.attributes.brokersetState) {
+        brokersets = Object.values(props.cluster.attributes.brokersetState);
+    }
+    let columns = [
+        { title: "Name", field: "brokersetAlias" },
+        { title: "Broker Count", field: "brokerCount" }
+    ]
+    let clusterId = props.cluster.clusterId;
+    let brokersetToRowValuesMap = {};
+    for (let brokerset of brokersets) {
+        let brokersetAlias = brokerset.brokersetAlias;
+        brokersetToRowValuesMap[brokersetAlias] = {
+            "brokersetAlias": brokersetAlias,
+            "clusterId": clusterId,
+            "brokerCount": brokerset.size,
+            "brokersetData": brokerset
+        }
+    }
 
-  let columns = [
-    { title: "Alias", field: "brokersetAlias" },
-    { title: "Brokers", field: "brokers" }
-  ];
-  let data = rows.map(row => ({
-      brokersetAlias: row.brokersetAlias,
-      brokers: row.size,
-      raw: row
-  }));
-  return (
-    <Box>
-      <MaterialTable
-        options={{ pageSize: 10, grouping: true, filtering: false }}
-        title=""
-        // style={useStyles}
-        detailPanel={rowData => {
-          return (
-            <div style={{ backgroundColor: "black" }}>
-              <div style={{ padding: "20px" }}>
-                <BrokersetPanel brokerset={rowData.raw} />
-              </div>
-            </div>
-          );
-        }}
-        columns={columns}
-        data={data}
-      />
-    </Box>
-  );
+    let data = Object.values(brokersetToRowValuesMap);
+
+    const classes = modalStyles();
+    const history = useHistory();
+    let match = useRouteMatch("/clusters/:clusterId/service/brokersets/:brokersetAlias?");
+
+    const [selectedRow, setSelectedRow] = useState();
+    const [openModal, setOpenModal] = useState(false);
+    const [openDetailsModal, setOpenDetailsModal] = useState(false);
+    const handleOpen = () => {
+        setOpenModal(true);
+    };
+    const handleClose = () => {
+        setOpenModal(false);
+    };
+    const handleDetailsClose = () => {
+        setOpenDetailsModal(false);
+        setSelectedRow();
+        history.push("/clusters/" + clusterId + "/service/brokersets")
+    }
+
+    if (selectedRow != null && !openDetailsModal) {
+        setOpenDetailsModal(true);
+    }
+
+    return (
+        <Box>
+            <Modal
+                aria-labelledby="transition-modal-title"
+                aria-describedby="transition-modal-description"
+                className={classes.modal}
+                open={openDetailsModal}
+                onClose={handleDetailsClose}
+                closeAfterTransition
+                BackdropComponent={Backdrop}
+                BackdropProps={{
+                    timeout: 500
+                }}
+            >
+                <Fade in={openDetailsModal}>
+                    <div
+                        style={{
+                            backgroundColor: "white",
+                            padding: "20px",
+                            width: "1000px"
+                        }}
+                    >
+                        {selectedRow && (
+                            <Suspense fallback={<div>Loading...</div>}>
+                                <BrokersetEntry
+                                    rowData={selectedRow}
+                                    clusterId={clusterId}
+                                />
+                            </Suspense>
+                        )}
+                    </div>
+                </Fade>
+            </Modal>
+            <MaterialTable
+                options={{ pageSize: 10, grouping: true, filtering: false }}
+                title={""}
+                onRowClick={(event, rowData, togglePanel) => {
+                    history.push("/clusters/" + clusterId + "/service/brokersets/" + rowData.brokersetAlias);
+                    setSelectedRow(rowData);
+                    setOpenDetailsModal(true);
+                }}
+                columns={columns}
+                data={data}
+            />
+        </Box>
+    )
 }
