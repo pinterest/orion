@@ -241,12 +241,11 @@ function getBrokersetData(cluster, node) {
   for (let brokersetAlias of brokersets) {
     const brokersetAliasSplit = brokersetAlias.split("_");
     let brokersetType = brokersetAliasSplit[0];
+    let brokerCount = "N/A";
+    let partitionCount = "N/A";
     if (brokersetType === "Capacity" || brokersetType === "Static") {
-      let brokerCount = brokersetAliasSplit[1].replace("B", "");
-      let partitionCount = brokersetAliasSplit[2].replace("P", "");
-    } else {
-      let brokerCount = "N/A";
-      let partitionCount = "N/A";
+      brokerCount = brokersetAliasSplit[1].replace("B", "");
+      partitionCount = brokersetAliasSplit[2].replace("P", "");
     }
     brokersetRows.push({
       brokersetAlias: <Box>{brokersetToLink(brokersetAlias, clusterId)}</Box>,
@@ -255,15 +254,7 @@ function getBrokersetData(cluster, node) {
       partitionCount: partitionCount
     });
   }
-  let brokersetData = brokersetRows.map(entry => {
-    return {
-      brokersetAlias: entry.brokersetAlias,
-      type: entry.type,
-      brokerCount: entry.brokerCount,
-      partitionCount: entry.partitionCount
-    };
-  });
-  return brokersetData;
+  return brokersetRows;
 }
 
 function getBrokersetColumns() {
