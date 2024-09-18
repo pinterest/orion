@@ -37,9 +37,11 @@ const modalStyles = makeStyles(theme => ({
 
 export default function Brokersets(props) {
     let brokersets = [];
-    if (props.cluster.attributes.brokerset) {
-        brokersets = Object.values(props.cluster.attributes.brokerset);
+    if (props.cluster.attributes.brokersetState) {
+        brokersets = Object.values(props.cluster.attributes.brokersetState);
     }
+    let brokersetsStr = JSON.stringify(brokersets);
+    console.log("[DEBUG-Brokersets]" + brokersetsStr);
     let columns = [
         { title: "Name", field: "brokersetAlias" },
         { title: "Broker Count", field: "brokerCount" }

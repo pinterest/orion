@@ -72,11 +72,11 @@ function getBrokerColumns() {
 function getAssignmentData(clusterId, rawData) {
     let brokersetData = rawData.brokersetData;
     let assignments = [];
-    for (let entry of brokersetData.entries) {
+    for (let range of brokersetData.brokersetRanges) {
         assignments.push({
-            startBrokerIdx: entry.startBrokerIdx,
-            endBrokerIdx: entry.endBrokerIdx,
-            size: entry.size
+            startBrokerIdx: range[0],
+            endBrokerIdx: range[1],
+            size: range[1] - range[0] + 1
         });
     }
     return assignments;

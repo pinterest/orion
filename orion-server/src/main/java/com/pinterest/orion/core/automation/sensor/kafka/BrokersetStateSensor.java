@@ -3,8 +3,11 @@ package com.pinterest.orion.core.automation.sensor.kafka;
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Node;
 import com.pinterest.orion.core.kafka.Brokerset;
+import com.pinterest.orion.core.kafka.BrokersetState;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,8 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class BrokersetNodeSensor extends KafkaSensor {
-    private static final Logger logger = Logger.getLogger(BrokersetNodeSensor.class.getName());
+public class BrokersetStateSensor extends KafkaSensor {
+    private static final Logger logger = Logger.getLogger(BrokersetStateSensor.class.getName());
+    public static final String ATTR_BROKERSET_STATE_KEY = "brokersetState";
 
     @Override
     public void sense(KafkaCluster cluster) throws Exception {
@@ -23,15 +27,16 @@ public class BrokersetNodeSensor extends KafkaSensor {
             return;
         }
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
+        // Brokerset state map.
+        Map<String, BrokersetState> brokersetStateMap = new HashMap<>();
         // BrokerId to brokerset alias set map
         Map<String, Set<String>> brokerToBrokersetsMap = new HashMap<>();
         for (String nodeId : cluster.getNodeMap().keySet()) {
             brokerToBrokersetsMap.put(nodeId, new HashSet<>());
         }
-        System.out.println("BrokersetNodeSensor.sense: cluster= " + cluster.getName()
-            + "brokersets=" + brokersetMap.keySet());
         for (Brokerset brokerset : brokersetMap.values()) {
             String brokersetAlias = brokerset.getBrokersetAlias();
+            BrokersetState brokersetState = new BrokersetState(brokersetAlias);
             // brokerIds in this brokerset
             Set<String> brokerIds = new HashSet<>();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
@@ -53,11 +58,10 @@ public class BrokersetNodeSensor extends KafkaSensor {
                         handleInvalidBrokerset(nodeId, brokersetAlias, cluster.getName());
                     }
                 }
+                brokersetState.addBrokerRange(Arrays.asList(start, end));
             }
-            brokerset.setBrokerIds(brokerIds);
-            System.out.println("BrokersetNodeSensor.sense: cluster= " + cluster.getName()
-                + "brokerset=" + brokersetAlias
-                + "brokerIds=" + brokerIds);
+            brokersetState.setBrokerIds(new ArrayList<>(brokerIds));
+            brokersetStateMap.put(brokersetAlias, brokersetState);
         }
         for (Node node : cluster.getNodeMap().values()) {
             if (node != null && node.getCurrentNodeInfo() != null) {
@@ -65,11 +69,12 @@ public class BrokersetNodeSensor extends KafkaSensor {
                 node.getCurrentNodeInfo().setBrokersets(brokerToBrokersetsMap.get(nodeId));
             }
         }
+        cluster.setAttribute(ATTR_BROKERSET_STATE_KEY, brokersetStateMap);
     }
 
     @Override
     public String getName() {
-        return "BrokersetNodeSensor";
+        return "BrokersetStateSensor";
     }
 
     protected void handleInvalidBrokerset(String nodeId, String brokersetAlias, String clusterId) {
