@@ -1,8 +1,7 @@
-package com.pinterest.orion.core.automation.operator.kafka;
+package com.pinterest.orion.core.automation.sensor.kafka;
 
 import com.pinterest.orion.core.Attribute;
 import com.pinterest.orion.core.Node;
-import com.pinterest.orion.core.automation.sensor.kafka.KafkaClusterInfoSensor;
 import com.pinterest.orion.core.kafka.Brokerset;
 import com.pinterest.orion.core.kafka.KafkaCluster;
 
@@ -13,14 +12,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class BrokersetNodeOperator extends KafkaOperator {
-    private static final Logger logger = Logger
-        .getLogger(BrokersetNodeOperator.class.getName());
+public class BrokersetNodeSensor extends KafkaSensor {
+    private static final Logger logger = Logger.getLogger(BrokersetNodeSensor.class.getName());
+
     @Override
-    public void operate(KafkaCluster cluster) throws Exception {
+    public void sense(KafkaCluster cluster) throws Exception {
         Attribute brokersetMapAttr = cluster.getAttribute(KafkaClusterInfoSensor.ATTR_BROKERSET_KEY);
         if (brokersetMapAttr == null) {
-            // TODO: Cluster has not brokerset. Return.
+            logger.warning(String.format("Cluster %s has no brokerset.", cluster.getName()));
             return;
         }
         Map<String, Brokerset> brokersetMap = brokersetMapAttr.getValue();
@@ -35,7 +34,8 @@ public class BrokersetNodeOperator extends KafkaOperator {
             Set<String> brokerIds = new HashSet<>();
             List<Brokerset.BrokersetRange> brokersetRanges = brokerset.getEntries();
             if (brokersetRanges == null || brokersetRanges.isEmpty()) {
-                // TODO: Brokerset has no brokerset range. Publish metrics - override internally?
+                logger.warning(String.format("Brokerset %s in cluster %s has no brokerset range.",
+                    brokersetAlias, cluster.getName()));
                 continue;
             }
             for (Brokerset.BrokersetRange brokersetRange : brokersetRanges) {
@@ -48,7 +48,7 @@ public class BrokersetNodeOperator extends KafkaOperator {
                         brokerIds.add(node.getCurrentNodeInfo().getNodeId());
                         brokerToBrokersetsMap.get(nodeId).add(brokersetAlias);
                     } else {
-                        // TODO: Brokerset contains invalid broker id.
+                        handleInvalidBrokerset(nodeId, brokersetAlias, cluster.getName());
                     }
                 }
             }
@@ -66,6 +66,11 @@ public class BrokersetNodeOperator extends KafkaOperator {
 
     @Override
     public String getName() {
-        return "BrokersetNodeOperator";
+        return "BrokersetNodeSensor";
+    }
+
+    protected void handleInvalidBrokerset(String nodeId, String brokersetAlias, String clusterId) {
+        logger.warning(String.format("Brokerset %s in cluster %s has invalid broker id %s.",
+            brokersetAlias, clusterId, nodeId));
     }
 }
