@@ -19,22 +19,22 @@ const routes = [
         getColumns: getBrokerColumns,
     },
     {
-        subpath: "status",
+        subpath: "stats",
         component: PropsTable,
-        label: "Status",
-        getData: getStatusData,
-        getColumns: getStatusColumns,
+        label: "Stats",
+        getData: getStatsData,
+        getColumns: getStatsColumns,
     }
 ];
 
-function getStatusData(clusterId, rawData) {
-    let brokersetStatus = [];
+function getStatsData(clusterId, rawData) {
+    let brokersetStats = [];
     let brokersetData = rawData.brokersetData;
-    brokersetStatus.push({ key: "Broker Count", value: brokersetData.size});
-    return brokersetStatus;
+    brokersetStats.push({ key: "Broker Count", value: brokersetData.size});
+    return brokersetStats;
 }
 
-function getStatusColumns() {
+function getStatsColumns() {
     return [
         { title: "Key", field: "key" },
         { title: "Value", field: "value" },
