@@ -16,7 +16,6 @@
 import React from "react";
 import { Tab, Tabs, Grid, Typography, Box, Chip, Link } from "@material-ui/core";
 import { Link as RouterLink, Redirect, Route, Switch } from "react-router-dom";
-import { makeStyles } from "@material-ui/core/styles";
 import PropsTable from "../Commons/PropsTable";
 
 const routes = [
@@ -40,6 +39,20 @@ const routes = [
     label: "Broker Environment",
     getData: getBrokerEnvironmentData,
     getColumns: getBrokerEnvironmentColumns,
+  },
+  {
+    subpath: "brokersets",
+    component: PropsTable,
+    label: "Brokersets",
+    getData: getBrokersetData,
+    getColumns: getBrokersetColumns,
+  },
+  {
+    subpath: "brokerstats",
+    component: PropsTable,
+    label: "Broker Stats",
+    getData: getBrokerStatsData,
+    getColumns: getBrokerStatsColumns,
   }
 ];
 
@@ -133,6 +146,14 @@ function getNodeInfoHeader(node, nodeId, brokerId, hostname) {
               label={node.currentNodeInfo.rack}
             />
           </Grid>
+          <Grid item>
+            <Chip
+                variant="outlined"
+                color="primary"
+                size="small"
+                label={node.currentNodeInfo.brokersets.length + " brokersets"}
+            />
+          </Grid>
         </Grid>
       </Box>
     </div>
@@ -199,6 +220,61 @@ function getTopicPartitionsColumns() {
     { title: "Is Leader?", field: "isLeader" },
     { title: "Preferred Leader?", field: "isPreferredLeader" },
     { title: "Size (GB)", field: "size", type: "numeric" }
+  ]);
+}
+
+function brokersetToLink(brokerset, clusterId) {
+  return (
+      <Link
+          component={RouterLink}
+          to={"/clusters/" + clusterId + "/service/brokersets/" + brokerset + "/stats"}
+      >
+        {brokerset}
+      </Link>
+  );
+}
+
+function getBrokersetData(cluster, node) {
+  let clusterId = node.currentNodeInfo.clusterId;
+  let brokersets = node.currentNodeInfo.brokersets;
+  let brokersetRows = [];
+  for (let brokersetAlias of brokersets) {
+    const brokersetAliasSplit = brokersetAlias.split("_");
+    let brokersetType = brokersetAliasSplit[0];
+    let brokerCount = -1;
+    let partitionCount = -1;
+    if (brokersetType === "Capacity" || brokersetType === "Static") {
+      brokerCount = parseInt(brokersetAliasSplit[1].replace("B", ""));
+      partitionCount = parseInt(brokersetAliasSplit[2].replace("P", ""));
+    }
+    brokersetRows.push({
+      brokersetAlias: <Box>{brokersetToLink(brokersetAlias, clusterId)}</Box>,
+      type: brokersetType,
+      brokerCount: brokerCount,
+      partitionCount: partitionCount
+    });
+  }
+  return brokersetRows;
+}
+
+function getBrokersetColumns() {
+    return ([
+      { title: "Brokerset Name", field: "brokersetAlias" },
+      { title: "Type", field: "type" },
+      { title: "Broker Count", field: "brokerCount" },
+      { title: "Partition Count", field: "partitionCount" }
+    ]);
+}
+
+function getBrokerStatsData(cluster, node) {
+  let brokerStatsData = [];
+  return brokerStatsData;
+}
+
+function getBrokerStatsColumns() {
+  return ([
+      { title: "Key", field: "key" },
+      { title: "Value", field: "value" }
   ]);
 }
 

@@ -16,7 +16,9 @@
 package com.pinterest.orion.common;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class NodeInfo implements Serializable {
 
@@ -33,6 +35,32 @@ public class NodeInfo implements Serializable {
   private Map<String, String> serviceInfo;
   private Map<String, String> agentSettings;
   private Map<String, String> environment;
+  private Set<String> brokersets = new HashSet<>();
+  private Map<String, String> brokerStatus;
+  /**
+   * @param brokerStatus
+   */
+  public void setBrokerStatus(Map<String, String> brokerStatus) {
+    this.brokerStatus = brokerStatus;
+  }
+  /**
+   * @return the brokerStatus
+   */
+  public Map<String, String> getBrokerStatus() {
+    return brokerStatus;
+  }
+  /**
+   * @param brokersets
+   */
+  public void setBrokersets(Set<String> brokersets) {
+    this.brokersets = brokersets;
+  }
+  /**
+   * @return the brokersets
+   */
+  public Set<String> getBrokersets() {
+      return brokersets;
+  }
   /**
    * @return the timestamp
    */
