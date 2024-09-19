@@ -48,11 +48,11 @@ const routes = [
     getColumns: getBrokersetColumns,
   },
   {
-    subpath: "brokerstatus",
+    subpath: "brokerstats",
     component: PropsTable,
-    label: "Broker Status",
-    getData: getBrokerStatusData,
-    getColumns: getBrokerStatusColumns,
+    label: "Broker Stats",
+    getData: getBrokerStatsData,
+    getColumns: getBrokerStatsColumns,
   }
 ];
 
@@ -241,11 +241,11 @@ function getBrokersetData(cluster, node) {
   for (let brokersetAlias of brokersets) {
     const brokersetAliasSplit = brokersetAlias.split("_");
     let brokersetType = brokersetAliasSplit[0];
-    let brokerCount = "N/A";
-    let partitionCount = "N/A";
+    let brokerCount = -1;
+    let partitionCount = -1;
     if (brokersetType === "Capacity" || brokersetType === "Static") {
-      brokerCount = brokersetAliasSplit[1].replace("B", "");
-      partitionCount = brokersetAliasSplit[2].replace("P", "");
+      brokerCount = parseInt(brokersetAliasSplit[1].replace("B", ""));
+      partitionCount = parseInt(brokersetAliasSplit[2].replace("P", ""));
     }
     brokersetRows.push({
       brokersetAlias: <Box>{brokersetToLink(brokersetAlias, clusterId)}</Box>,
@@ -266,12 +266,12 @@ function getBrokersetColumns() {
     ]);
 }
 
-function getBrokerStatusData(cluster, node) {
-  let brokerStatusData = [];
-  return brokerStatusData;
+function getBrokerStatsData(cluster, node) {
+  let brokerStatsData = [];
+  return brokerStatsData;
 }
 
-function getBrokerStatusColumns() {
+function getBrokerStatsColumns() {
   return ([
       { title: "Key", field: "key" },
       { title: "Value", field: "value" }
