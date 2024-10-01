@@ -300,10 +300,12 @@ public class OrionServer extends Application<OrionConf> {
     new OrionServer().run(args);
   }
 
+  /**
+   * Static helper class doing counter.inc() for Orion Server metrics.
+   * @param name The name of the metric
+   * @param tagMap The tag map of the metric
+   */
   public static void metricsCounterInc(String name, Map<String, String> tagMap) {
-    /*
-    Static helper class doing counter.inc() for Orion Server metrics.
-     */
     try {
       METRICS.counter(new MetricName(name, tagMap)).inc();
     } catch (Exception e) {
@@ -311,14 +313,31 @@ public class OrionServer extends Application<OrionConf> {
     }
   }
 
+  /**
+   * Static helper class doing metrics.gauge for Orion Server metrics.
+   * @param name The name of the metric
+   * @param value The value of the metric
+   * @param tagMap The tag map of the metric
+   */
   public static void metricsGaugeNum(String name, double value, Map<String, String> tagMap) {
-    /*
-    Static helper class doing metrics.gauge for Orion Server metrics.
-     */
     try {
       METRICS.gauge(new MetricName(name, tagMap), () -> (Gauge<Double>) () -> value);
     } catch (Exception e) {
       logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics gauge. Error: ", e);
+    }
+  }
+
+  /**
+   * Static helper class doing metrics.histogram for Orion Server metrics.
+   * @param name The name of the metric
+   * @param value The value of the metric
+   * @param tagMap The tag map of the metric
+   */
+  public static void metricsHistogram(String name, long value, Map<String, String> tagMap) {
+    try {
+      METRICS.histogram(new MetricName(name, tagMap)).update(value);
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics histogram. Error: ", e);
     }
   }
 }
