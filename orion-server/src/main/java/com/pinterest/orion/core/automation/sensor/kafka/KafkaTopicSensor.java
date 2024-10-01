@@ -144,31 +144,35 @@ public class KafkaTopicSensor extends KafkaSensor {
     return cluster.getTopicDescriptionFromKafka();
   }
 
+  /**
+   * Publish kafka topic metrics including topic size in byte, number of partitions and retention period in ms.
+   * @param cluster KafkaCluster
+   * @param topicDescriptionMap Map of topic name to KafkaTopicDescription
+   */
   public void populateTopicMetrics(KafkaCluster cluster, Map<String, KafkaTopicDescription> topicDescriptionMap) {
-    // Publish kafka topic metrics including topic size in byte, number of partitions and retention period in ms.
     for (KafkaTopicDescription topicDescription : topicDescriptionMap.values()) {
       Map<String, String> metricsTags = new HashMap<String, String>() {{
         put("topicName", topicDescription.getName());
         put("clusterId", cluster.getClusterId());
       }};
       // Topic size
-      double topicSize = getTopicSizeByteFromTopicDescription(topicDescription);
-      OrionServer.metricsGaugeNum(
+      int topicSize = (int) getTopicSizeByteFromTopicDescription(topicDescription);
+      OrionServer.metricsHistogram(
               "kafka.topic.size.bytes",
               topicSize,
               metricsTags
       );
       // Number of partitions
-      double numPartition = (double) topicDescription.getPartitions().size();
-      OrionServer.metricsGaugeNum(
+      int numPartition = topicDescription.getPartitions().size();
+      OrionServer.metricsHistogram(
               "kafka.topic.partition.count",
               numPartition,
               metricsTags
       );
       // Retention
-      double retentionMs= Double.parseDouble(
+      int retentionMs= Integer.parseInt(
               topicDescription.getTopicConfigs().getOrDefault("retention.ms", "0.0"));
-      OrionServer.metricsGaugeNum(
+      OrionServer.metricsHistogram(
               "kafka.topic.retention.ms",
               retentionMs,
               metricsTags
