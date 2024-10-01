@@ -321,4 +321,15 @@ public class OrionServer extends Application<OrionConf> {
       logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics gauge. Error: ", e);
     }
   }
+
+  public static void metricsHistogram(String name, long value, Map<String, String> tagMap) {
+    /*
+    Static helper class doing metrics.histogram for Orion Server metrics.
+     */
+    try {
+      METRICS.histogram(new MetricName(name, tagMap)).update(value);
+    } catch (Exception e) {
+      logger.log(Level.WARNING, "ActionEngine failed to run tsdb metrics histogram. Error: ", e);
+    }
+  }
 }
