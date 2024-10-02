@@ -50,6 +50,7 @@ public class AmiTagManager {
   public static final String KEY_APPLICATION = "application";
   public static final String KEY_RELEASE = "release";
   public static final String KEY_ARCHITECTURE = "architecture";
+  public static final String KEY_ENVIRONMENT = "environment";
   public static final String KEY_APPLICATION_ENVIRONMENT = "application_environment";
   public static final String VALUE_KAFKA = "kafka";
   public static UnaryOperator<String> tag = key -> "tag:" + key;
@@ -85,6 +86,12 @@ public class AmiTagManager {
       filterList.add(
         filterBuilder.name(KEY_ARCHITECTURE)
           .values(filter.get(KEY_ARCHITECTURE))
+          .build()
+      );
+    if (filter.containsKey(KEY_ENVIRONMENT))
+      filterList.add(
+        filterBuilder.name(tag.apply(KEY_ENVIRONMENT))
+          .values(filter.get(KEY_ENVIRONMENT))
           .build()
       );
     filterList.add(
