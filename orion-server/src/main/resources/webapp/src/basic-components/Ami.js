@@ -53,6 +53,12 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
   const handleArchChange = event => {
     setArch(event.target.value);
   };
+  const [environment, setEnvironment] = React.useState();
+  if (environment == undefined)
+    setEnvironment("prod")
+  const handleEnvironmentChange = event => {
+    setEnvironment(event.target.value);
+  };
   const [selected, setSelected] = React.useState([]);
   const [env, setEnv] = React.useState({});
   if (envTypes !== undefined && Object.keys(env).length == 0) {
@@ -85,6 +91,8 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
       parms.push("release=" + os);
     if (arch)
       parms.push("architecture=" + arch);
+    if (environment)
+      parms.push("environment=" + environment);
     requestAmiList(parms.join('&'));
     requestEnvTypes();
   }
@@ -139,6 +147,21 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
               >
                 <MenuItem value={"x86_64"}>x86_64</MenuItem>
                 <MenuItem value={"arm64"}>arm64</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
+          <div>
+            <FormControl className={classes.formControl}>
+              <InputLabel id="lblEnvironment">OS</InputLabel>
+              <Select
+                labelId="lblSelectEnvironment"
+                id="selectEnvironment"
+                value={environment}
+                onChange={handleEnvironmentChange}
+                style={{ width: "200px", textAlign: "left" }}
+              >
+                <MenuItem value={"prod"}>prod</MenuItem>
+                <MenuItem value={"test"}>test</MenuItem>
               </Select>
             </FormControl>
           </div>
