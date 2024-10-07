@@ -159,12 +159,15 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Orion agents on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyAgentBrokersWithoutURPs,
           "orion"
       ));
-      OrionServer.metricsCounterInc(
-              "broker.agent.unhealthy",
-              new HashMap<String, String>() {{
-                put("clusterId", cluster.getClusterId());
-              }}
-      );
+      for (String brokerId : alertableUnhealthyAgentBrokersWithoutURPs) {
+        OrionServer.metricsCounterInc(
+                "broker.agent.unhealthy",
+                new HashMap<String, String>() {{
+                  put("clusterId", cluster.getClusterId());
+                  put("brokerId", brokerId);
+                }}
+        );
+      }
     }
     
     // alert on brokers where broker service is unhealthy but there are no URPs if they show up for 3 consecutive times
@@ -186,12 +189,15 @@ public class BrokerHealingOperator extends KafkaOperator {
           "Kafka service on " + cluster.getClusterId() + " are unhealthy, no URPs on the cluster: " + alertableUnhealthyBrokersWithoutURPs,
           "orion"
       ));
-      OrionServer.metricsCounterInc(
-              "broker.service.unhealthy",
-              new HashMap<String, String>() {{
-                put("clusterId", cluster.getClusterId());
-              }}
-      );
+      for (String brokerId : alertableUnhealthyBrokersWithoutURPs) {
+        OrionServer.metricsCounterInc(
+                "broker.service.unhealthy",
+                new HashMap<String, String>() {{
+                  put("clusterId", cluster.getClusterId());
+                  put("brokerId", brokerId);
+                }}
+        );
+      }
     }
 
     setMessage("offline brokers: " + unhealthyKafkaBrokers + "\nunhealthy agent orion nodes: " + unhealthyAgentNodes +
