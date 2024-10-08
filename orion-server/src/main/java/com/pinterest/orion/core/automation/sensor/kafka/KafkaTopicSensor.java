@@ -156,7 +156,7 @@ public class KafkaTopicSensor extends KafkaSensor {
         put("clusterId", cluster.getClusterId());
       }};
       // Topic size
-      int topicSize = (int) getTopicSizeByteFromTopicDescription(topicDescription);
+      long topicSize = (long) getTopicSizeByteFromTopicDescription(topicDescription);
       OrionServer.metricsHistogram(
               "kafka.topic.size.bytes",
               topicSize,
@@ -170,7 +170,7 @@ public class KafkaTopicSensor extends KafkaSensor {
               metricsTags
       );
       // Retention
-      int retentionMs= Integer.parseInt(
+      long retentionMs= Long.parseLong(
               topicDescription.getTopicConfigs().getOrDefault("retention.ms", "0.0"));
       OrionServer.metricsHistogram(
               "kafka.topic.retention.ms",
