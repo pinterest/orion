@@ -80,6 +80,10 @@ public class MemqClusterSensor extends MemqSensor {
 
       logger.info("[TEST-3]");
       Map<String, Node> currentNodeMap = cluster.getNodeMap();
+      logger.info("[TEST-4]");
+      if (currentNodeMap == null) {
+        currentNodeMap = new ConcurrentHashMap<>();
+      }
       ConcurrentMap<String, Node> refreshedNodeMap = new ConcurrentHashMap<>();
       for (String brokerName : brokerNames) {
         byte[] brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
