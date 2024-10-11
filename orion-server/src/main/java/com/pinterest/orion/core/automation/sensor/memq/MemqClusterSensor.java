@@ -17,13 +17,11 @@ package com.pinterest.orion.core.automation.sensor.memq;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Set;
 
-import com.pinterest.orion.core.Node;
-import com.pinterest.orion.core.memq.MemqBroker;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -33,7 +31,6 @@ import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 import com.pinterest.orion.utils.NetworkUtils;
-import org.jboss.netty.util.internal.ConcurrentHashMap;
 
 import static com.pinterest.orion.core.memq.MemqCluster.CLUSTER_CONTEXT;
 
@@ -59,7 +56,6 @@ public class MemqClusterSensor extends MemqSensor {
   @Override
   public void sense(MemqCluster cluster) throws Exception {
     try {
-      logger.info("[TEST-1]");
       if (cluster.getZkClient() == null) {
         String zkUrl = cluster.getAttribute(MemqCluster.ZK_CONNECTION_STRING).getValue();
         CuratorFramework curator = CuratorFrameworkFactory.newClient(zkUrl,
@@ -68,7 +64,6 @@ public class MemqClusterSensor extends MemqSensor {
         curator.blockUntilConnected();
         cluster.setZkClient(curator);
       }
-      logger.info("[TEST-2]");
       CuratorFramework zkClient = cluster.getZkClient();
       List<String> brokerNames = zkClient.getChildren().forPath(BROKERS);
       
@@ -78,10 +73,8 @@ public class MemqClusterSensor extends MemqSensor {
 
       Gson gson = new Gson();
 
-      logger.info("[TEST-3]");
-      Map<String, Node> refreshedNodeMap = new HashMap<>();
+      Set<String> existingNodeIPs = new HashSet<>();
       for (String brokerName : brokerNames) {
-        logger.info("[TEST-4] Loop: " + brokerName + " - " + cluster.getClusterId());
         byte[] brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
         NodeInfo info = new NodeInfo();
@@ -106,15 +99,15 @@ public class MemqClusterSensor extends MemqSensor {
           }
           hostnames.add(hostname);
         }
-        String nodeId = broker.getBrokerIP();
-        if (cluster.getNodeMap() != null && cluster.getNodeMap().containsKey(nodeId)) {
-          refreshedNodeMap.put(nodeId, cluster.getNodeMap().get(nodeId));
-        } else {
-          refreshedNodeMap.put(nodeId, new MemqBroker(cluster, info, new Properties()));
+        existingNodeIPs.add(broker.getBrokerIP());
+      }
+      logger.info("[TEST1] existingNodeIPs: " + existingNodeIPs.toString() + "keySet: " + cluster.getNodeMap().keySet().toString());
+      for (String nodeId : cluster.getNodeMap().keySet()) {
+        if (!existingNodeIPs.contains(nodeId)) {
+          cluster.getNodeMap().remove(nodeId);
         }
       }
-      logger.info("[TEST-5] currentNodeMap: " + cluster.getNodeMap() + "; refreshedNodeMap: " + refreshedNodeMap);
-      cluster.setNodeMap(new ConcurrentHashMap<>(refreshedNodeMap));
+      logger.info("[TEST2] Finished removing nodes from cluster.getNodeMap() that are not in existingNodeIPs.");
 
       Map<String, TopicConfig> topicConfigMap = new HashMap<>();
       List<String> topics = zkClient.getChildren().forPath(TOPICS);
