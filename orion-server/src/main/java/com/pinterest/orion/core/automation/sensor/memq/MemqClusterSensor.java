@@ -19,7 +19,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentMap;
 
+import com.pinterest.orion.core.Node;
+import com.pinterest.orion.core.memq.MemqBroker;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -29,6 +33,7 @@ import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 import com.pinterest.orion.utils.NetworkUtils;
+import org.jboss.netty.util.internal.ConcurrentHashMap;
 
 import static com.pinterest.orion.core.memq.MemqCluster.CLUSTER_CONTEXT;
 
@@ -71,6 +76,9 @@ public class MemqClusterSensor extends MemqSensor {
       Map<String, Broker> rawBrokerMap = new HashMap<>();
 
       Gson gson = new Gson();
+
+      Map<String, Node> currentNodeMap = cluster.getNodeMap();
+      ConcurrentMap<String, Node> refreshedNodeMap = new ConcurrentHashMap<>();
       for (String brokerName : brokerNames) {
         byte[] brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
@@ -96,7 +104,14 @@ public class MemqClusterSensor extends MemqSensor {
           }
           hostnames.add(hostname);
         }
+        String nodeId = broker.getBrokerIP();
+        if (currentNodeMap.containsKey(nodeId)) {
+          refreshedNodeMap.put(nodeId, currentNodeMap.get(nodeId));
+        } else {
+          refreshedNodeMap.put(nodeId, new MemqBroker(cluster, info, new Properties()));
+        }
       }
+      cluster.setNodeMap(refreshedNodeMap);
 
       Map<String, TopicConfig> topicConfigMap = new HashMap<>();
       List<String> topics = zkClient.getChildren().forPath(TOPICS);
