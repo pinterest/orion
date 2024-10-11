@@ -79,13 +79,9 @@ public class MemqClusterSensor extends MemqSensor {
       Gson gson = new Gson();
 
       logger.info("[TEST-3]");
-      Map<String, Node> currentNodeMap = cluster.getNodeMap();
-      logger.info("[TEST-4]");
-      if (currentNodeMap == null) {
-        currentNodeMap = new ConcurrentHashMap<>();
-      }
-      ConcurrentMap<String, Node> refreshedNodeMap = new ConcurrentHashMap<>();
+      Map<String, Node> refreshedNodeMap = new HashMap<>();
       for (String brokerName : brokerNames) {
+        logger.info("[TEST-4] Loop: " + brokerName + " - " + cluster.getClusterId());
         byte[] brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
         NodeInfo info = new NodeInfo();
@@ -111,15 +107,14 @@ public class MemqClusterSensor extends MemqSensor {
           hostnames.add(hostname);
         }
         String nodeId = broker.getBrokerIP();
-        if (currentNodeMap.containsKey(nodeId)) {
-          refreshedNodeMap.put(nodeId, currentNodeMap.get(nodeId));
+        if (cluster.getNodeMap() != null && cluster.getNodeMap().containsKey(nodeId)) {
+          refreshedNodeMap.put(nodeId, cluster.getNodeMap().get(nodeId));
         } else {
           refreshedNodeMap.put(nodeId, new MemqBroker(cluster, info, new Properties()));
         }
       }
-      logger.info("[TEST-4] currentNodeMap: " + cluster.getNodeMap() + "; refreshedNodeMap: " + refreshedNodeMap);
-
-      cluster.setNodeMap(refreshedNodeMap);
+      logger.info("[TEST-5] currentNodeMap: " + cluster.getNodeMap() + "; refreshedNodeMap: " + refreshedNodeMap);
+      cluster.setNodeMap(new ConcurrentHashMap<>(refreshedNodeMap));
 
       Map<String, TopicConfig> topicConfigMap = new HashMap<>();
       List<String> topics = zkClient.getChildren().forPath(TOPICS);
