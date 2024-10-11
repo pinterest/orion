@@ -111,6 +111,8 @@ public class MemqClusterSensor extends MemqSensor {
           refreshedNodeMap.put(nodeId, new MemqBroker(cluster, info, new Properties()));
         }
       }
+      logger.info("[TEST] currentNodeMap: " + cluster.getNodeMap() + "; refreshedNodeMap: " + refreshedNodeMap);
+
       cluster.setNodeMap(refreshedNodeMap);
 
       Map<String, TopicConfig> topicConfigMap = new HashMap<>();
