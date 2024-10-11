@@ -59,6 +59,7 @@ public class MemqClusterSensor extends MemqSensor {
   @Override
   public void sense(MemqCluster cluster) throws Exception {
     try {
+      logger.info("[TEST-1]");
       if (cluster.getZkClient() == null) {
         String zkUrl = cluster.getAttribute(MemqCluster.ZK_CONNECTION_STRING).getValue();
         CuratorFramework curator = CuratorFrameworkFactory.newClient(zkUrl,
@@ -67,7 +68,7 @@ public class MemqClusterSensor extends MemqSensor {
         curator.blockUntilConnected();
         cluster.setZkClient(curator);
       }
-
+      logger.info("[TEST-2]");
       CuratorFramework zkClient = cluster.getZkClient();
       List<String> brokerNames = zkClient.getChildren().forPath(BROKERS);
       
@@ -77,6 +78,7 @@ public class MemqClusterSensor extends MemqSensor {
 
       Gson gson = new Gson();
 
+      logger.info("[TEST-3]");
       Map<String, Node> currentNodeMap = cluster.getNodeMap();
       ConcurrentMap<String, Node> refreshedNodeMap = new ConcurrentHashMap<>();
       for (String brokerName : brokerNames) {
@@ -111,7 +113,7 @@ public class MemqClusterSensor extends MemqSensor {
           refreshedNodeMap.put(nodeId, new MemqBroker(cluster, info, new Properties()));
         }
       }
-      logger.info("[TEST] currentNodeMap: " + cluster.getNodeMap() + "; refreshedNodeMap: " + refreshedNodeMap);
+      logger.info("[TEST-4] currentNodeMap: " + cluster.getNodeMap() + "; refreshedNodeMap: " + refreshedNodeMap);
 
       cluster.setNodeMap(refreshedNodeMap);
 
