@@ -17,8 +17,10 @@ package com.pinterest.orion.core.automation.sensor.memq;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -29,6 +31,7 @@ import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 import com.pinterest.orion.utils.NetworkUtils;
+import org.apache.zookeeper.KeeperException;
 
 import static com.pinterest.orion.core.memq.MemqCluster.CLUSTER_CONTEXT;
 
@@ -71,8 +74,22 @@ public class MemqClusterSensor extends MemqSensor {
       Map<String, Broker> rawBrokerMap = new HashMap<>();
 
       Gson gson = new Gson();
+
+      Set<String> brokersInZookeeper = new HashSet<>();
       for (String brokerName : brokerNames) {
-        byte[] brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
+        byte[] brokerData = null;
+        try {
+          brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
+        } catch (KeeperException.NoNodeException e) {
+          cluster.getNodeMap().remove(brokerName);
+          logger.info(
+              "Broker data of " + brokerName + " is not available in zookeeper. It may have been removed.");
+          continue;
+        } catch (Exception e) {
+          logger.severe(
+              "Face unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
+          continue;
+        }
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
         NodeInfo info = new NodeInfo();
         info.setClusterId(cluster.getClusterId());
@@ -95,6 +112,18 @@ public class MemqClusterSensor extends MemqSensor {
             writeBrokerAssignments.put(topic, hostnames);
           }
           hostnames.add(hostname);
+        }
+        brokersInZookeeper.add(broker.getBrokerIP());
+      }
+
+      if (brokersInZookeeper.isEmpty()) {
+        logger.warning("No broker found in zookeeper for cluster " + cluster.getClusterId());
+      } else {
+        // Remove brokers that are not in zookeeper from the cluster node map
+        for (String nodeId : cluster.getNodeMap().keySet()) {
+          if (!brokersInZookeeper.contains(nodeId)) {
+            cluster.getNodeMap().remove(nodeId);
+          }
         }
       }
 
