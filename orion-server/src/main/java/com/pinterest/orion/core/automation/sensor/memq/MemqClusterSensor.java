@@ -83,11 +83,11 @@ public class MemqClusterSensor extends MemqSensor {
         } catch (KeeperException.NoNodeException e) {
           cluster.getNodeMap().remove(brokerName);
           logger.info(
-              "Broker data of " + brokerName + " is not available in zookeeper. It may have been removed.");
+              "Broker data of " + brokerName + " is not available in zookeeper. The broker might be removed.");
           continue;
         } catch (Exception e) {
           logger.severe(
-              "Face unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
+              "Faced an unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
           continue;
         }
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
