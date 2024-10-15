@@ -29,6 +29,7 @@ import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 import com.pinterest.orion.utils.NetworkUtils;
+import org.apache.zookeeper.KeeperException;
 
 import static com.pinterest.orion.core.memq.MemqCluster.CLUSTER_CONTEXT;
 
@@ -72,7 +73,16 @@ public class MemqClusterSensor extends MemqSensor {
 
       Gson gson = new Gson();
       for (String brokerName : brokerNames) {
-        byte[] brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
+        byte[] brokerData = null;
+        // Handle the case where the broker is removed from zookeeper outside orion.
+        // In this case, we should remove the broker from the orion broker map.
+        try {
+          brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
+        } catch (KeeperException.NoNodeException e) {
+          cluster.getNodeMap().remove(brokerName);
+          logger.warning("Broker " + brokerName + " is not available in zookeeper. It may have been removed.");
+          continue;
+        }
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
         NodeInfo info = new NodeInfo();
         info.setClusterId(cluster.getClusterId());
