@@ -31,6 +31,7 @@ import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.memq.MemqCluster;
 import com.pinterest.orion.utils.NetworkUtils;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import org.apache.zookeeper.KeeperException;
 
 import static com.pinterest.orion.core.memq.MemqCluster.CLUSTER_CONTEXT;
@@ -67,7 +68,27 @@ public class MemqClusterSensor extends MemqSensor {
       }
 
       CuratorFramework zkClient = cluster.getZkClient();
-      List<String> brokerNames = zkClient.getChildren().forPath(BROKERS);
+
+      // Add retry to fix zk connection issue
+      int maxRetries = 3;
+      int retryCount = 0;
+      List<String> brokerNames = null;
+      while (retryCount < maxRetries) {
+        try {
+          brokerNames = zkClient.getChildren().forPath(BROKERS);
+          break;
+        } catch (Exception e) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            throw new RuntimeException("Failed to get broker names from zookeeper after " + maxRetries + " retries.", e);
+          }
+          Thread.sleep(1000 * retryCount);
+        }
+      }
+      if (brokerNames == null) {
+        throw new RuntimeException("Failed to get broker names from zookeeper after " + maxRetries + " retries.");
+      }
+
       
       Map<String, List<String>> writeBrokerAssignments = new HashMap<>();
       
