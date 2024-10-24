@@ -36,18 +36,18 @@ public class NodeInfo implements Serializable {
   private Map<String, String> agentSettings;
   private Map<String, String> environment;
   private Set<String> brokersets = new HashSet<>();
-  private Map<String, String> brokerStatus;
+  private Map<String, String> brokerStats;
   /**
-   * @param brokerStatus
+   * @param brokerStats
    */
-  public void setBrokerStatus(Map<String, String> brokerStatus) {
-    this.brokerStatus = brokerStatus;
+  public void setBrokerStats(Map<String, String> brokerStats) {
+    this.brokerStats = brokerStats;
   }
   /**
-   * @return the brokerStatus
+   * @return the brokerStats
    */
-  public Map<String, String> getBrokerStatus() {
-    return brokerStatus;
+  public Map<String, String> getBrokerStats() {
+    return brokerStats;
   }
   /**
    * @param brokersets
