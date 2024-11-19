@@ -54,20 +54,33 @@ public class MemqClusterSensor extends MemqSensor {
     super.initialize(config);
   }
 
+  private void refreshZkClient(MemqCluster cluster) throws Exception {
+    String zkUrl = cluster.getAttribute(MemqCluster.ZK_CONNECTION_STRING).getValue();
+    CuratorFramework curator = CuratorFrameworkFactory.newClient(zkUrl,
+        new ExponentialBackoffRetry(1000, 3));
+    curator.start();
+    curator.blockUntilConnected();
+    cluster.setZkClient(curator);
+  }
+
   @Override
   public void sense(MemqCluster cluster) throws Exception {
     try {
       if (cluster.getZkClient() == null) {
-        String zkUrl = cluster.getAttribute(MemqCluster.ZK_CONNECTION_STRING).getValue();
-        CuratorFramework curator = CuratorFrameworkFactory.newClient(zkUrl,
-            new ExponentialBackoffRetry(1000, 3));
-        curator.start();
-        curator.blockUntilConnected();
-        cluster.setZkClient(curator);
+        refreshZkClient(cluster);
       }
 
       CuratorFramework zkClient = cluster.getZkClient();
-      List<String> brokerNames = zkClient.getChildren().forPath(BROKERS);
+      List<String> brokerNames;
+      try {
+        brokerNames = zkClient.getChildren().forPath(BROKERS);
+      } catch (Exception e) {
+        logger.warning(
+            "Failed to get broker list from zookeeper: " + e + ". Refreshing zookeeper client and retrying");
+        refreshZkClient(cluster);
+        zkClient = cluster.getZkClient();
+        brokerNames = zkClient.getChildren().forPath(BROKERS);
+      }
       
       Map<String, List<String>> writeBrokerAssignments = new HashMap<>();
       
@@ -88,7 +101,15 @@ public class MemqClusterSensor extends MemqSensor {
         } catch (Exception e) {
           logger.severe(
               "Faced an unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
-          continue;
+          // Refresh client and try again
+          refreshZkClient(cluster);
+          zkClient = cluster.getZkClient();
+          try {
+            brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
+          } catch (Exception e1) {
+            logger.severe("Failed to get broker data for " + brokerName + " after refreshing zookeeper client");
+            continue;
+          }
         }
         Broker broker = gson.fromJson(new String(brokerData), Broker.class);
         NodeInfo info = new NodeInfo();
