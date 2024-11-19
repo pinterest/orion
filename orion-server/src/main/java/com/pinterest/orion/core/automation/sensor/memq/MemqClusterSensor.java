@@ -137,8 +137,10 @@ public class MemqClusterSensor extends MemqSensor {
         brokersInZookeeper.add(broker.getBrokerIP());
       }
 
+      boolean noBrokerInZookeeper = false;
       if (brokersInZookeeper.isEmpty()) {
         logger.warning("No broker found in zookeeper for cluster " + cluster.getClusterId());
+        noBrokerInZookeeper = true;
       } else {
         // Remove brokers that are not in zookeeper from the cluster node map
         for (String nodeId : cluster.getNodeMap().keySet()) {
@@ -156,9 +158,13 @@ public class MemqClusterSensor extends MemqSensor {
         topicConfigMap.put(topic, topicConfig);
       }
 
-      byte[] governorData = zkClient.getData().forPath(GOVERNOR);
-      String governorIp = new String(governorData);
-      String clusterContext = "Governor: " + governorIp + "\n";
+      String clusterContext = "No Broker";
+      if (!noBrokerInZookeeper) {
+        // TODO: Move to ZK helper
+        byte[] governorData = zkClient.getData().forPath(GOVERNOR);
+        String governorIp = new String(governorData);
+        clusterContext = "Governor: " + governorIp + "\n";
+      }
 
       setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
       setAttribute(cluster, RAW_BROKER_INFO, rawBrokerMap);
