@@ -22,9 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
+import com.pinterest.orion.core.utils.memq.zookeeper.MemqZookeeperClient;
 
 import com.google.gson.Gson;
 import com.pinterest.orion.common.NodeInfo;
@@ -39,9 +37,6 @@ public class MemqClusterSensor extends MemqSensor {
 
   public static final String WRITE_ASSIGNMENTS = "writeAssignments";
   public static final String TOPIC_CONFIG = "topicconfig";
-  public static final String BROKERS = "/brokers";
-  public static final String TOPICS = "/topics";
-  public static final String GOVERNOR = "/governor";
   public static final String RAW_BROKER_INFO = "rawBrokerInfo";
 
   @Override
@@ -57,29 +52,17 @@ public class MemqClusterSensor extends MemqSensor {
   @Override
   public void sense(MemqCluster cluster) throws Exception {
     try {
-      if (cluster.getZkClient() == null) {
-        String zkUrl = cluster.getAttribute(MemqCluster.ZK_CONNECTION_STRING).getValue();
-        CuratorFramework curator = CuratorFrameworkFactory.newClient(zkUrl,
-            new ExponentialBackoffRetry(1000, 3));
-        curator.start();
-        curator.blockUntilConnected();
-        cluster.setZkClient(curator);
-      }
+      MemqZookeeperClient memqZookeeperClient = new MemqZookeeperClient(cluster);
 
-      CuratorFramework zkClient = cluster.getZkClient();
-      List<String> brokerNames = zkClient.getChildren().forPath(BROKERS);
-      
+      List<String> brokerNames = memqZookeeperClient.getBrokerNames();
       Map<String, List<String>> writeBrokerAssignments = new HashMap<>();
-      
       Map<String, Broker> rawBrokerMap = new HashMap<>();
-
       Gson gson = new Gson();
-
       Set<String> brokersInZookeeper = new HashSet<>();
       for (String brokerName : brokerNames) {
-        byte[] brokerData = null;
+        String brokerDataJsonString = null;
         try {
-          brokerData = zkClient.getData().forPath(BROKERS + "/" + brokerName);
+          brokerDataJsonString = memqZookeeperClient.getBrokerData(brokerName);
         } catch (KeeperException.NoNodeException e) {
           cluster.getNodeMap().remove(brokerName);
           logger.info(
@@ -90,7 +73,7 @@ public class MemqClusterSensor extends MemqSensor {
               "Faced an unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
           continue;
         }
-        Broker broker = gson.fromJson(new String(brokerData), Broker.class);
+        Broker broker = gson.fromJson(brokerDataJsonString, Broker.class);
         NodeInfo info = new NodeInfo();
         info.setClusterId(cluster.getClusterId());
         String hostname = NetworkUtils.getHostnameFromIpIfAvailable(broker.getBrokerIP());
@@ -105,19 +88,21 @@ public class MemqClusterSensor extends MemqSensor {
         
         rawBrokerMap.put(broker.getBrokerIP(), broker);
         for (TopicConfig topicConfig : broker.getAssignedTopics()) {
-          String topic = topicConfig.getTopic();
-          List<String> hostnames = writeBrokerAssignments.get(topic);
+          String topicName = topicConfig.getTopic();
+          List<String> hostnames = writeBrokerAssignments.get(topicName);
           if (hostnames == null) {
             hostnames = new ArrayList<>();
-            writeBrokerAssignments.put(topic, hostnames);
+            writeBrokerAssignments.put(topicName, hostnames);
           }
           hostnames.add(hostname);
         }
         brokersInZookeeper.add(broker.getBrokerIP());
       }
 
+      boolean noBrokerInZookeeper = false;
       if (brokersInZookeeper.isEmpty()) {
         logger.warning("No broker found in zookeeper for cluster " + cluster.getClusterId());
+        noBrokerInZookeeper = true;
       } else {
         // Remove brokers that are not in zookeeper from the cluster node map
         for (String nodeId : cluster.getNodeMap().keySet()) {
@@ -128,16 +113,20 @@ public class MemqClusterSensor extends MemqSensor {
       }
 
       Map<String, TopicConfig> topicConfigMap = new HashMap<>();
-      List<String> topics = zkClient.getChildren().forPath(TOPICS);
-      for (String topic : topics) {
-        byte[] topicData = zkClient.getData().forPath(TOPICS + "/" + topic);
-        TopicConfig topicConfig = gson.fromJson(new String(topicData), TopicConfig.class);
-        topicConfigMap.put(topic, topicConfig);
+      List<String> topics = memqZookeeperClient.getTopics();
+      for (String topicName : topics) {
+        String topicDataJsonString = memqZookeeperClient.getTopicData(topicName);
+        TopicConfig topicConfig = gson.fromJson(topicDataJsonString, TopicConfig.class);
+        topicConfigMap.put(topicName, topicConfig);
       }
 
-      byte[] governorData = zkClient.getData().forPath(GOVERNOR);
-      String governorIp = new String(governorData);
-      String clusterContext = "Governor: " + governorIp + "\n";
+      String clusterContext = "NO BROKER";
+      if (!noBrokerInZookeeper) {
+        String governorIp = memqZookeeperClient.getGovernorIp();
+        if (governorIp != null) {
+          clusterContext = "Governor: " + governorIp + "\n";
+        }
+      }
 
       setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
       setAttribute(cluster, RAW_BROKER_INFO, rawBrokerMap);
