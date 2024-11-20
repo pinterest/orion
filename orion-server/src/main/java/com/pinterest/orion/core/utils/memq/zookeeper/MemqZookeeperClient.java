@@ -11,7 +11,7 @@ public class MemqZookeeperClient {
     public static final String BROKERS = "/brokers";
     public static final String TOPICS = "/topics";
     public static final String GOVERNOR = "/governor";
-    private boolean refreshZkClientWhenException = true;
+    private boolean refreshZkClientOnException = true;
     private String zkUrl;
     private MemqCluster cluster;
     private CuratorFramework zkClient;
@@ -26,12 +26,12 @@ public class MemqZookeeperClient {
         }
     }
 
-    public void enableRefreshZkClientWhenException() {
-        this.refreshZkClientWhenException = true;
+    public void enableRefreshZkClientOnException() {
+        this.refreshZkClientOnException = true;
     }
 
-    public void disableRefreshZkClientWhenException() {
-        this.refreshZkClientWhenException = false;
+    public void disableRefreshZkClientOnException() {
+        this.refreshZkClientOnException = false;
     }
 
     /**
@@ -61,7 +61,7 @@ public class MemqZookeeperClient {
 
     /**
      * Get the children of a node in Zookeeper.
-     * When an exception occurs, the Zookeeper client is refreshed and the children are fetched again if the refreshZkClientWhenException flag is set.
+     * When an exception occurs, the Zookeeper client is refreshed and the children are fetched again if the refreshZkClientOnException flag is set.
      * @param path The path of the node.
      * @return List of children node names.
      * @throws Exception
@@ -70,7 +70,7 @@ public class MemqZookeeperClient {
         try {
             return zkClient.getChildren().forPath(path);
         } catch (Exception e) {
-            if (refreshZkClientWhenException) {
+            if (refreshZkClientOnException) {
                 refreshZkClient();
                 return zkClient.getChildren().forPath(path);
             } else {
@@ -81,7 +81,7 @@ public class MemqZookeeperClient {
 
     /**
      * Get the data of a node in Zookeeper.
-     * When an exception occurs, the Zookeeper client is refreshed and the data is fetched again if the refreshZkClientWhenException flag is set.
+     * When an exception occurs, the Zookeeper client is refreshed and the data is fetched again if the refreshZkClientOnException flag is set.
      * @param path The path of the node.
      * @return The data of the node as a json string
      * @throws Exception
@@ -90,7 +90,7 @@ public class MemqZookeeperClient {
         try {
             return new String(zkClient.getData().forPath(path));
         } catch (Exception e) {
-            if (refreshZkClientWhenException) {
+            if (refreshZkClientOnException) {
                 refreshZkClient();
                 return new String(zkClient.getData().forPath(path));
             } else {
