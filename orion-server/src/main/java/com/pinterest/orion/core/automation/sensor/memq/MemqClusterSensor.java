@@ -60,9 +60,9 @@ public class MemqClusterSensor extends MemqSensor {
       Gson gson = new Gson();
       Set<String> brokersInZookeeper = new HashSet<>();
       for (String brokerName : brokerNames) {
-        String brokerData = null;
+        String brokerDataJsonString = null;
         try {
-          brokerData = memqZookeeperClient.getBrokerData(brokerName);
+          brokerDataJsonString = memqZookeeperClient.getBrokerData(brokerName);
         } catch (KeeperException.NoNodeException e) {
           cluster.getNodeMap().remove(brokerName);
           logger.info(
@@ -73,7 +73,7 @@ public class MemqClusterSensor extends MemqSensor {
               "Faced an unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
           continue;
         }
-        Broker broker = gson.fromJson(brokerData, Broker.class);
+        Broker broker = gson.fromJson(brokerDataJsonString, Broker.class);
         NodeInfo info = new NodeInfo();
         info.setClusterId(cluster.getClusterId());
         String hostname = NetworkUtils.getHostnameFromIpIfAvailable(broker.getBrokerIP());
@@ -88,11 +88,11 @@ public class MemqClusterSensor extends MemqSensor {
         
         rawBrokerMap.put(broker.getBrokerIP(), broker);
         for (TopicConfig topicConfig : broker.getAssignedTopics()) {
-          String topic = topicConfig.getTopic();
-          List<String> hostnames = writeBrokerAssignments.get(topic);
+          String topicName = topicConfig.getTopic();
+          List<String> hostnames = writeBrokerAssignments.get(topicName);
           if (hostnames == null) {
             hostnames = new ArrayList<>();
-            writeBrokerAssignments.put(topic, hostnames);
+            writeBrokerAssignments.put(topicName, hostnames);
           }
           hostnames.add(hostname);
         }
@@ -114,16 +114,18 @@ public class MemqClusterSensor extends MemqSensor {
 
       Map<String, TopicConfig> topicConfigMap = new HashMap<>();
       List<String> topics = memqZookeeperClient.getTopics();
-      for (String topic : topics) {
-        String topicData = memqZookeeperClient.getTopicData(topic);
-        TopicConfig topicConfig = gson.fromJson(new String(topicData), TopicConfig.class);
-        topicConfigMap.put(topic, topicConfig);
+      for (String topicName : topics) {
+        String topicDataJsonString = memqZookeeperClient.getTopicData(topicName);
+        TopicConfig topicConfig = gson.fromJson(topicDataJsonString, TopicConfig.class);
+        topicConfigMap.put(topicName, topicConfig);
       }
 
-      String clusterContext = "No broker in zookeeper";
+      String clusterContext = "NO BROKER";
       if (!noBrokerInZookeeper) {
         String governorIp = memqZookeeperClient.getGovernorIp();
-        clusterContext = "Governor: " + governorIp + "\n";
+        if (governorIp != null) {
+          clusterContext = "Governor: " + governorIp + "\n";
+        }
       }
 
       setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
