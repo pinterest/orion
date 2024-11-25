@@ -20,6 +20,7 @@ import com.pinterest.orion.core.actions.Action;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
 import com.pinterest.orion.core.actions.alert.AlertMessage;
 import com.pinterest.orion.core.actions.aws.ReplaceEC2InstanceAction;
+import com.pinterest.orion.core.actions.generic.GenericActions.ServiceStopAction;
 import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.generic.ServiceStabilityCheckAction;
 import com.pinterest.orion.server.OrionServer;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class BrokerRecoveryAction extends NodeAction {
@@ -42,6 +44,7 @@ public class BrokerRecoveryAction extends NodeAction {
   private static final int retryIntervalMilliseconds = 1000;
 
   public static final String ATTR_TRY_TO_RESTART_KEY = "try_restart";
+  public static final String ATTR_STOP_SERVICE_BEFORE_ACTION = "stop_service_before_action";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_NONEXISTENT_HOST_KEY = "nonexistent_host";
   public static final String CONF_DRY_RUN_REPLACEMENT_KEY = "dry_run";
@@ -86,6 +89,37 @@ public class BrokerRecoveryAction extends NodeAction {
       nodeId = node.getCurrentNodeInfo().getNodeId();
       String hostname = node.getCurrentNodeInfo().getHostname();
       int port = node.getCurrentNodeInfo().getServicePort();
+
+      // Try to gracefully shutdown service before recovery actions.
+      // This can make sure the broker is not the leader of any partition.
+      boolean stopServiceBeforeAction = true;
+      if (containsAttribute(ATTR_STOP_SERVICE_BEFORE_ACTION)) {
+        stopServiceBeforeAction = getAttribute(ATTR_STOP_SERVICE_BEFORE_ACTION).getValue();
+      }
+      if (stopServiceBeforeAction) {
+        // Metrics
+        try {
+          ServiceStopAction stopServiceAction = new ServiceStopAction();
+          stopServiceAction.copyAttributeFrom(this, OrionConstants.NODE_ID);
+          getEngine().dispatchChild(this, stopServiceAction);
+          getResult().appendOut("Attempt to stop service before recovery action.");
+          try {
+            stopServiceAction.get(30, TimeUnit.SECONDS);
+          } catch (Exception e) {
+            getResult().appendErr(
+                "Unable to stop service before broker replacement. Will keep moving forward. Error message:"
+                    + e.getMessage());
+          }
+        } catch (Exception e) {
+          getResult().appendErr(
+              "Encounter unknown error when stopping service. Will keep moving forward. Error message:"
+                  + e.getMessage());
+        }
+      } else {
+        getResult().appendOut(
+            "Skip stopping service before recovery actions. The configuration is set to false.");
+      }
+
       boolean tryRestart = false;
       if (containsAttribute(ATTR_TRY_TO_RESTART_KEY)) {
         tryRestart = getAttribute(ATTR_TRY_TO_RESTART_KEY).getValue();
