@@ -97,7 +97,7 @@ public class BrokerRecoveryAction extends NodeAction {
         stopServiceBeforeAction = getAttribute(ATTR_STOP_SERVICE_BEFORE_ACTION).getValue();
       }
       if (stopServiceBeforeAction) {
-        // Metrics
+        OrionServer.METRICS.counter(metricPrefix.resolve("stop_service_before_action")).inc();
         try {
           ServiceStopAction stopServiceAction = new ServiceStopAction();
           stopServiceAction.copyAttributeFrom(this, OrionConstants.NODE_ID);
