@@ -89,7 +89,6 @@ public class BrokerRecoveryAction extends NodeAction {
       nodeId = node.getCurrentNodeInfo().getNodeId();
       String hostname = node.getCurrentNodeInfo().getHostname();
       int port = node.getCurrentNodeInfo().getServicePort();
-
       boolean tryRestart = false;
       if (containsAttribute(ATTR_TRY_TO_RESTART_KEY)) {
         tryRestart = getAttribute(ATTR_TRY_TO_RESTART_KEY).getValue();
@@ -132,12 +131,12 @@ public class BrokerRecoveryAction extends NodeAction {
 
     // Try to gracefully shutdown service before replacing broker.
     // This can make sure the broker is not the leader of any partition.
-    boolean stopServiceBeforeAction = true;
+    boolean stopServiceBeforeReplacement = true;
     if (containsAttribute(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT)) {
-      stopServiceBeforeAction = getAttribute(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT).getValue();
+      stopServiceBeforeReplacement = getAttribute(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT).getValue();
     }
-    if (stopServiceBeforeAction) {
-      OrionServer.METRICS.counter(metricPrefix.resolve("stop_service_before_replacement")).inc();
+    if (stopServiceBeforeReplacement) {
+      OrionServer.METRICS.counter(metricPrefix.resolve(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT)).inc();
       try {
         ServiceStopAction stopServiceAction = new ServiceStopAction();
         stopServiceAction.copyAttributeFrom(this, OrionConstants.NODE_ID);
