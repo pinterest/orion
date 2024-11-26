@@ -20,6 +20,7 @@ import com.pinterest.orion.core.actions.Action;
 import com.pinterest.orion.core.actions.alert.AlertLevel;
 import com.pinterest.orion.core.actions.alert.AlertMessage;
 import com.pinterest.orion.core.actions.aws.ReplaceEC2InstanceAction;
+import com.pinterest.orion.core.actions.generic.GenericActions.ServiceStopAction;
 import com.pinterest.orion.core.actions.generic.NodeAction;
 import com.pinterest.orion.core.actions.generic.ServiceStabilityCheckAction;
 import com.pinterest.orion.server.OrionServer;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class BrokerRecoveryAction extends NodeAction {
@@ -125,6 +127,26 @@ public class BrokerRecoveryAction extends NodeAction {
     OrionServer.METRICS.counter(metricPrefix.resolve("start_replace")).inc();
 
     getResult().appendOut("Start replacing broker");
+
+    // Try to gracefully shutdown service before replacing broker.
+    // This ensures partition leaderships are moved away from the broker before the replacement process starts.
+    try {
+      ServiceStopAction stopServiceAction = new ServiceStopAction();
+      stopServiceAction.copyAttributeFrom(this, OrionConstants.NODE_ID);
+      getEngine().dispatchChild(this, stopServiceAction);
+      getResult().appendOut("Attempt to stop service before broker replacement.");
+      try {
+        stopServiceAction.get(30, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        getResult().appendErr(
+            "Unable to stop service before broker replacement. Will keep moving forward. Error message:"
+                + e.getMessage());
+      }
+    } catch (Exception e) {
+      getResult().appendErr(
+          "Encounter unknown error when stopping service. Will keep moving forward. Error message:"
+              + e.getMessage());
+    }
 
     try {
       // if dry run skip dispatching the replacement action and report success, but still set the cooldown flag for the cluster
