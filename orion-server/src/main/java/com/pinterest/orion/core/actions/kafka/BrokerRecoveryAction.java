@@ -44,7 +44,6 @@ public class BrokerRecoveryAction extends NodeAction {
   private static final int retryIntervalMilliseconds = 1000;
 
   public static final String ATTR_TRY_TO_RESTART_KEY = "try_restart";
-  public static final String ATTR_STOP_SERVICE_BEFORE_REPLACEMENT = "stop_service_before_replacement";
   public static final String ATTR_NODE_EXISTS_KEY = "node_exists";
   public static final String ATTR_NONEXISTENT_HOST_KEY = "nonexistent_host";
   public static final String CONF_DRY_RUN_REPLACEMENT_KEY = "dry_run";
@@ -130,34 +129,23 @@ public class BrokerRecoveryAction extends NodeAction {
     getResult().appendOut("Start replacing broker");
 
     // Try to gracefully shutdown service before replacing broker.
-    // This can make sure the broker is not the leader of any partition.
-    boolean stopServiceBeforeReplacement = true;
-    if (containsAttribute(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT)) {
-      stopServiceBeforeReplacement = getAttribute(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT).getValue();
-    }
-    if (stopServiceBeforeReplacement) {
-      OrionServer.METRICS.counter(metricPrefix.resolve(ATTR_STOP_SERVICE_BEFORE_REPLACEMENT)).inc();
+    // This ensures partition leaderships are moved away from the broker before the replacement process starts.
+    try {
+      ServiceStopAction stopServiceAction = new ServiceStopAction();
+      stopServiceAction.copyAttributeFrom(this, OrionConstants.NODE_ID);
+      getEngine().dispatchChild(this, stopServiceAction);
+      getResult().appendOut("Attempt to stop service before broker replacement.");
       try {
-        ServiceStopAction stopServiceAction = new ServiceStopAction();
-        stopServiceAction.copyAttributeFrom(this, OrionConstants.NODE_ID);
-        getEngine().dispatchChild(this, stopServiceAction);
-        getResult().appendOut("Attempt to stop service before broker replacement.");
-        try {
-          stopServiceAction.get(30, TimeUnit.SECONDS);
-        } catch (Exception e) {
-          getResult().appendErr(
-              "Unable to stop service before broker replacement. Will keep moving forward. Error message:"
-                  + e.getMessage());
-        }
+        stopServiceAction.get(30, TimeUnit.SECONDS);
       } catch (Exception e) {
         getResult().appendErr(
-            "Encounter unknown error when stopping service. Will keep moving forward. Error message:"
+            "Unable to stop service before broker replacement. Will keep moving forward. Error message:"
                 + e.getMessage());
       }
-    } else {
-      getResult().appendOut(
-          "Skip stopping service before broker replacement. " +
-              "The stop_service_before_replacement configuration is set to false.");
+    } catch (Exception e) {
+      getResult().appendErr(
+          "Encounter unknown error when stopping service. Will keep moving forward. Error message:"
+              + e.getMessage());
     }
 
     try {
