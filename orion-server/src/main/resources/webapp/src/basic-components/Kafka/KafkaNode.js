@@ -269,6 +269,7 @@ function getBrokersetColumns() {
 function getBrokerStatsData(cluster, node) {
   let brokerStatsData = [];
   let brokerStats = node.currentNodeInfo.brokerStatus;
+  console.log("[TEST] Broker Stats: ", brokerStats);
   if (brokerStats === null) {
     brokerStatsData.push({key: "Note", value: "No broker stats available yet."});
     return brokerStatsData;
@@ -276,6 +277,7 @@ function getBrokerStatsData(cluster, node) {
   for (let [key, value] of Object.entries(brokerStats)) {
     brokerStatsData.push({key: key, value: JSON.stringify(value)});
   }
+  console.log("[TEST] Broker Stats Data: ", brokerStatsData);
   return brokerStatsData;
 }
 
