@@ -270,6 +270,7 @@ function getBrokerStatsData(cluster, node) {
   let brokerStatsData = [];
   let brokerStats = node.currentNodeInfo.brokerStatus;
   if (brokerStats === null) {
+    brokerStatsData.push({key: "Note", value: "No broker stats available yet."});
     return brokerStatsData;
   }
   for (let [key, value] of Object.entries(brokerStats)) {
@@ -280,7 +281,7 @@ function getBrokerStatsData(cluster, node) {
 
 function getBrokerStatsColumns() {
   return ([
-      { title: "Metrics Name", field: "key" },
+      { title: "Key", field: "key" },
       { title: "Value", field: "value" }
   ]);
 }
