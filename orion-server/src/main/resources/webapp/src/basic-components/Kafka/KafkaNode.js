@@ -267,13 +267,17 @@ function getBrokersetColumns() {
 }
 
 function getBrokerStatsData(cluster, node) {
+  let brokerStats = node.currentNodeInfo.brokerStatus;
   let brokerStatsData = [];
+  for (let [key, value] of Object.entries(brokerStats)) {
+    brokerStatsData.push({key: key, value: JSON.stringify(value)});
+  }
   return brokerStatsData;
 }
 
 function getBrokerStatsColumns() {
   return ([
-      { title: "Key", field: "key" },
+      { title: "Metrics Name", field: "key" },
       { title: "Value", field: "value" }
   ]);
 }
