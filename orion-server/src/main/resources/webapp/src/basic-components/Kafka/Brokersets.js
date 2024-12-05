@@ -48,18 +48,26 @@ export default function Brokersets(props) {
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
-    console.log("Brokersets.js: brokersets:")
-    console.log(brokersets);
     for (let brokerset of brokersets) {
         let brokersetAlias = brokerset.brokersetAlias;
-        console.log("Brokersets.js: brokerset: " + brokersetAlias)
-        console.log(brokerset);
+        let maxCpuUsage = "N/A";
+        let maxDiskUsage = "N/A";
+        if (brokerset.brokersetStatus) {
+            if (brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"] !== undefined) {
+                maxCpuUsage = brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"];
+            }
+            if (brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"] !== undefined) {
+                maxDiskUsage = brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"];
+            }
+        }
+
         brokersetToRowValuesMap[brokersetAlias] = {
             "brokersetAlias": brokersetAlias,
             "clusterId": clusterId,
             "brokerCount": brokerset.size,
-            "maxCpuUsage": brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"],
-            "maxDiskUsage": brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"]
+            "brokersetData": brokerset,
+            "maxCpuUsage": maxCpuUsage,
+            "maxDiskUsage": maxDiskUsage
         }
     }
 

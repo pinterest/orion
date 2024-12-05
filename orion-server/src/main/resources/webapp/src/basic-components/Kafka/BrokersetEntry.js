@@ -28,16 +28,16 @@ const routes = [
 ];
 
 function getStatsData(clusterId, rawData) {
-    let stats = [];
+    let brokersetStats = [];
     let brokersetData = rawData.brokersetData;
+    brokersetStats.push({ key: "Broker_Count", value: brokersetData.size});
     let brokersetStatus = brokersetData.brokersetStatus;
-    if (brokersetStatus !== undefined && brokersetStatus !== null) {
+    if (brokersetStatus) {
         for (let key of Object.keys(brokersetStatus)) {
-            stats.push({ key: key, value: brokersetStatus[key] });
+            brokersetStats.push({ key: key, value: brokersetStatus[key] });
         }
     }
-    stats.push({ key: "Broker Count", value: brokersetData.size});
-    return stats;
+    return brokersetStats;
 }
 
 function getStatsColumns() {
@@ -115,8 +115,6 @@ function BrokersetNavTabs(props) {
 
 function getBrokersetInfoHeader(rawData, clusterId) {
     let brokersetData = rawData.brokersetData;
-    console.log("BrokersetEntry.js: brokersetData:")
-    console.log(brokersetData);
     let brokersetAlias = brokersetData.brokersetAlias;
     let brokerCount = brokersetData.size;
     return (
