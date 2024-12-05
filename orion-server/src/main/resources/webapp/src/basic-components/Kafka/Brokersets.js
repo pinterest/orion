@@ -58,8 +58,8 @@ export default function Brokersets(props) {
             "brokersetAlias": brokersetAlias,
             "clusterId": clusterId,
             "brokerCount": brokerset.size,
-            "maxCpuUsage": "N/A",
-            "maxDiskUsage": "N/A"
+            "maxCpuUsage": brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"],
+            "maxDiskUsage": brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"]
         }
     }
 

@@ -115,6 +115,8 @@ function BrokersetNavTabs(props) {
 
 function getBrokersetInfoHeader(rawData, clusterId) {
     let brokersetData = rawData.brokersetData;
+    console.log("BrokersetEntry.js: brokersetData:")
+    console.log(brokersetData);
     let brokersetAlias = brokersetData.brokersetAlias;
     let brokerCount = brokersetData.size;
     return (
