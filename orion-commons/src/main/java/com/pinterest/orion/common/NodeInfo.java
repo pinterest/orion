@@ -36,7 +36,23 @@ public class NodeInfo implements Serializable {
   private Map<String, String> agentSettings;
   private Map<String, String> environment;
   private Set<String> brokersets = new HashSet<>();
+  // Save the broker status in readable format
   private Map<String, String> brokerStatus;
+  // Save the broker status in raw format
+  private Map<String, Double> rawBrokerStatus;
+
+  /**
+   * @param rawBrokerStatus
+   */
+  public void setRawBrokerStatus(Map<String, Double> rawBrokerStatus) {
+    this.rawBrokerStatus = rawBrokerStatus;
+  }
+  /**
+   * @return the rawBrokerStatus
+   */
+  public Map<String, Double> getRawBrokerStatus() {
+      return rawBrokerStatus;
+  }
   /**
    * @param brokerStatus
    */
