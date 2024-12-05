@@ -79,6 +79,8 @@ public class BrokersetStateSensor extends KafkaSensor {
                 brokersetState.addBrokerRange(Arrays.asList(start, end));
             }
             brokersetState.setBrokerIds(new ArrayList<>(brokerIds));
+            // TODO: Override a method to add usage data: brokersetState.setUsageData
+            updateBrokersetState(cluster, brokersetState, brokerIds);
             brokersetStateMap.put(brokersetAlias, brokersetState);
             if (invalidBrokerset) {
                 handleInvalidBrokerset(brokersetAlias, cluster.getName());
@@ -93,6 +95,12 @@ public class BrokersetStateSensor extends KafkaSensor {
                 node.getCurrentNodeInfo().setBrokersets(brokerToBrokersetsMap.get(nodeId));
             }
         }
+    }
+
+    protected void updateBrokersetState(
+        KafkaCluster cluster,
+        BrokersetState brokersetState,
+        Set<String> brokerIds) {
     }
 
     @Override

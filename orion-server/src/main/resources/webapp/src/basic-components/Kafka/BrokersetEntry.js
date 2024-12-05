@@ -28,10 +28,19 @@ const routes = [
 ];
 
 function getStatsData(clusterId, rawData) {
-    let brokersetStats = [];
+    let stats = [];
     let brokersetData = rawData.brokersetData;
-    brokersetStats.push({ key: "Broker Count", value: brokersetData.size});
-    return brokersetStats;
+    console.log("Brokerset Data: ");
+    console.log(brokersetData);
+    let brokersetStatus = brokersetData.brokersetStatus;
+    console.log(brokersetStatus);
+    if (brokersetStatus !== undefined && brokersetStatus !== null) {
+        for (let key of Object.keys(brokersetStatus)) {
+            stats.push({ key: key, value: brokersetStatus[key] });
+        }
+    }
+    stats.push({ key: "Broker Count", value: brokersetData.size});
+    return stats;
 }
 
 function getStatsColumns() {
