@@ -42,17 +42,24 @@ export default function Brokersets(props) {
     }
     let columns = [
         { title: "Name", field: "brokersetAlias" },
-        { title: "Broker Count", field: "brokerCount" }
+        { title: "Broker Count", field: "brokerCount" },
+        { title: "Max CPU Usage", field: "maxCpuUsage" },
+        { title: "Max Disk Usage", field: "maxDiskUsage" }
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
+    console.log("Brokersets.js: brokersets:")
+    console.log(brokersets);
     for (let brokerset of brokersets) {
         let brokersetAlias = brokerset.brokersetAlias;
+        console.log("Brokersets.js: brokerset: " + brokersetAlias)
+        console.log(brokerset);
         brokersetToRowValuesMap[brokersetAlias] = {
             "brokersetAlias": brokersetAlias,
             "clusterId": clusterId,
             "brokerCount": brokerset.size,
-            "brokersetData": brokerset
+            "maxCpuUsage": "N/A",
+            "maxDiskUsage": "N/A"
         }
     }
 

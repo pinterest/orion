@@ -30,10 +30,7 @@ const routes = [
 function getStatsData(clusterId, rawData) {
     let stats = [];
     let brokersetData = rawData.brokersetData;
-    console.log("Brokerset Data: ");
-    console.log(brokersetData);
     let brokersetStatus = brokersetData.brokersetStatus;
-    console.log(brokersetStatus);
     if (brokersetStatus !== undefined && brokersetStatus !== null) {
         for (let key of Object.keys(brokersetStatus)) {
             stats.push({ key: key, value: brokersetStatus[key] });
