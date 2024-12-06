@@ -44,7 +44,8 @@ export default function Brokersets(props) {
         { title: "Name", field: "brokersetAlias" },
         { title: "Broker Count", field: "brokerCount" },
         { title: "Max CPU Usage", field: "maxCpuUsage" },
-        { title: "Max Disk Usage", field: "maxDiskUsage" }
+        { title: "Max Disk Usage", field: "maxDiskUsage" },
+        { title: "Updated Time", field: "timestamp" }
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
@@ -52,12 +53,16 @@ export default function Brokersets(props) {
         let brokersetAlias = brokerset.brokersetAlias;
         let maxCpuUsage = "N/A";
         let maxDiskUsage = "N/A";
+        let timestamp = "N/A"
         if (brokerset.brokersetStatus) {
             if (brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"] !== undefined) {
                 maxCpuUsage = brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"];
             }
             if (brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"] !== undefined) {
                 maxDiskUsage = brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"];
+            }
+            if (brokerset.brokersetStatus["Short_Timestamp"] !== undefined) {
+                timestamp = brokerset.brokersetStatus["Short_Timestamp"];
             }
         }
 
@@ -67,7 +72,8 @@ export default function Brokersets(props) {
             "brokerCount": brokerset.size,
             "brokersetData": brokerset,
             "maxCpuUsage": maxCpuUsage,
-            "maxDiskUsage": maxDiskUsage
+            "maxDiskUsage": maxDiskUsage,
+            "timestamp": timestamp
         }
     }
 
