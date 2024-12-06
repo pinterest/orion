@@ -30,7 +30,13 @@ const routes = [
 function getStatsData(clusterId, rawData) {
     let brokersetStats = [];
     let brokersetData = rawData.brokersetData;
-    brokersetStats.push({ key: "Broker Count", value: brokersetData.size});
+    brokersetStats.push({ key: "Broker_Count", value: brokersetData.size});
+    let brokersetStatus = brokersetData.brokersetStatus;
+    if (brokersetStatus !== undefined && brokersetStatus !== null) {
+        for (let key of Object.keys(brokersetStatus)) {
+            brokersetStats.push({ key: key, value: brokersetStatus[key] });
+        }
+    }
     return brokersetStats;
 }
 

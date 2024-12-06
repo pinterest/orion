@@ -79,6 +79,14 @@ public class BrokersetStateSensor extends KafkaSensor {
                 brokersetState.addBrokerRange(Arrays.asList(start, end));
             }
             brokersetState.setBrokerIds(new ArrayList<>(brokerIds));
+            try {
+                updateBrokersetStateWithMetrics(cluster, brokersetState, brokerIds);
+            } catch (Exception e) {
+                logger.warning(
+                    String.format("Failed to update brokerset state with metrics for brokerset %s in cluster %s.",
+                        brokersetAlias,
+                        cluster.getName()));
+            }
             brokersetStateMap.put(brokersetAlias, brokersetState);
             if (invalidBrokerset) {
                 handleInvalidBrokerset(brokersetAlias, cluster.getName());
@@ -93,6 +101,19 @@ public class BrokersetStateSensor extends KafkaSensor {
                 node.getCurrentNodeInfo().setBrokersets(brokerToBrokersetsMap.get(nodeId));
             }
         }
+    }
+
+    /**
+     * Update brokerset state with metrics.
+     * This method should be overridden by subclasses to update brokerset state with metrics.
+     * @param cluster Kafka cluster.
+     * @param brokersetState Brokerset state to update. It has state fields and raw metrics fields to update.
+     * @param brokerIds Broker ids in the brokerset.
+     */
+    protected void updateBrokersetStateWithMetrics(
+        KafkaCluster cluster,
+        BrokersetState brokersetState,
+        Set<String> brokerIds) {
     }
 
     @Override
