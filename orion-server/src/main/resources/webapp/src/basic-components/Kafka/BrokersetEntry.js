@@ -117,6 +117,13 @@ function getBrokersetInfoHeader(rawData, clusterId) {
     let brokersetData = rawData.brokersetData;
     let brokersetAlias = brokersetData.brokersetAlias;
     let brokerCount = brokersetData.size;
+    console.log("Brokerset Data");
+    console.log(brokersetData);
+    let instanceType = "Unknown";
+    // if (brokersetData.brokersetState !== undefined
+    //     && brokersetData.brokersetState.instanceType != undefined) {
+    //     instanceType = brokersetData.brokersetStatus.instanceType;
+    // }
     return (
         <Box my={2}>
             <Grid container display="flex" alignItems="center" spacing={2}>
@@ -134,6 +141,14 @@ function getBrokersetInfoHeader(rawData, clusterId) {
                         color="primary"
                         size="small"
                         label={brokerCount + " brokers"}
+                    />
+                </Grid>
+                <Grid item>
+                    <Chip
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        label={instanceType}
                     />
                 </Grid>
             </Grid>
