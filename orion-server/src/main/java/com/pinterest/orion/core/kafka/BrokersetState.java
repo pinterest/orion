@@ -11,6 +11,10 @@ public class BrokersetState {
      */
     private String brokersetAlias;
     /**
+     * The instanceType is the type of the brokerset.
+     */
+    private String instanceType;
+    /**
      * The brokersetRanges are the ranges of brokerset that are in the brokerset.
      * The brokersetRanges are obtained from the brokerset configuration file.
      */
@@ -128,5 +132,11 @@ public class BrokersetState {
     }
     public Map<String, String> getBrokersetStatus() {
         return brokersetStatus;
+    }
+    public void setInstanceType(String instanceType) {
+        this.instanceType = instanceType;
+    }
+    public String getInstanceType() {
+        return instanceType;
     }
 }
