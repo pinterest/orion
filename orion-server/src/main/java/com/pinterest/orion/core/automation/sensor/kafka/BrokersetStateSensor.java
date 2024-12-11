@@ -83,9 +83,11 @@ public class BrokersetStateSensor extends KafkaSensor {
                 updateBrokersetStateWithMetrics(cluster, brokersetState, brokerIds);
             } catch (Exception e) {
                 logger.warning(
-                    String.format("Failed to update brokerset state with metrics for brokerset %s in cluster %s.",
+                    String.format(
+                        "Failed to update brokerset state with metrics for brokerset %s in cluster %s. Error: %s",
                         brokersetAlias,
-                        cluster.getName()));
+                        cluster.getName(),
+                        e.getMessage()));
             }
             brokersetStateMap.put(brokersetAlias, brokersetState);
             if (invalidBrokerset) {

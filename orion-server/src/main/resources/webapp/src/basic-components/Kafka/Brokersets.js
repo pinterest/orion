@@ -43,23 +43,23 @@ export default function Brokersets(props) {
     let columns = [
         { title: "Name", field: "brokersetAlias" },
         { title: "Broker Count", field: "brokerCount" },
-        { title: "Max CPU Usage", field: "maxCpuUsage" },
-        { title: "Max Disk Usage", field: "maxDiskUsage" },
+        { title: "Max CPU Usage 7D", field: "maxCpuUsage7Day" },
+        { title: "Max Disk Usage 7D", field: "maxDiskUsage7Day" },
         { title: "Updated Time", field: "timestamp" }
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
     for (let brokerset of brokersets) {
         let brokersetAlias = brokerset.brokersetAlias;
-        let maxCpuUsage = "N/A";
-        let maxDiskUsage = "N/A";
+        let maxCpuUsage7Day = "N/A";
+        let maxDiskUsage7Day = "N/A";
         let timestamp = "N/A"
         if (brokerset.brokersetStatus) {
-            if (brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"] !== undefined) {
-                maxCpuUsage = brokerset.brokersetStatus["CPU_Usage_All_Brokers_Max"];
+            if (brokerset.brokersetStatus["CPU_Usage_Max_All_Brokers_7Days"] !== undefined) {
+                maxCpuUsage7Day = brokerset.brokersetStatus["CPU_Usage_Max_All_Brokers_7Days"];
             }
-            if (brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"] !== undefined) {
-                maxDiskUsage = brokerset.brokersetStatus["Disk_Usage_All_Brokers_Max"];
+            if (brokerset.brokersetStatus["Disk_Usage_Max_All_Brokers_7Days"] !== undefined) {
+                maxDiskUsage7Day = brokerset.brokersetStatus["Disk_Usage_Max_All_Brokers_7Days"];
             }
             if (brokerset.brokersetStatus["Short_Timestamp"] !== undefined) {
                 timestamp = brokerset.brokersetStatus["Short_Timestamp"];
@@ -70,8 +70,8 @@ export default function Brokersets(props) {
             "clusterId": clusterId,
             "brokerCount": brokerset.size,
             "brokersetData": brokerset,
-            "maxCpuUsage": maxCpuUsage,
-            "maxDiskUsage": maxDiskUsage,
+            "maxCpuUsage7Day": maxCpuUsage7Day,
+            "maxDiskUsage7Day": maxDiskUsage7Day,
             "timestamp": timestamp
         }
     }
