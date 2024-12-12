@@ -223,20 +223,24 @@ public class NodeInfo implements Serializable {
 
   @Override
   public String toString() {
-    return "NodeInfo [timestamp=" + timestamp +
-        ", nodeId=" + nodeId +
-        ", hostname=" + hostname +
-        ", ip=" + ip +
-        ", clusterId=" + clusterId +
-        ", servicePort=" + servicePort +
-        ", localtime=" + localtime +
-        ", rack=" + rack +
-        ", nodeType=" + nodeType +
-        ", serviceInfo=" + serviceInfo +
-        ", agentSettings=" + agentSettings +
-        ", environment=" + environment +
-        ", brokersets=" + brokersets +
-        ", brokerStatus=" + brokerStatus +
-        ", rawBrokerStatus=" + rawBrokerStatus + "]";
+    return String.format(
+        "NodeInfo [timestamp=%d, nodeId=%s, hostname=%s, ip=%s, clusterId=%s, servicePort=%d, " +
+            "localtime=%d, rack=%s, nodeType=%s, serviceInfo=%s, agentSettings=%s, environment=%s, brokersets=%s, " +
+            "brokerStatus=%s, rawBrokerStatus=%s]",
+        timestamp,
+        nodeId,
+        hostname,
+        ip,
+        clusterId,
+        servicePort,
+        localtime,
+        rack,
+        nodeType,
+        serviceInfo,
+        agentSettings,
+        environment,
+        brokersets,
+        brokerStatus,
+        rawBrokerStatus);
   }
 }
