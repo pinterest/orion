@@ -42,17 +42,37 @@ export default function Brokersets(props) {
     }
     let columns = [
         { title: "Name", field: "brokersetAlias" },
-        { title: "Broker Count", field: "brokerCount" }
+        { title: "Broker Count", field: "brokerCount" },
+        { title: "Max CPU Usage 7D", field: "maxCpuUsage7Day" },
+        { title: "Max Disk Usage 7D", field: "maxDiskUsage7Day" },
+        { title: "Updated Time", field: "timestamp" }
     ]
     let clusterId = props.cluster.clusterId;
     let brokersetToRowValuesMap = {};
     for (let brokerset of brokersets) {
         let brokersetAlias = brokerset.brokersetAlias;
+        let maxCpuUsage7Day = "N/A";
+        let maxDiskUsage7Day = "N/A";
+        let timestamp = "N/A"
+        if (brokerset.brokersetStatus) {
+            if (brokerset.brokersetStatus["CPU_Usage_Max_All_Brokers_7Days"] !== undefined) {
+                maxCpuUsage7Day = brokerset.brokersetStatus["CPU_Usage_Max_All_Brokers_7Days"];
+            }
+            if (brokerset.brokersetStatus["Disk_Usage_Max_All_Brokers_7Days"] !== undefined) {
+                maxDiskUsage7Day = brokerset.brokersetStatus["Disk_Usage_Max_All_Brokers_7Days"];
+            }
+            if (brokerset.brokersetStatus["Short_Timestamp"] !== undefined) {
+                timestamp = brokerset.brokersetStatus["Short_Timestamp"];
+            }
+        }
         brokersetToRowValuesMap[brokersetAlias] = {
             "brokersetAlias": brokersetAlias,
             "clusterId": clusterId,
             "brokerCount": brokerset.size,
-            "brokersetData": brokerset
+            "brokersetData": brokerset,
+            "maxCpuUsage7Day": maxCpuUsage7Day,
+            "maxDiskUsage7Day": maxDiskUsage7Day,
+            "timestamp": timestamp
         }
     }
 

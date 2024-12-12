@@ -30,7 +30,13 @@ const routes = [
 function getStatsData(clusterId, rawData) {
     let brokersetStats = [];
     let brokersetData = rawData.brokersetData;
-    brokersetStats.push({ key: "Broker Count", value: brokersetData.size});
+    brokersetStats.push({ key: "Broker_Count", value: brokersetData.size});
+    let brokersetStatus = brokersetData.brokersetStatus;
+    if (brokersetStatus !== undefined && brokersetStatus !== null) {
+        for (let key of Object.keys(brokersetStatus)) {
+            brokersetStats.push({ key: key, value: brokersetStatus[key] });
+        }
+    }
     return brokersetStats;
 }
 
@@ -111,6 +117,10 @@ function getBrokersetInfoHeader(rawData, clusterId) {
     let brokersetData = rawData.brokersetData;
     let brokersetAlias = brokersetData.brokersetAlias;
     let brokerCount = brokersetData.size;
+    let instanceType = "Unknown";
+    if (brokersetData.instanceType !== undefined && brokersetData.instanceType !== null) {
+        instanceType = brokersetData.instanceType;
+    }
     return (
         <Box my={2}>
             <Grid container display="flex" alignItems="center" spacing={2}>
@@ -128,6 +138,14 @@ function getBrokersetInfoHeader(rawData, clusterId) {
                         color="primary"
                         size="small"
                         label={brokerCount + " brokers"}
+                    />
+                </Grid>
+                <Grid item>
+                    <Chip
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        label={instanceType}
                     />
                 </Grid>
             </Grid>

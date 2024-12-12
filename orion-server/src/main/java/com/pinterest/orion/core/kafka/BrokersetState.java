@@ -3,12 +3,17 @@ package com.pinterest.orion.core.kafka;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class BrokersetState {
     /**
      * The brokersetAlias is the alias of the brokerset.
      */
     private String brokersetAlias;
+    /**
+     * The instanceType is the type of the brokerset.
+     */
+    private String instanceType;
     /**
      * The brokersetRanges are the ranges of brokerset that are in the brokerset.
      * The brokersetRanges are obtained from the brokerset configuration file.
@@ -19,6 +24,14 @@ public class BrokersetState {
      * The brokerIds are obtained from the cluster state.
      */
     private List<String> brokerIds = new ArrayList<>();
+    /**
+     * Save the broker status in printable format (string).
+     */
+    private Map<String, Double> rawBrokersetStatus;
+    /**
+     * Save the broker status in raw format (number).
+     */
+    private Map<String, String> brokersetStatus;
     /**
      * The constructor of BrokersetState.
      * @param brokersetAlias
@@ -107,5 +120,23 @@ public class BrokersetState {
      */
     public void setBrokerIds(List<String> brokerIds) {
         this.brokerIds = brokerIds;
+    }
+    public void setRawBrokersetStatus(Map<String, Double> rawBrokersetStatus) {
+        this.rawBrokersetStatus = rawBrokersetStatus;
+    }
+    public Map<String, Double> getRawBrokersetStatus() {
+        return rawBrokersetStatus;
+    }
+    public void setBrokersetStatus(Map<String, String> brokersetStatus) {
+        this.brokersetStatus = brokersetStatus;
+    }
+    public Map<String, String> getBrokersetStatus() {
+        return brokersetStatus;
+    }
+    public void setInstanceType(String instanceType) {
+        this.instanceType = instanceType;
+    }
+    public String getInstanceType() {
+        return instanceType;
     }
 }

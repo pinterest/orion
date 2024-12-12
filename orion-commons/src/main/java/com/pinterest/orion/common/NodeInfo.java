@@ -36,7 +36,26 @@ public class NodeInfo implements Serializable {
   private Map<String, String> agentSettings;
   private Map<String, String> environment;
   private Set<String> brokersets = new HashSet<>();
+  /**
+   * Save the broker status in printable format (string)
+   */
   private Map<String, String> brokerStatus;
+  /**
+   * Save the broker status in raw format (number)
+   */
+  private Map<String, Double> rawBrokerStatus;
+  /**
+   * @param rawBrokerStatus
+   */
+  public void setRawBrokerStatus(Map<String, Double> rawBrokerStatus) {
+    this.rawBrokerStatus = rawBrokerStatus;
+  }
+  /**
+   * @return the rawBrokerStatus
+   */
+  public Map<String, Double> getRawBrokerStatus() {
+      return rawBrokerStatus;
+  }
   /**
    * @param brokerStatus
    */
@@ -202,15 +221,26 @@ public class NodeInfo implements Serializable {
     this.nodeType = nodeType;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
-    return "NodeInfo [nodeId=" + nodeId + ", hostname=" + hostname + ", ip=" + ip + ", clusterId="
-        + clusterId + ", servicePort=" + servicePort + ", localtime="
-        + localtime + ", rack=" + rack + ", serviceInfo=" + serviceInfo + ", agentSettings="
-        + agentSettings + ", environment=" + environment + "]";
+    return String.format(
+        "NodeInfo [timestamp=%d, nodeId=%s, hostname=%s, ip=%s, clusterId=%s, servicePort=%d, " +
+            "localtime=%d, rack=%s, nodeType=%s, serviceInfo=%s, agentSettings=%s, environment=%s, brokersets=%s, " +
+            "brokerStatus=%s, rawBrokerStatus=%s]",
+        timestamp,
+        nodeId,
+        hostname,
+        ip,
+        clusterId,
+        servicePort,
+        localtime,
+        rack,
+        nodeType,
+        serviceInfo,
+        agentSettings,
+        environment,
+        brokersets,
+        brokerStatus,
+        rawBrokerStatus);
   }
-
 }
