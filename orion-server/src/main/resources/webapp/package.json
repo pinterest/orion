@@ -22,7 +22,7 @@
     "react-final-form": "^6.5.0",
     "react-json-view": "^1.19.1",
     "react-redux": "^7.1.3",
-    "react-router-dom": "^5.1.2",
+    "react-router-dom": "^6.0.0",
     "react-scripts": "^3.3.0",
     "redux": "^4.0.5",
     "redux-saga": "^1.1.3"
