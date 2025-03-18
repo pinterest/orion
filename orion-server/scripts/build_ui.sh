@@ -25,4 +25,4 @@ export CI=''
 npm cache clean --force
 npm prune
 npm install
-npm run build
+NODE_OPTIONS=--openssl-legacy-provider npm run build
