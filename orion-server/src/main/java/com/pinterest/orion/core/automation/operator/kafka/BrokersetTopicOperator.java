@@ -143,12 +143,6 @@ public class BrokersetTopicOperator extends KafkaOperator {
       KafkaTopicDescription actualTopicDescription = topicDescriptionMap.get(topicName);
       Brokerset brokerset = brokersetMap.get(brokersetAlias);
 
-      if (brokerset == null) {
-        logger.warning("Topic(" + topicName + ") Attempted to use Brokerset(" + brokersetAlias + ") which doesn't exist.");
-        OrionServer.METRICS.counter(metric.resolve("non_existent_brokerset")).inc();
-        continue;
-      }
-
       if (topicAssignment.isDelete()) {
         if (enableTopicDeletion) {
           if (actualTopicDescription == null) {
@@ -159,6 +153,12 @@ public class BrokersetTopicOperator extends KafkaOperator {
             dispatch(action);
           }
         }
+        continue;
+      }
+
+      if (brokerset == null) {
+        logger.warning("Topic(" + topicName + ") Attempted to use Brokerset(" + brokersetAlias + ") which doesn't exist.");
+        OrionServer.METRICS.counter(metric.resolve("non_existent_brokerset")).inc();
         continue;
       }
 
