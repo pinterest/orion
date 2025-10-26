@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.function.Function;
@@ -45,6 +49,8 @@ import software.amazon.awssdk.services.ec2.model.Tag;
 public class AmiTagManager {
   private static final Logger logger = Logger.getLogger(AmiTagManager.class.getCanonicalName());
   private Ec2Client ec2Client;
+  private ExecutorService executorService = Executors.newCachedThreadPool();
+  private Map<String, CompletableFuture<List<Ami>>> activeFutures = new ConcurrentHashMap<>();
   public static final String KEY_IS_PUBLIC = "is-public";
   public static final String KEY_AMI_ID = "ami_id";
   public static final String KEY_APPLICATION = "application";
@@ -58,6 +64,39 @@ public class AmiTagManager {
 
   public AmiTagManager() {
     ec2Client = Ec2Client.create();
+  }
+
+  /**
+   * run queries in a pool of threads
+   *
+   * @param filter - map of criteria fields
+   * @return either a status string or the AMI list
+   */
+  public Object getStatusOrAmiList(Map<String, String> filter) {
+    String filterKey = filter.toString();
+    CompletableFuture<List<Ami>> future = activeFutures.get(filterKey);
+    if (future == null) {
+      future = CompletableFuture.supplyAsync(() -> {
+        return getAmiList(filter);
+      }, executorService);
+      activeFutures.put(filterKey, future);
+    }
+    
+    try {
+      if (future.isDone()) {
+        if (future.isCompletedExceptionally()) {
+            throw new RuntimeException("Query thread completed exceptionally");
+        }
+        activeFutures.remove(filterKey);
+        return future.get();
+      } else {
+        return "{\"status\": \"Processing\"}";
+      }
+    } catch (Exception e) {
+      activeFutures.remove(filterKey);
+      logger.log(Level.SEVERE, "AmiTagManager: Failed to retrieve AMI list", e);
+      return "{\"status\": \"Failed\"}";
+    }
   }
 
   /**
@@ -101,6 +140,7 @@ public class AmiTagManager {
     );
     builder = builder.filters(filterList);
     try {
+      logger.info("AmiTagManager: querying AWS for AMI list");
       DescribeImagesResponse resp = ec2Client.describeImages(builder.build());
       if (resp.hasImages() && !resp.images().isEmpty()) {
         // The limitation of images newer than 180 days is temporarily suspended
@@ -127,6 +167,7 @@ public class AmiTagManager {
         Function<Ami, ZonedDateTime> parse = i -> ZonedDateTime.parse(i.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
         amiList.sort((a, b) -> - parse.apply(a).compareTo(parse.apply(b)));
       }
+      logger.info("AmiTagManager: AWS query complete");
     } catch (Exception e) {
       logger.log(Level.SEVERE, "AmiTagManager: could not retrieve AMI list", e);
       throw e;

@@ -252,9 +252,21 @@ function* fetchAmiList(action) {
   const filter = action.payload.filter;
   try {
     yield put(showLoading());
-    const resp = yield call(fetch, "/api/describeImages?" + filter);
-    const data = yield resp.json();
-    yield put(receiveAmiList(data));
+    do {
+      const resp = yield call(fetch, "/api/describeImages?" + filter);
+      const data = yield resp.json();
+      if (Array.isArray(data)) {
+        yield put(hideAppError());
+        yield put(receiveAmiList(data));
+        break;
+      }
+      if (data.status !== 'Processing') {
+        yield put(showAppError(data.status));
+        yield put(receiveAmiList(null));
+        break;
+      }
+      yield delay(10000);
+    } while (true);
   } catch (e) {
     yield put(showAppError(e));
   } finally {
@@ -278,13 +290,11 @@ function* fetchAmiTagUpdate(action) {
 
 function* fetchEnvTypes() {
   try {
-    yield put(showLoading());
     const resp = yield call(fetch, "/api/getEnvTypes");
     const data = yield resp.json();
+    yield put(hideAppError());
     yield put(receiveEnvTypes(data));
   } catch (e) {
     yield put(showAppError(e));
-  } finally {
-    yield put(hideLoading());
   }
 }
