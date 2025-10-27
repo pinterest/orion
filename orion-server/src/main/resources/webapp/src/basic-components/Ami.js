@@ -19,7 +19,7 @@ import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField,
   FormGroup, FormControlLabel, Checkbox } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
-import { requestAmiList, updateAmiTag, requestEnvTypes } from "../actions/cluster";
+import { requestAmiList, updateAmiTag, requestEnvTypes } from "../actions/ami";
 
 const mapState = (state, ownProps) => {
   const { amiList, envTypes } = state.app;
@@ -250,8 +250,7 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
               <Button
                 variant="contained"
                 onClick={() => {
-                  updateAmiTag(selected, appEnv);
-                  applyFilter();
+                  updateAmiTag(amiList, selected, appEnv);
                 }}
               >Update</Button>
             </FormControl>

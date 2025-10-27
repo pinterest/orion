@@ -63,7 +63,6 @@ public class AmiApi extends BaseClustersApi {
     amiTagManager.updateAmiTag(amiId, applicationEnvironment);
   }
 
-
   @Path("/getEnvTypes")
   @GET
   public List<String> getEnvTypes() {
