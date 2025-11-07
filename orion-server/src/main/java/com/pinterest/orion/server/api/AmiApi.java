@@ -39,11 +39,22 @@ public class AmiApi extends BaseClustersApi {
 
   @Path("/describeImages")
   @GET
-  public Object describeImages(
+  /**
+   * @param os: bionic, focal, release
+   * @param arch: x86_64, arm64
+   * @param environment: dev, test, stage, prod
+   * @return AMI list, or null if waiting for query completion
+   * @throws Exception
+   * 
+   * Http response status:
+   * - AMI list: 200
+   * - null: 204
+   */
+  public List<Ami> describeImages(
       @QueryParam(AmiTagManager.KEY_RELEASE) String os,
       @QueryParam(AmiTagManager.KEY_ARCHITECTURE) String arch,
       @QueryParam(AmiTagManager.KEY_ENVIRONMENT) String environment
-  ) {
+  ) throws Exception {
     Map<String, String> filter = new HashMap<>();
     if (os != null)
       filter.put(AmiTagManager.KEY_RELEASE, os);
@@ -51,7 +62,7 @@ public class AmiApi extends BaseClustersApi {
       filter.put(AmiTagManager.KEY_ARCHITECTURE, arch);
     if (environment != null)
       filter.put(AmiTagManager.KEY_ENVIRONMENT, environment);
-    return amiTagManager.getStatusOrAmiList(filter);
+    return amiTagManager.getAmiListAsync(filter);
   }
 
   @Path("/updateImageTag")

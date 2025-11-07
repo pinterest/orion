@@ -256,15 +256,10 @@ function* fetchAmiList(action) {
     yield put(showLoading());
     do {
       const resp = yield call(fetch, "/api/describeImages?" + filter);
-      const data = yield resp.json();
-      if (Array.isArray(data)) {
+      if (resp.status === 200) {
+        const data = yield resp.json();
         yield put(hideAppError());
         yield put(receiveAmiList(data));
-        break;
-      }
-      if (data.status !== 'Processing') {
-        yield put(showAppError(data.status));
-        yield put(receiveAmiList(null));
         break;
       }
       yield delay(10000);
