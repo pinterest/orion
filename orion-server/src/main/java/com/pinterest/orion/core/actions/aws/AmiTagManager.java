@@ -91,17 +91,6 @@ public class AmiTagManager {
   }
 
   /**
-   * get query status
-   *
-   * @param filter - map of criteria fields
-   * @return true if complete (successfully, exceptionally or cancelled), false otherwise
-   */
-  public boolean getQueryStatus(Map<String, String> filter) throws Exception {
-
-    return activeFutures.get(filter.toString()).isDone();
-  }
-
-  /**
    * retrieve AMI list from cloud provider
    *
    * @param filter - map of criteria fields

@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.pinterest.orion.server.api;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +55,7 @@ public class AmiApi extends BaseClustersApi {
       @QueryParam(AmiTagManager.KEY_ARCHITECTURE) String arch,
       @QueryParam(AmiTagManager.KEY_ENVIRONMENT) String environment
   ) throws Exception {
-    Map<String, String> filter = new HashMap<>();
+    Map<String, String> filter = new LinkedHashMap<>();
     if (os != null)
       filter.put(AmiTagManager.KEY_RELEASE, os);
     if (arch != null)
