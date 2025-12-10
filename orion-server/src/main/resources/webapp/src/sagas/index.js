@@ -38,11 +38,6 @@ import {
   receiveUtilization,
   COST_REQUESTED,
   receiveCost,
-  AMI_LIST_REQUESTED,
-  receiveAmiList,
-  AMI_TAG_UPDATE,
-  ENV_TYPES_REQUESTED,
-  receiveEnvTypes
 } from "../actions/cluster";
 import {
   CLUSTERS_SUMMARY_REQUESTED,
@@ -61,6 +56,13 @@ import {
   showAutoRefreshTimer,
   hideAutoRefreshTimer,
 } from "../actions/app";
+import {
+  AMI_LIST_REQUESTED,
+  receiveAmiList,
+  AMI_TAG_UPDATE,
+  ENV_TYPES_REQUESTED,
+  receiveEnvTypes,
+} from "../actions/ami";
 
 export default function* rootSaga() {
   yield fork(clusterSummaryWatcher);
@@ -252,9 +254,16 @@ function* fetchAmiList(action) {
   const filter = action.payload.filter;
   try {
     yield put(showLoading());
-    const resp = yield call(fetch, "/api/describeImages?" + filter);
-    const data = yield resp.json();
-    yield put(receiveAmiList(data));
+    do {
+      const resp = yield call(fetch, "/api/describeImages?" + filter);
+      if (resp.status === 200) {
+        const data = yield resp.json();
+        yield put(hideAppError());
+        yield put(receiveAmiList(data));
+        break;
+      }
+      yield delay(10000);
+    } while (true);
   } catch (e) {
     yield put(showAppError(e));
   } finally {
@@ -263,12 +272,17 @@ function* fetchAmiList(action) {
 }
 
 function* fetchAmiTagUpdate(action) {
+  const amiList = action.payload.amiList;
   const amiId = action.payload.amiId;
   const applicationEnvironment = action.payload.applicationEnvironment;
   try {
     yield put(showLoading());
     yield call(fetch, "/api/updateImageTag?ami_id=" + amiId +
         "&application_environment=" + applicationEnvironment, { method: 'PUT' });
+    const updatedAmiList = amiList.map(ami => 
+      ami.amiId === amiId ? { ...ami, applicationEnvironment } : ami
+    );
+    yield put(receiveAmiList(updatedAmiList));
   } catch (e) {
     yield put(showAppError(e));
   } finally {
@@ -278,13 +292,11 @@ function* fetchAmiTagUpdate(action) {
 
 function* fetchEnvTypes() {
   try {
-    yield put(showLoading());
     const resp = yield call(fetch, "/api/getEnvTypes");
     const data = yield resp.json();
+    yield put(hideAppError());
     yield put(receiveEnvTypes(data));
   } catch (e) {
     yield put(showAppError(e));
-  } finally {
-    yield put(hideLoading());
   }
 }

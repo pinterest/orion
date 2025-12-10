@@ -25,9 +25,11 @@ import {
 import {
   UTILIZATION_RECEIVED,
   COST_RECEIVED,
+} from "../actions/cluster";
+import {
   AMI_LIST_RECEIVED,
   ENV_TYPES_RECEIVED,
-} from "../actions/cluster";
+} from "../actions/ami"
 
 export default function showError(
   state = {

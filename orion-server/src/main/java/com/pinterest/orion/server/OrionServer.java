@@ -51,6 +51,7 @@ import com.pinterest.orion.metrics.StatsPusher;
 import com.pinterest.orion.security.NoopAuthorizationFilter;
 import com.pinterest.orion.security.OrionAuthorizationFilter;
 import com.pinterest.orion.server.api.ActionEngineApi;
+import com.pinterest.orion.server.api.AmiApi;
 import com.pinterest.orion.server.api.ClusterApi;
 import com.pinterest.orion.server.api.ClusterManagerApi;
 import com.pinterest.orion.server.api.CustomApiFactory;
@@ -275,6 +276,7 @@ public class OrionServer extends Application<OrionConf> {
                                                                  // the future and the admin api
                                                                  // should be the endpoint for
                                                                  // registeration
+    environment.jersey().register(new AmiApi(mgr));
     if (configuration.getCustomApiFactoryClasses() != null) {
       for (String factoryClass : configuration.getCustomApiFactoryClasses()) {
         CustomApiFactory instance;

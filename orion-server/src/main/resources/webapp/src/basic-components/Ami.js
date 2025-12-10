@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, FormControl, Grid, InputLabel, MenuItem, Select, TextField,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   FormGroup, FormControlLabel, Checkbox } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
-import { requestAmiList, updateAmiTag, requestEnvTypes } from "../actions/cluster";
+import { requestAmiList, updateAmiTag, requestEnvTypes } from "../actions/ami";
 
 const mapState = (state, ownProps) => {
   const { amiList, envTypes } = state.app;
@@ -54,14 +54,14 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     setArch(event.target.value);
   };
   const [environment, setEnvironment] = React.useState();
-  if (environment == undefined)
+  if (environment === undefined)
     setEnvironment("prod")
   const handleEnvironmentChange = event => {
     setEnvironment(event.target.value);
   };
   const [selected, setSelected] = React.useState([]);
   const [env, setEnv] = React.useState({});
-  if (envTypes !== undefined && Object.keys(env).length == 0) {
+  if (envTypes !== undefined && Object.keys(env).length === 0) {
     const targetEnv = {};
     envTypes.forEach(value => { targetEnv[value] = false; });
     setEnv(targetEnv);
@@ -94,8 +94,10 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
     if (environment)
       parms.push("environment=" + environment);
     requestAmiList(parms.join('&'));
-    requestEnvTypes();
   }
+  useEffect(() => {
+    requestEnvTypes();
+  }, [requestEnvTypes]);
 
   if (!amiList)
     amiList = [];
@@ -248,8 +250,7 @@ function Ami({ amiList, requestAmiList, envTypes, requestEnvTypes, updateAmiTag 
               <Button
                 variant="contained"
                 onClick={() => {
-                  updateAmiTag(selected, appEnv);
-                  applyFilter();
+                  updateAmiTag(amiList, selected, appEnv);
                 }}
               >Update</Button>
             </FormControl>

@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.function.Function;
@@ -45,6 +49,8 @@ import software.amazon.awssdk.services.ec2.model.Tag;
 public class AmiTagManager {
   private static final Logger logger = Logger.getLogger(AmiTagManager.class.getCanonicalName());
   private Ec2Client ec2Client;
+  private ExecutorService executorService = Executors.newCachedThreadPool();
+  private Map<String, CompletableFuture<List<Ami>>> activeFutures = new ConcurrentHashMap<>();
   public static final String KEY_IS_PUBLIC = "is-public";
   public static final String KEY_AMI_ID = "ami_id";
   public static final String KEY_APPLICATION = "application";
@@ -61,12 +67,36 @@ public class AmiTagManager {
   }
 
   /**
+   * run queries in a pool of threads
+   *
+   * @param filter - map of criteria fields
+   * @return AMI list, or null if waiting to complete the query
+   */
+  public List<Ami> getAmiListAsync(Map<String, String> filter) throws Exception {
+    String filterKey = filter.toString();
+    CompletableFuture<List<Ami>> future = activeFutures.get(filterKey);
+    // Start a new query if it doesn't already exist
+    if (future == null) {
+      future = CompletableFuture.supplyAsync(() -> {
+        return getAmiList(filter);
+      }, executorService);
+      activeFutures.put(filterKey, future);
+    }
+
+    if (future.isDone()) {
+      activeFutures.remove(filterKey);
+      return future.get();
+    }
+    return null;
+  }
+
+  /**
    * retrieve AMI list from cloud provider
    *
    * @param filter - map of criteria fields
    * @return list of Ami objects
    */
-  public List<Ami> getAmiList(Map<String, String> filter) {
+  private List<Ami> getAmiList(Map<String, String> filter) {
     List<Ami> amiList = new ArrayList<>();
     DescribeImagesRequest.Builder builder = DescribeImagesRequest.builder();
     Filter.Builder filterBuilder = Filter.builder();
@@ -101,6 +131,7 @@ public class AmiTagManager {
     );
     builder = builder.filters(filterList);
     try {
+      logger.info("Querying AWS for AMI list");
       DescribeImagesResponse resp = ec2Client.describeImages(builder.build());
       if (resp.hasImages() && !resp.images().isEmpty()) {
         // The limitation of images newer than 180 days is temporarily suspended
@@ -127,8 +158,9 @@ public class AmiTagManager {
         Function<Ami, ZonedDateTime> parse = i -> ZonedDateTime.parse(i.getCreationDate(), DateTimeFormatter.ISO_ZONED_DATE_TIME);
         amiList.sort((a, b) -> - parse.apply(a).compareTo(parse.apply(b)));
       }
+      logger.info("AWS query complete");
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "AmiTagManager: could not retrieve AMI list", e);
+      logger.log(Level.SEVERE, "Could not retrieve AMI list", e);
       throw e;
     }
     return amiList;
@@ -155,7 +187,7 @@ public class AmiTagManager {
       if (!resp.sdkHttpResponse().isSuccessful())
         throw AwsServiceException.builder().message("Http code \" + resp.sdkHttpResponse().statusCode() + \" received").build();
     } catch (Exception e) {
-      logger.severe("AmiTagManager: tag update failed for " + amiId + " and application_environment tag = " + applicationEnvironment + ", " + e);
+      logger.severe("Tag update failed for " + amiId + " and application_environment tag = " + applicationEnvironment + ", " + e);
       throw e;
     }
   }
