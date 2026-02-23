@@ -293,10 +293,11 @@ function* fetchAmiTagUpdate(action) {
 function* fetchEnvTypes() {
   try {
     const resp = yield call(fetch, "/api/getEnvTypes");
-    const data = yield resp.json();
-    yield put(hideAppError());
-    yield put(receiveEnvTypes(data));
+    if (resp.ok) {
+      const data = yield resp.json();
+      yield put(receiveEnvTypes(data));
+    }
   } catch (e) {
-    yield put(showAppError(e));
+    console.error("Failed to fetch env types", e);
   }
 }
