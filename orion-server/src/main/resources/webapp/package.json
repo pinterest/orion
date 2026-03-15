@@ -7,7 +7,7 @@
     "@material-ui/icons": "^4.5.1",
     "@material-ui/lab": "^4.0.0-alpha.49",
     "apexcharts": "^3.15.2",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "express": "^4.17.1",
     "final-form": "^4.20.0",
     "gestalt": "^0.112.0",
