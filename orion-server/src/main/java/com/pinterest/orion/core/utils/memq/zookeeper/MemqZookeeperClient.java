@@ -4,6 +4,7 @@ import com.pinterest.orion.core.memq.MemqCluster;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.utils.CloseableUtils;
 
 import java.util.List;
 
@@ -36,27 +37,69 @@ public class MemqZookeeperClient {
 
     /**
      * Create a new Zookeeper client using the connection string provided in the cluster configuration.
+     *
+     * The chroot suffix is applied as a Curator namespace rather than as a
+     * ZooKeeper connection-string chroot. A connection-string chroot is dropped by Curator's
+     * EnsembleTracker whenever the ensemble emits a dynamic reconfiguration event, which silently
+     * re-points reads at the root of the (shared) ensemble and leaks data across clusters. A Curator
+     * namespace is applied client-side and survives reconfiguration/session loss, keeping every read
+     * scoped to this cluster.
      * @return CuratorFramework
      * @throws Exception
      */
     private CuratorFramework createZkClient() throws Exception {
-        CuratorFramework curator = CuratorFrameworkFactory.newClient(
-            zkUrl,
-            new ExponentialBackoffRetry(1000, 3)
-        );
+        CuratorFramework curator = CuratorFrameworkFactory.builder()
+            .connectString(parseConnectString(zkUrl))
+            .retryPolicy(new ExponentialBackoffRetry(1000, 3))
+            .namespace(parseNamespace(zkUrl))
+            .build();
         curator.start();
         curator.blockUntilConnected();
         return curator;
     }
 
     /**
+     * Extract the host:port list from a zk connection string, dropping any chroot suffix.
+     * e.g. "h1:2181,h2:2181/memq/cluster01" -> "h1:2181,h2:2181"
+     */
+    static String parseConnectString(String zkUrl) {
+        int slashIndex = zkUrl.indexOf('/');
+        return slashIndex >= 0 ? zkUrl.substring(0, slashIndex) : zkUrl;
+    }
+
+    /**
+     * Extract the chroot path from a zk connection string as a Curator namespace (no leading slash),
+     * or null when there is no chroot. e.g. "h1:2181/memq/cluster01" -> "memq/cluster01"
+     */
+    static String parseNamespace(String zkUrl) {
+        int slashIndex = zkUrl.indexOf('/');
+        if (slashIndex < 0) {
+            return null;
+        }
+        String namespace = zkUrl.substring(slashIndex + 1);
+        return namespace.isEmpty() ? null : namespace;
+    }
+
+    /**
      * Refresh the Zookeeper client by creating a new one.
-     * The new client is then set in the cluster object.
+     * The new client is then set in the cluster object and the previous client is closed to avoid
+     * leaking ZooKeeper connections/sessions across refreshes.
      * @throws Exception
      */
     public void refreshZkClient() throws Exception {
+        CuratorFramework oldClient = this.zkClient;
         this.zkClient = createZkClient();
         cluster.setZkClient(this.zkClient);
+        if (oldClient != null) {
+            CloseableUtils.closeQuietly(oldClient);
+        }
+    }
+
+    /**
+     * @return true if the underlying client currently has a live connection to ZooKeeper.
+     */
+    public boolean isConnected() {
+        return zkClient != null && zkClient.getZookeeperClient().isConnected();
     }
 
     /**
