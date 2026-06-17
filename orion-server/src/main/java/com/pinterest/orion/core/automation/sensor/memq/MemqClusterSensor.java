@@ -51,91 +51,112 @@ public class MemqClusterSensor extends MemqSensor {
 
   @Override
   public void sense(MemqCluster cluster) throws Exception {
-    try {
-      MemqZookeeperClient memqZookeeperClient = new MemqZookeeperClient(cluster);
+    sense(cluster, new MemqZookeeperClient(cluster));
+  }
 
-      List<String> brokerNames = memqZookeeperClient.getBrokerNames();
-      Map<String, List<String>> writeBrokerAssignments = new HashMap<>();
-      Map<String, Broker> rawBrokerMap = new HashMap<>();
-      Gson gson = new Gson();
-      Set<String> brokersInZookeeper = new HashSet<>();
-      for (String brokerName : brokerNames) {
-        String brokerDataJsonString = null;
-        try {
-          brokerDataJsonString = memqZookeeperClient.getBrokerData(brokerName);
-        } catch (KeeperException.NoNodeException e) {
-          cluster.getNodeMap().remove(brokerName);
-          logger.info(
-              "Broker data of " + brokerName + " is not available in zookeeper. The broker might be removed.");
-          continue;
-        } catch (Exception e) {
-          logger.severe(
-              "Faced an unknown exception when getting broker data for " + brokerName +" from zookeeper:" + e);
-          continue;
-        }
-        Broker broker = gson.fromJson(brokerDataJsonString, Broker.class);
-        NodeInfo info = new NodeInfo();
-        info.setClusterId(cluster.getClusterId());
-        String hostname = NetworkUtils.getHostnameFromIpIfAvailable(broker.getBrokerIP());
-        info.setHostname(hostname);
-        info.setIp(broker.getBrokerIP());
-        info.setNodeType(broker.getInstanceType());
-        info.setNodeId(broker.getBrokerIP());
-        info.setRack(broker.getLocality());
-        info.setServicePort(broker.getBrokerPort());
-        info.setTimestamp(System.currentTimeMillis());
-        cluster.addNodeWithoutAgent(info);
-        
-        rawBrokerMap.put(broker.getBrokerIP(), broker);
-        for (TopicConfig topicConfig : broker.getAssignedTopics()) {
-          String topicName = topicConfig.getTopic();
-          List<String> hostnames = writeBrokerAssignments.get(topicName);
-          if (hostnames == null) {
-            hostnames = new ArrayList<>();
-            writeBrokerAssignments.put(topicName, hostnames);
-          }
-          hostnames.add(hostname);
-        }
-        brokersInZookeeper.add(broker.getBrokerIP());
-      }
-
-      boolean noBrokerInZookeeper = false;
-      if (brokersInZookeeper.isEmpty()) {
-        logger.warning("No broker found in zookeeper for cluster " + cluster.getClusterId());
-        noBrokerInZookeeper = true;
-      } else {
-        // Remove brokers that are not in zookeeper from the cluster node map
-        for (String nodeId : cluster.getNodeMap().keySet()) {
-          if (!brokersInZookeeper.contains(nodeId)) {
-            cluster.getNodeMap().remove(nodeId);
-          }
-        }
-      }
-
-      Map<String, TopicConfig> topicConfigMap = new HashMap<>();
-      List<String> topics = memqZookeeperClient.getTopics();
-      for (String topicName : topics) {
-        String topicDataJsonString = memqZookeeperClient.getTopicData(topicName);
-        TopicConfig topicConfig = gson.fromJson(topicDataJsonString, TopicConfig.class);
-        topicConfigMap.put(topicName, topicConfig);
-      }
-
-      String clusterContext = "NO BROKER";
-      if (!noBrokerInZookeeper) {
-        String governorIp = memqZookeeperClient.getGovernorIp();
-        if (governorIp != null) {
-          clusterContext = "Governor: " + governorIp + "\n";
-        }
-      }
-
-      setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
-      setAttribute(cluster, RAW_BROKER_INFO, rawBrokerMap);
-      setAttribute(cluster, WRITE_ASSIGNMENTS, writeBrokerAssignments);
-      setAttribute(cluster, CLUSTER_CONTEXT, clusterContext);
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw e;
+  /**
+   * Reads cluster state from ZooKeeper and publishes it as cluster attributes.
+   *
+   * Reads are defensive: the cluster's attributes and node map are only mutated once a complete,
+   * trustworthy snapshot has been read. If the client is unhealthy or any read fails partway
+   * through, this method leaves the previously published (known-good) state untouched instead of
+   * overwriting it with empty, partial, or cross-cluster data.
+   */
+  void sense(MemqCluster cluster, MemqZookeeperClient memqZookeeperClient) throws Exception {
+    if (!memqZookeeperClient.isConnected()) {
+      logger.warning("ZooKeeper client for cluster " + cluster.getClusterId()
+          + " is not connected; skipping update to avoid showing incorrect data.");
+      return;
     }
+
+    List<String> brokerNames;
+    try {
+      brokerNames = memqZookeeperClient.getBrokerNames();
+    } catch (Exception e) {
+      logger.warning("Failed to read broker list for cluster " + cluster.getClusterId()
+          + "; skipping update to avoid showing incorrect data: " + e);
+      return;
+    }
+
+    Gson gson = new Gson();
+    Map<String, List<String>> writeBrokerAssignments = new HashMap<>();
+    Map<String, Broker> rawBrokerMap = new HashMap<>();
+    Set<String> brokersInZookeeper = new HashSet<>();
+    List<NodeInfo> discoveredNodes = new ArrayList<>();
+    Set<String> removedBrokers = new HashSet<>();
+
+    for (String brokerName : brokerNames) {
+      String brokerDataJsonString;
+      try {
+        brokerDataJsonString = memqZookeeperClient.getBrokerData(brokerName);
+      } catch (KeeperException.NoNodeException e) {
+        removedBrokers.add(brokerName);
+        logger.info(
+            "Broker data of " + brokerName + " is not available in zookeeper. The broker might be removed.");
+        continue;
+      } catch (Exception e) {
+        // A transient read failure means we have an incomplete snapshot. Bail out rather than
+        // silently dropping brokers and reporting NO BROKER / partial assignments.
+        logger.warning("Failed to read broker data for " + brokerName + " in cluster "
+            + cluster.getClusterId() + "; skipping update to avoid showing incorrect data: " + e);
+        return;
+      }
+      Broker broker = gson.fromJson(brokerDataJsonString, Broker.class);
+      NodeInfo info = new NodeInfo();
+      info.setClusterId(cluster.getClusterId());
+      String hostname = NetworkUtils.getHostnameFromIpIfAvailable(broker.getBrokerIP());
+      info.setHostname(hostname);
+      info.setIp(broker.getBrokerIP());
+      info.setNodeType(broker.getInstanceType());
+      info.setNodeId(broker.getBrokerIP());
+      info.setRack(broker.getLocality());
+      info.setServicePort(broker.getBrokerPort());
+      info.setTimestamp(System.currentTimeMillis());
+      discoveredNodes.add(info);
+
+      rawBrokerMap.put(broker.getBrokerIP(), broker);
+      for (TopicConfig topicConfig : broker.getAssignedTopics()) {
+        writeBrokerAssignments.computeIfAbsent(topicConfig.getTopic(), k -> new ArrayList<>())
+            .add(hostname);
+      }
+      brokersInZookeeper.add(broker.getBrokerIP());
+    }
+
+    Map<String, TopicConfig> topicConfigMap = new HashMap<>();
+    try {
+      for (String topicName : memqZookeeperClient.getTopics()) {
+        String topicDataJsonString = memqZookeeperClient.getTopicData(topicName);
+        topicConfigMap.put(topicName, gson.fromJson(topicDataJsonString, TopicConfig.class));
+      }
+    } catch (Exception e) {
+      logger.warning("Failed to read topics for cluster " + cluster.getClusterId()
+          + "; skipping update to avoid showing incorrect data: " + e);
+      return;
+    }
+
+    // Snapshot is complete and trustworthy: apply it to the cluster.
+    for (NodeInfo info : discoveredNodes) {
+      cluster.addNodeWithoutAgent(info);
+    }
+    for (String removed : removedBrokers) {
+      cluster.getNodeMap().remove(removed);
+    }
+
+    String clusterContext;
+    if (brokersInZookeeper.isEmpty()) {
+      logger.warning("No broker found in zookeeper for cluster " + cluster.getClusterId());
+      clusterContext = "NO BROKER";
+    } else {
+      // Prune stale nodes only when we have a confirmed, non-empty broker list.
+      cluster.getNodeMap().keySet().removeIf(nodeId -> !brokersInZookeeper.contains(nodeId));
+      String governorIp = memqZookeeperClient.getGovernorIp();
+      clusterContext = governorIp != null ? "Governor: " + governorIp + "\n" : "";
+    }
+
+    setAttribute(cluster, TOPIC_CONFIG, topicConfigMap);
+    setAttribute(cluster, RAW_BROKER_INFO, rawBrokerMap);
+    setAttribute(cluster, WRITE_ASSIGNMENTS, writeBrokerAssignments);
+    setAttribute(cluster, CLUSTER_CONTEXT, clusterContext);
   }
 
 }
