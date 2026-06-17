@@ -146,7 +146,7 @@
 		<dependency>
 			<groupId>org.simplejavamail</groupId>
 			<artifactId>simple-java-mail</artifactId>
-			<version>6.0.4</version>
+			<version>6.6.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.srotya.sidewinder</groupId>
