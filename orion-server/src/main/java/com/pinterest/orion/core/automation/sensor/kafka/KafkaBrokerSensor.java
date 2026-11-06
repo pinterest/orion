@@ -76,6 +76,7 @@ public class KafkaBrokerSensor extends KafkaSensor {
       info.setServiceInfo(new HashMap<>());
       cluster.addNodeWithoutAgent(info);
     });
+    cluster.markBrokerSensorCompleted();
 
     // also record duplicate info as an attribute so we can compare agent reported
     // info Vs. cluster reported info

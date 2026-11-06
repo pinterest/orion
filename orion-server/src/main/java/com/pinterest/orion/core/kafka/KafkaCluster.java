@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.pinterest.orion.core.kafka;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +45,8 @@ import org.apache.kafka.common.requests.DescribeLogDirsResponse.ReplicaInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
+import com.pinterest.orion.common.AgentHeartbeat;
+import com.pinterest.orion.common.NodeCmd;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.Cluster;
 import com.pinterest.orion.core.ClusterCost;
@@ -86,6 +89,9 @@ public class KafkaCluster extends Cluster {
   private AdminClient adminClient;
   private KafkaConsumer<byte[], byte[]> kafkaConsumer;
   public static final String ATTR_EBS_VOLUME_SIZE_KEY = "ebs_volume_size";
+  private static final long AGENT_REGISTRATION_GRACE_PERIOD_MS = TimeUnit.MINUTES.toMillis(2);
+  private final transient long startTimeMs = System.currentTimeMillis();
+  private transient volatile boolean brokerSensorCompleted = false;
 
   public KafkaCluster(String clusterId,
                       String name,
@@ -166,6 +172,23 @@ public class KafkaCluster extends Cluster {
   @Override
   public void addNodeWithoutAgent(NodeInfo info) {
     getNodeMap().putIfAbsent(info.getNodeId(), new KafkaBroker(this, info, props));
+  }
+  
+  public void markBrokerSensorCompleted() {
+    brokerSensorCompleted = true;
+  }
+
+  @Override
+  public NodeCmd updateNodeFromAgentHeartbeat(AgentHeartbeat heartbeat) throws IOException {
+    String nodeId = heartbeat.getNodeInfo().getNodeId();
+    if (!brokerSensorCompleted
+        && !getNodeMap().containsKey(nodeId)
+        && System.currentTimeMillis() - startTimeMs < AGENT_REGISTRATION_GRACE_PERIOD_MS) {
+      logger.info("Deferring registration of node " + nodeId
+          + " until the first broker sensor run completes");
+      return null;
+    }
+    return super.updateNodeFromAgentHeartbeat(heartbeat);
   }
 
   private Map<String, KafkaTopicDescription> getURP(Map<String, KafkaTopicDescription> clusterMD) {
