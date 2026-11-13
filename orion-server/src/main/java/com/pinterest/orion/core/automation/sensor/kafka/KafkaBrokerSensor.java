@@ -36,6 +36,7 @@ import org.apache.kafka.common.Node;
 import com.pinterest.orion.common.NodeInfo;
 import com.pinterest.orion.core.PluginConfigurationException;
 import com.pinterest.orion.core.kafka.KafkaCluster;
+import com.pinterest.orion.server.OrionServer;
 import com.pinterest.orion.utils.NetworkUtils;
 
 public class KafkaBrokerSensor extends KafkaSensor {
@@ -63,6 +64,9 @@ public class KafkaBrokerSensor extends KafkaSensor {
     }
     DescribeClusterResult clusterResult = adminClient.describeCluster(describeClusterOptions);
     Collection<org.apache.kafka.common.Node> brokersList = clusterResult.nodes().get();
+    Map<String, String> brokerCountTags = new HashMap<>();
+    brokerCountTags.put("clusterId", cluster.getClusterId());
+    OrionServer.metricsGaugeNum("kafka.cluster.broker.count", brokersList.size(), brokerCountTags);
     brokersList.stream().forEach(n -> {
       NodeInfo info = new NodeInfo();
       info.setClusterId(cluster.getClusterId());
